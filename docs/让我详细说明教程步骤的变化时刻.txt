@@ -1,0 +1,52 @@
+● 让我详细说明教程步骤的变化时刻：
+
+  教程步骤变化时刻：
+
+  步骤 0 → 步骤 1
+
+  - 时刻：新用户首次登录时，TutorialService 初始化检测到 tutorial_step 为 0 或不存在
+  - 位置：lib/services/tutorial_service.dart 第47-49行
+  if (tutorialStep == STEP_NOT_STARTED) {
+    debugPrint('🎓 [Tutorial] 检测到新用户，初始化教程步骤为1');
+    setTutorialStep(STEP_FIRST_GAME);
+  }
+
+  步骤 1 → 步骤 2
+
+  - 时刻：用户在 Hub 页面点击绿色"开始游戏"按钮时
+  - 位置：lib/game_hub_page.dart 第401-405行
+  // 检查教程步骤
+  final currentStep = TutorialService.instance.currentStep;
+  if (currentStep == TutorialService.STEP_NOT_STARTED || currentStep == TutorialService.STEP_FIRST_GAME) {
+    // 如果是步骤0或1，都更新到步骤2
+    await TutorialService.instance.setTutorialStep(TutorialService.STEP_COLLECTION_PAGE);
+  }
+
+  步骤 2 → 步骤 3
+
+  - 时刻：用户在 Hub 页面点击蓝色"主题收集"按钮时
+  - 位置：lib/game_hub_page.dart 第438-441行
+  // 检查教程步骤，如果是步骤2，则更新到步骤3
+  if (TutorialService.instance.currentStep == TutorialService.STEP_COLLECTION_PAGE) {
+    await TutorialService.instance.setTutorialStep(TutorialService.STEP_BLIND_BOX);
+  }
+
+  步骤 3 → 步骤 4
+
+  - 时刻：用户在收集页面点击第一关的黄色盲盒按钮时
+  - 位置：lib/collection_page.dart 第743-748行
+  // 如果是教程步骤3且按钮是第一关的盲盒
+  if (isInTutorialStep3 && isFirstLevel) {
+    // 进入下一步教程
+    await TutorialService.instance.setTutorialStep(TutorialService.STEP_COMPLETED);
+    debugPrint('🎓 [Tutorial] 教程完成！');
+  }
+
+  教程流程总结：
+
+  1. 步骤0（新用户）→ 自动变为步骤1
+  2. 步骤1（Hub只显示绿色按钮）→ 点击绿色按钮后变为步骤2
+  3. 步骤2（Hub只显示蓝色按钮）→ 点击蓝色按钮后变为步骤3
+  4. 步骤3（收集页面限制交互）→ 点击盲盒按钮后变为步骤4（完成）
+
+  每个步骤的更新都会立即同步到 Firestore 数据库，确保用户下次登录时能从正确的步骤继续。

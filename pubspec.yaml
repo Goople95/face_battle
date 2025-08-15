@@ -1,0 +1,48 @@
+name: face_battle
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.18.0
+  rive: ^0.12.3
+  provider: ^6.1.1
+  http: ^1.1.0
+  logger: ^2.0.2
+  shared_preferences: ^2.2.0
+  video_player: ^2.8.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/dice/
+    - assets/people/
+    - assets/people/man/
+    - assets/people/man/videos/
+    - assets/people/woman/
+    - assets/people/woman/videos/
+    - assets/people/youngman/
+    - assets/people/youngman/videos/
+    - assets/people/youngwoman/
+    - assets/people/youngwoman/videos/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/dice/dice_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#1B5E20"  # 墨绿色
+  adaptive_icon_foreground: "assets/dice/dice_icon.png"
+  remove_alpha_ios: true
+  ios_background_color: "#1B5E20"  # iOS也使用墨绿色背景

@@ -1,0 +1,550 @@
+进阶：让“文字模型”直接控制AI对手表情
+不需要额外“表情AI”。用文本模型产出结构化指令，驱动你的 Rive/Spine 头像就行。
+
+1) 统一表情协议（建议）
+json
+复制
+编辑
+{
+  "emotion": "confident|nervous|neutral|taunt|reverse_acting",
+  "valence": -1.0_to_1.0,
+  "arousal": 0.0_to_1.0,
+  "confidence": 0.0_to_1.0,
+  "bluff": 0.0_to_1.0,
+  "gaze": {"x": -1.0_to_1.0, "y": -1.0_to_1.0},
+  "blink": "none|soft|fast",
+  "say": {"text": "短句嘲讽/独白", "viseme": true}
+}
+这些字段直接映射到 Rive 状态机 输入（valence/arousal/confidence/bluff/blink/gazeX/gazeY/talk）。
+
+say.viseme=true 时，用 TTS 的 viseme 时间戳对齐嘴型（后期可上 Azure TTS viseme；先占位也行）。
+
+2) 提示词模板（让模型只吐 JSON）
+“你是‘骰声诡语’AI。根据【当前回合态势+上一条玩家台词+我方心理策略】输出唯一 JSON，字段见上。
+规则：
+
+情绪只影响表情与台词，不能泄露真实骰面；
+
+当触发‘反向演’时，bluff≥0.7 且 arousal 稍↑；
+
+质疑被点名后 1s 内，blink="fast"；
+
+只输出 JSON，无解释。”
+
+3) 回合触发点
+报数后、对手决策前、质疑瞬间、开杯判定——这几处调用一次模型，刷新表情指令即可。
+
+频率很低（每回合 1～2 次），1000/天足够支撑大量对局。
+
+为什么用这套
+成本：Gemini Free tier 就能顶住你的日调用，0 元先跑；超限再走 OpenRouter 的 :free 档。
+Google AI for Developers
+OpenRouter
+
+表现：文本模型最擅长“情境到表演指令”的可解释输出，和你要的“AI会演戏、会心理战”完美贴合。
+
+工程量小：你已有 Rive 头像，只需把 JSON 映射到状态机，先不做语音也能强感知；之后要口型再接 viseme。
+
+要不要我直接给你：
+
+最小服务端路由（Gemini ⇒ OpenRouter 兜底）；
+
+Rive 输入映射表（JSON → 状态机输入）；
+
+两条人格的提示词（稳健/挑衅），上来就能看见“AI会演”。
+
+
+
+
+
+
+您说：
+我需要提供AI人物的头像照片吗？有什么要求吗
+
+
+ChatGPT 说：
+
+已思考 27s
+不一定要“真人照片”。做你这款“只展示AI脸、可控表情”的对战感，最推荐是 2D 动画头像（Rive/Flare 骨骼）。如果你已有美术支持，只需提供分层素材就能开工；如果将来追求写实或3D，再考虑模型/照片路线。
+
+下面给你三条可选路线 + 交付要求（越到下方越重）：
+
+路线 A：2D 分层头像 → Rive 状态机（推荐）
+**是否需要照片？**不用。提供插画/立绘的分层文件即可。
+你需要准备：
+
+源文件：PSD/AI/SVG（建议 1024–2048px 正方形画布，透明背景，sRGB）。
+
+分层结构（关键）：
+
+头部底层（不含五官）、头发（前/后）、耳朵（左右）
+
+眉毛（左右独立）、上/下眼睑（左右独立）、眼白/虹膜/瞳孔（左右独立）
+
+鼻子、脸颊高光/法令纹（可选）
+
+嘴唇（上/下）、牙齿、舌头、口腔底色
+
+配件：眼镜、帽檐、耳环等（单独图层便于开/关）
+
+最小“口型/表情库”（做成静态参考即可，动画我们来做）：
+
+口型：Rest、AA(张大)、E(扁宽)、O(圆)、M（闭嘴：M/B/P）
+
+眼睛：张开 / 半闭 / 闭眼（眨眼用）
+
+表情关键帧：中性、微笑、自信（挑眉）、紧张（眉内收/抿嘴）、惊讶（眉上抬/大眼）
+
+构图与规范：
+
+主体 80–90% 画布，四周留 5–10% 安全边距
+
+线稿和阴影尽量不要用半透明叠色的超细笔触（变形时易起锯齿）
+
+同一角色风格与调色统一，多角色共用一套骨骼（省时省算力）
+
+**我们在 Rive 里会做：**骨骼绑定 + 网格变形 + 表情状态机，并暴露这些控制量：
+valence(-1..1), arousal(0..1), confidence(0..1), bluff(0..1), blink(trigger), talk(0..1), gazeX/Y(-1..1)
+游戏逻辑只需改这些数值，就能驱动“自信/紧张/诈唬/眨眼/说话/视线”。
+
+路线 B：二次元立绘 → Live2D（可选）
+是否需要照片？不用。
+要求（与A类似）：必须提供面部零件高度分层的 PSD（Cubism 的分层规范），最好正面或略 3/4 视角。
+优点：表情过渡细腻、编辑器成熟；
+注意：集成成本与授权、包体相对 Rive 更高。
+
+路线 C：3D 头像（Unity/Unreal，写实或卡通）
+**是否需要照片？**不要求，但如果想“写真级”，可用真人参考做模型或基于生成角色。
+模型交付要求（移动端友好）：
+
+格式：FBX/GLB，三角面 ≤ 30k（头部），1–2k 贴图（BaseColor/Normal/Roughness/Metallic）
+
+表情：ARKit 52 项 blendshapes 或至少常用表情 + viseme（嘴型）集合
+
+骨骼：面部骨骼或仅 blendshapes 均可；统一命名
+
+口型：若后续要配音，对齐 viseme 时间戳（Azure TTS / Oculus LipSync 等）
+
+版权与形象注意
+不要使用真实人物肖像（尤其名人）或未经许可的素材；确保商用授权无争议。
+
+多角色建议做风格模板：同骨骼、不同皮肤/发型/配件，利于规模化生产。
+
+所有源文件请保留可编辑图层与命名（英文/蛇形命名，便于自动化导入）。
+
+你要是今天就定稿，我给你一份可交付清单
+给我：
+
+1–3 个角色的 PSD/AI/SVG（按上面分层）
+
+参考表情 PNG（中性/自信/紧张/惊讶 + 五个口型）
+
+角色人设标签（教授/赌徒/挑衅/冰山，用于调参）
+
+我回你：
+
+一个 Rive .riv 文件（含状态机 + 参数名一致）
+
+一份 JSON 映射表（游戏事件 → 参数变化曲线）
+
+Flutter 侧最小示例（如何把数值喂给 Rive 控件）
+
+如果你暂时没有美术，也可以先用占位头像（简化线条脸 + 眼/眉/嘴几块），两天内就能把“会演戏的AI对手”跑起来；等正式立绘就无缝替换。
+
+
+
+
+
+
+
+源
+您说：
+那就用会演戏的AI对手吧
+
+
+ChatGPT 说：
+太好了！我把“会演戏的 AI 对手”做成一套可直接落地的最小方案（Flutter/Flame + Rive）。你今天就能开工。
+
+一、要准备的东西
+头像：1–2 个分层立绘（PSD/SVG），按「头/眉/眼/嘴/舌/牙/配件」分层，1024–2048px。
+
+Rive 文件：一个面部骨骼 + 状态机 AI_Face，暴露这些输入：
+
+连续：valence(-1..1), arousal(0..1), confidence(0..1), bluff(0..1), talk(0..1), gazeX(-1..1), gazeY(-1..1)
+
+触发：blink(trigger)
+
+（可选）离散状态：emotion（neutral/confident/nervous/taunt/reverse）
+
+二、表情控制协议（模型或本地策略产出的唯一 JSON）
+json
+复制
+编辑
+{
+  "emotion": "confident",
+  "valence": 0.35,
+  "arousal": 0.62,
+  "confidence": 0.74,
+  "bluff": 0.10,
+  "gaze": {"x": -0.2, "y": 0.1},
+  "blink": "soft",
+  "say": {"text": "不敢加码了吗？", "viseme": false},
+  "duration_ms": 1400
+}
+游戏只接这个 JSON → 映射到 Rive 输入（见第 四 部分）。
+
+不需要用户露脸；摄像头关闭也能跑。若以后要“读玩家情绪”，仅影响 arousal/confidence 的小幅偏移（±3–5%），不显示画面。
+
+三、AI“会演戏”的来源（两种都可）
+纯本地策略（零接口成本）
+
+用你已有的概率/阈值/历史画像，产出表情 JSON：
+
+valence ∝ ΔP(win)（胜率变好→正，变差→负）
+
+arousal ∝ 决策熵（越纠结越紧张）
+
+confidence ∝ 与质疑阈值的距离（越笃定越高）
+
+bluff 在“半诈/重诈”时拉高，并触发 reverse 表情状态（有冷却与代价）
+
+轻量文本模型（让台词更灵 & 可解释）
+
+用免费配额的文本模型（如 Gemini Free tier / OpenRouter :free）在关键时刻（报数后、质疑前/后）生成表情 JSON + 一句台词。
+
+频率很低（每回合 1–2 次），日 1000 次完全够。
+
+示例系统提示（让模型只吐 JSON）：
+
+javascript
+复制
+编辑
+你是“骰声诡语”的AI对手，只输出下述JSON。根据【本回合态势+我方策略+玩家上一句】产出表情和一句短台词。
+规则：不泄露真实骰面；反向演时 bluff≥0.7 且 arousal↑；被质疑后0.5s内 blink="fast"；只输出JSON。
+四、Flutter 集成（核心 20 行）
+dart
+复制
+编辑
+// 1) 加载 Rive 面板
+final artboard = await RiveFile.asset('assets/ai_face.riv')
+  .then((f) => f.mainArtboard);
+final ctrl = StateMachineController.fromArtboard(artboard, 'AI_Face')!;
+artboard.addController(ctrl);
+
+// 2) 取输入
+final valence    = ctrl.findInput<double>('valence')!;
+final arousal    = ctrl.findInput<double>('arousal')!;
+final confidence = ctrl.findInput<double>('confidence')!;
+final bluff      = ctrl.findInput<double>('bluff')!;
+final talk       = ctrl.findInput<double>('talk')!;
+final gazeX      = ctrl.findInput<double>('gazeX')!;
+final gazeY      = ctrl.findInput<double>('gazeY')!;
+final blink      = ctrl.findInput<bool>('blink')!;
+
+// 3) 应用一条“表情指令”（带EMA平滑）
+void applyEmotion(Map e) {
+  double ema(double cur, double target, [k=0.25]) => cur + (target - cur) * k;
+  valence.value    = ema(valence.value,    (e['valence'] ?? 0).toDouble());
+  arousal.value    = ema(arousal.value,    (e['arousal'] ?? 0).toDouble());
+  confidence.value = ema(confidence.value, (e['confidence'] ?? 0).toDouble());
+  bluff.value      = ema(bluff.value,      (e['bluff'] ?? 0).toDouble());
+  final g = e['gaze'] ?? {"x":0,"y":0};
+  gazeX.value = ema(gazeX.value, (g['x'] ?? 0).toDouble());
+  gazeY.value = ema(gazeY.value, (g['y'] ?? 0).toDouble());
+  if ((e['blink'] ?? 'none') == 'fast' || e['blink'] == 'soft') blink.value = true;
+  // 说话嘴型：把台词时长内按节拍推进 talk 0..1（或以后接 viseme）
+}
+五、两位首发人格（可直接用）
+人格	用途	关键参数
+教授型（稳健）	新手友好	bluff_max=0.4，reverse_prob=0.1，质疑阈值高，表情幅度小，眨眼规律稳定
+挑衅型（心理战）	社交传播	bluff_max=0.8，reverse_prob=0.35，爱嘲讽，gaze 偏移更大，关键回合提高 arousal
+
+冷却与代价（避免一直装）：
+
+触发 reverse 后 8–12s 冷却；冷却期内 gaze jitter↑、blink 略失衡，给玩家“破绽感”。
+
+六、触发时机（把“会演戏”放在对的点）
+报数后（你方）：自信/镇定或反向演
+
+对手思考前：挑衅/紧张小演技
+
+质疑瞬间：blink=fast + arousal↑
+
+开杯判定：胜→valence↑、自信笑；负→valence↓、嘴角抽动
+
+七、1 周落地清单
+D1–D2：Rive 头像 + 状态机输入命名统一；Flutter 加载/驱动跑通
+
+D3：本地策略产出 JSON（不接模型也能演）
+
+D4：回合内 3 个触发点插入表情指令；EMA 平滑 & hysteresis
+
+D5：教授型/挑衅型参数调优，加入冷却与代价
+
+D6：战报截图（比分 + 三次“关键表情帧”+ 金句）
+
+D7：小规模测试，调节幅度（避免过戏或信息泄露感）
+
+你把第一版分层头像丢给我（或用占位图也行），我就按上面的输入协议 + Rive 状态机给你一个 .riv 示例和映射表；你这周内就能把“会演戏的 AI 对手”跑起来。需要我顺手起一个**参数表（人格→上限/冷却/曲线）**吗？
+
+
+
+
+
+
+
+源
+您说：
+我现在没有美术，先用简单办法可以吗，但是也要能看到表情变化
+
+
+ChatGPT 说：
+
+已思考 15s
+可以，先用“零美术”的矢量表情头像就能跑起来，而且能清楚看到表情变化。思路是：用 Flutter 自绘一个“表情脸（eyes / brows / mouth）”，把你已有的情绪参数（valence、arousal、confidence、bluff、blink、talk、gazeX/Y）直接映射到眼皮开合、眉毛倾斜、嘴角弧度、瞳孔转动等。等有美术后，再把同一套参数接到 Rive 状态机即可无缝替换。
+
+下面给你一个可用的最小版组件：SimpleAIAvatar
+
+无需任何图片资源
+
+支持：眨眼、说话口型、视线移动、眉毛/嘴角随情绪变化
+
+你只要喂参数（或一条JSON），它就“演”
+
+dart
+复制
+编辑
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+
+class SimpleAIAvatar extends StatefulWidget {
+  final double size;
+  const SimpleAIAvatar({super.key, this.size = 200});
+  @override
+  State<SimpleAIAvatar> createState() => _SimpleAIAvatarState();
+}
+
+class _SimpleAIAvatarState extends State<SimpleAIAvatar>
+    with TickerProviderStateMixin {
+  // 可控情绪参数（与将来Rive一致）
+  double valence = 0.0;     // -1..1  负/正情绪 -> 嘴角弧度
+  double arousal = 0.3;     // 0..1   紧张度 -> 眼睑收缩、眉角上扬
+  double confidence = 0.5;  // 0..1   自信 -> 眉形/嘴角稳定度
+  double bluff = 0.0;       // 0..1   诈唬 -> 夸张度/挑眉
+  double gazeX = 0.0;       // -1..1  视线左右
+  double gazeY = 0.0;       // -1..1  视线上下
+
+  // 动画控制
+  late final AnimationController _blinkCtrl;
+  late final AnimationController _talkCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _blinkCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 140));
+    _talkCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 260))
+      ..repeat(reverse: true); // 占位嘴型摆动（有台词时再驱动）
+  }
+
+  @override
+  void dispose() {
+    _blinkCtrl.dispose();
+    _talkCtrl.dispose();
+    super.dispose();
+  }
+
+  // 对外：应用一条“表情指令”
+  void applyEmotion({
+    double? valence,
+    double? arousal,
+    double? confidence,
+    double? bluff,
+    double? gazeX,
+    double? gazeY,
+    bool blink = false,
+    bool talking = false,
+  }) {
+    setState(() {
+      if (valence != null) this.valence = valence.clamp(-1.0, 1.0);
+      if (arousal != null) this.arousal = arousal.clamp(0.0, 1.0);
+      if (confidence != null) this.confidence = confidence.clamp(0.0, 1.0);
+      if (bluff != null) this.bluff = bluff.clamp(0.0, 1.0);
+      if (gazeX != null) this.gazeX = gazeX.clamp(-1.0, 1.0);
+      if (gazeY != null) this.gazeY = gazeY.clamp(-1.0, 1.0);
+      if (blink) _blinkCtrl.forward(from: 0); // 触发一次眨眼
+      if (talking) {
+        if (!_talkCtrl.isAnimating) _talkCtrl.repeat(reverse: true);
+      } else {
+        _talkCtrl.stop();
+        _talkCtrl.value = 0.0;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_blinkCtrl, _talkCtrl]),
+      builder: (_, __) {
+        return CustomPaint(
+          size: Size.square(widget.size),
+          painter: _FacePainter(
+            valence: valence,
+            arousal: arousal,
+            confidence: confidence,
+            bluff: bluff,
+            gazeX: gazeX,
+            gazeY: gazeY,
+            blinkT: _blinkCtrl.value, // 0->1 眨眼闭合
+            talkT: _talkCtrl.value,   // 0->1 嘴型张合
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FacePainter extends CustomPainter {
+  final double valence, arousal, confidence, bluff, gazeX, gazeY, blinkT, talkT;
+  _FacePainter({
+    required this.valence,
+    required this.arousal,
+    required this.confidence,
+    required this.bluff,
+    required this.gazeX,
+    required this.gazeY,
+    required this.blinkT,
+    required this.talkT,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width/2, size.height/2);
+    final r = size.width/2;
+
+    // 背板（脸）
+    final facePaint = Paint()..color = const Color(0xFFF4F4F8);
+    canvas.drawCircle(c, r*0.95, facePaint);
+
+    // 轻微阴影/边框
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width*0.02
+      ..color = const Color(0xFFE2E2EA);
+    canvas.drawCircle(c, r*0.95, border);
+
+    // 眼睛参数
+    final eyeCx = r*0.38;
+    final eyeCy = r*0.2;
+    final eyeOpen = (1.0 - 0.6*arousal) * (1.0 - blinkT); // 紧张/眨眼 -> 眼缝收窄
+    final pupilOffset = Offset(gazeX*8, gazeY*6);
+
+    // 画眼白
+    final eyePaint = Paint()..color = Colors.white;
+    final leftEye = Rect.fromCenter(center: c+Offset(-eyeCx, -eyeCy),
+        width: r*0.38, height: (r*0.26).clamp(4, double.infinity)*eyeOpen.max(0.2));
+    final rightEye = Rect.fromCenter(center: c+Offset(eyeCx, -eyeCy),
+        width: r*0.38, height: (r*0.26).clamp(4, double.infinity)*eyeOpen.max(0.2));
+    canvas.drawRRect(RRect.fromRectAndRadius(leftEye, Radius.circular(r*0.12)), eyePaint);
+    canvas.drawRRect(RRect.fromRectAndRadius(rightEye, Radius.circular(r*0.12)), eyePaint);
+
+    // 瞳孔
+    final pupilPaint = Paint()..color = const Color(0xFF22232B);
+    canvas.drawCircle(leftEye.center + pupilOffset, r*0.05, pupilPaint);
+    canvas.drawCircle(rightEye.center + pupilOffset, r*0.05, pupilPaint);
+
+    // 眉毛（arousal↑ -> 眉抬起；bluff↑ -> 一挑一压）
+    final browPaint = Paint()
+      ..color = const Color(0xFF22232B)
+      ..strokeWidth = r*0.05
+      ..strokeCap = StrokeCap.round;
+    final browY = -eyeCy - r*0.16 - arousal*6;
+    final asym = (bluff*8); // 诈唬时非对称更明显
+    canvas.drawLine(
+      c + Offset(-eyeCx - r*0.08, browY - asym),
+      c + Offset(-eyeCx + r*0.18, browY + asym*0.5),
+      browPaint,
+    );
+    canvas.drawLine(
+      c + Offset(eyeCx - r*0.18, browY + asym*0.5),
+      c + Offset(eyeCx + r*0.08, browY - asym),
+      browPaint,
+    );
+
+    // 嘴巴（valence -> 弧度；talk -> 张口）
+    final mouthWidth = r*0.8;
+    final mouthY = r*0.35;
+    final smile = (valence).clamp(-1, 1); // -下弯 +上扬
+    final open = (talkT * (0.25 + 0.5*confidence)); // 说话张合 + 自信越高张口越稳
+    final p1 = c + Offset(-mouthWidth/2, mouthY);
+    final p2 = c + Offset(mouthWidth/2, mouthY);
+    final ctrl = c + Offset(0, mouthY + (-18*smile) + 8*bluff); // 诈唬时弧度略夸张
+    final mouthPath = Path()
+      ..moveTo(p1.dx, p1.dy)
+      ..quadraticBezierTo(ctrl.dx, ctrl.dy, p2.dx, p2.dy);
+    final mouthPaint = Paint()
+      ..color = const Color(0xFFEC5A69)
+      ..strokeWidth = r*0.06
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(mouthPath, mouthPaint);
+
+    // 张口（在曲线下加一个小椭圆填充，模拟开口程度）
+    if (open > 0.02) {
+      final oval = Rect.fromCenter(center: c+Offset(0, mouthY+2),
+          width: mouthWidth*0.28, height: (r*0.12*open));
+      canvas.drawOval(oval, Paint()..color = const Color(0xFF7A1F28));
+    }
+
+    // 腮红/紧张（arousal高时加轻微腮红）
+    if (arousal > 0.55) {
+      final blush = Paint()..color = const Color(0xFFFFC9D0).withOpacity((arousal-0.55)*1.2);
+      canvas.drawCircle(c+Offset(-r*0.35, r*0.1), r*0.09, blush);
+      canvas.drawCircle(c+Offset(r*0.35, r*0.1), r*0.09, blush);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FacePainter old) =>
+      old.valence!=valence || old.arousal!=arousal || old.confidence!=confidence ||
+      old.bluff!=bluff || old.gazeX!=gazeX || old.gazeY!=gazeY ||
+      old.blinkT!=blinkT || old.talkT!=talkT;
+}
+
+extension on double { double max(double m) => this > m ? this : m; }
+用法示例
+dart
+复制
+编辑
+final avatarKey = GlobalKey<_SimpleAIAvatarState>();
+
+// 构建
+final avatar = SimpleAIAvatar(key: avatarKey, size: 180);
+
+// 在关键时刻触发表情（例如“被质疑瞬间”）
+avatarKey.currentState?.applyEmotion(
+  arousal: 0.85, valence: -0.3, bluff: 0.0, blink: true, talking: false,
+);
+
+// “挑衅台词”时
+avatarKey.currentState?.applyEmotion(
+  valence: 0.2, arousal: 0.5, confidence: 0.8, bluff: 0.6, talking: true,
+);
+参数映射建议（先这么用就很好看）
+valence：控制嘴角上扬/下撇（-1 悲 / +1 喜）
+
+arousal：控制眼睑开合、眉毛抬起、腮红强度（紧张/兴奋）
+
+confidence：影响说话时嘴型稳定度（越自信摆动越均匀）
+
+bluff：提高“非对称感”（挑眉、嘴弧夸张一点）
+
+blink：触发眨眼一次
+
+talking：让嘴型周期性张合（以后接 TTS viseme 更准）
+
+gazeX/Y：瞳孔转向（-1..1）
+
+这样你今天就能把“会演戏的AI”跑起来；后面换 Rive/美术也不需要改业务逻辑，只把这套参数喂给 Rive 状态机即可。如果你要，我可以把上面这套再包一层，把你的“表情JSON”直接 applyEmotionFromJson(...) 喂进去，方便和AI输出对接。
