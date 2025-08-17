@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:io';
+import '../config/character_assets.dart';
 
 /// AI角色视频播放头像组件
 class AIVideoAvatar extends StatefulWidget {
@@ -28,61 +29,14 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
   bool _isInitializing = false;
   bool _hasVideo = false;
   
-  // 最大缓存数量 - 减少到1个，避免缓冲区问题
-  static const int _maxCacheSize = 1;
+  // 最大缓存数量 - 设置为3个，平衡内存和性能
+  static const int _maxCacheSize = 3;
   
   // 记录使用频率，用于智能缓存管理
   Map<String, int> _usageCount = {};
   Map<String, DateTime> _lastUsed = {};
   
-  // 映射personality ID到文件夹名
-  static const Map<String, String> personalityToFolder = {
-    'professor': 'man',         // 稳重大叔
-    'gambler': 'youngman',       // 冲动小哥
-    'provocateur': 'woman',      // 心机御姐
-    'youngwoman': 'youngwoman',  // 活泼少女
-  };
-  
-  // 映射表情名称到视频文件名（处理拼写问题）
-  static const Map<String, String> emotionFileMapping = {
-    'thinking': 'thinking',
-    'happy': 'happy',
-    'confident': 'confident',
-    'nervous': 'nervous',
-    'angry': 'angry',
-    'excited': 'excited',
-    'worried': 'worried',
-    'surprised': 'suprised',  // 注意拼写
-    'disappointed': 'disappointed',
-    'suspicious': 'suspicious',
-    // 其他表情映射到最接近的视频
-    'smirk': 'confident',
-    'proud': 'confident',
-    'relaxed': 'happy',
-    'anxious': 'nervous',
-    'cunning': 'suspicious',
-    'frustrated': 'angry',
-    'determined': 'confident',
-    'playful': 'happy',
-    'neutral': 'thinking',
-    'contemplating': 'thinking',
-    '思考/沉思': 'thinking',
-    // 中文表情映射
-    '开心/得意': 'happy',
-    '兴奋/自信': 'excited',
-    '担心/紧张': 'worried',
-    '思考': 'thinking',
-    '怀疑': 'suspicious',
-    '自信': 'confident',
-    '紧张': 'nervous',
-    '生气': 'angry',
-    '兴奋': 'excited',
-    '担心': 'worried',
-    '惊讶': 'suprised',
-    '失望': 'disappointed',
-    '得意': 'happy',
-    '沉思': 'thinking',
-  };
+  // 使用CharacterAssets中的统一映射，不再需要本地映射表
 
   @override
   void initState() {
@@ -104,10 +58,10 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       // 跳过当前正在显示的表情
       if (emotion == widget.emotion) continue;
       
-      String fileName = emotionFileMapping[emotion.toLowerCase()] ?? emotion;
-      String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-      String videoPath = 'assets/people/$folderName/videos/$fileName.mp4';
-      String cacheKey = '${widget.characterId}_$fileName';
+      String videoPath = CharacterAssets.getVideoPath(widget.characterId, emotion);
+      String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
+      String normalizedEmotion = CharacterAssets.emotionMapping[emotion.toLowerCase()] ?? 'happy';
+      String cacheKey = '${normalizedId}_$normalizedEmotion';
       
       // 如果已经在缓存中，跳过
       if (_controllerCache.containsKey(cacheKey)) continue;
@@ -163,15 +117,11 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       _isInitializing = true;
     });
 
-    // 获取映射后的文件名
-    String fileName = emotionFileMapping[emotion.toLowerCase()] ?? 'excited';  // 默认使用excited
-    
-    // 获取文件夹名
-    String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-    
-    // 构建视频路径和缓存键
-    String videoPath = 'assets/people/$folderName/videos/$fileName.mp4';
-    String cacheKey = '${widget.characterId}_$fileName';
+    // 使用统一的CharacterAssets获取视频路径
+    String videoPath = CharacterAssets.getVideoPath(widget.characterId, emotion);
+    String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
+    String normalizedEmotion = CharacterAssets.emotionMapping[emotion.toLowerCase()] ?? 'happy';
+    String cacheKey = '${normalizedId}_$normalizedEmotion';
     print('🎬 [AIVideoAvatar] 视频路径: $videoPath, 缓存键: $cacheKey');
     
     try {
@@ -314,13 +264,8 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
   }
 
   Widget _buildFallbackImage() {
-    // 获取文件夹名
-    String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-    
-    // 构建静态图片路径
-    String imagePath = 'assets/people/$folderName/$folderName.png';
-    
-    // woman文件夹已经使用正确的文件名woman.png
+    // 使用统一的CharacterAssets获取头像路径
+    String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
     
     return ClipOval(
       child: Image.asset(

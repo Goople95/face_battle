@@ -36,6 +36,26 @@ class LoggerUtils {
     }
     return _logger;
   }
+  
+  /// 便捷方法 - 信息日志
+  static void info(dynamic message) {
+    logger.i(message);
+  }
+  
+  /// 便捷方法 - 错误日志
+  static void error(dynamic message) {
+    logger.e(message);
+  }
+  
+  /// 便捷方法 - 调试日志
+  static void debug(dynamic message) {
+    logger.d(message);
+  }
+  
+  /// 便捷方法 - 警告日志
+  static void warning(dynamic message) {
+    logger.w(message);
+  }
 }
 
 /// AI服务专用日志器

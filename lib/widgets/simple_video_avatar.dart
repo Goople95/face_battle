@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../config/character_assets.dart';
 
 /// 简化版的视频头像组件
 /// 一次只播放一个视频，避免资源问题
@@ -12,7 +13,7 @@ class SimpleVideoAvatar extends StatefulWidget {
   const SimpleVideoAvatar({
     Key? key,
     required this.characterId,
-    this.emotion = 'excited',
+    this.emotion = 'happy',
     this.size = 120,
     this.showBorder = true,
   }) : super(key: key);
@@ -25,54 +26,6 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
   VideoPlayerController? _controller;
   bool _isLoading = true;
   String? _currentEmotion;
-  
-  // 映射表: personality ID -> 文件夹名
-  static const Map<String, String> personalityToFolder = {
-    'professor': 'man',         // 稳重大叔
-    'gambler': 'youngman',       // 冲动小哥
-    'provocateur': 'woman',      // 心机御姐
-    'youngwoman': 'youngwoman',  // 活泼少女
-  };
-  
-  static const Map<String, String> emotionFileMapping = {
-    'thinking': 'thinking',
-    'happy': 'happy',
-    'confident': 'confident',
-    'nervous': 'nervous',
-    'angry': 'angry',
-    'excited': 'excited',
-    'worried': 'worried',
-    'surprised': 'suprised',  // 注意拼写
-    'disappointed': 'disappointed',
-    'suspicious': 'suspicious',
-    // 默认映射
-    'smirk': 'confident',
-    'proud': 'confident',
-    'relaxed': 'happy',
-    'anxious': 'nervous',
-    'cunning': 'suspicious',
-    'frustrated': 'angry',
-    'determined': 'confident',
-    'playful': 'happy',
-    'neutral': 'thinking',
-    'contemplating': 'thinking',
-    // 中文映射
-    '思考/沉思': 'thinking',
-    '开心/得意': 'happy',
-    '兴奋/自信': 'excited',
-    '担心/紧张': 'worried',
-    '思考': 'thinking',
-    '怀疑': 'suspicious',
-    '自信': 'confident',
-    '紧张': 'nervous',
-    '生气': 'angry',
-    '兴奋': 'excited',
-    '担心': 'worried',
-    '惊讶': 'suprised',
-    '失望': 'disappointed',
-    '得意': 'happy',
-    '沉思': 'thinking',
-  };
 
   @override
   void initState() {
@@ -107,10 +60,8 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       _isLoading = true;
     });
 
-    // 构建视频路径
-    String fileName = emotionFileMapping[widget.emotion.toLowerCase()] ?? 'excited';
-    String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-    String videoPath = 'assets/people/$folderName/videos/$fileName.mp4';
+    // 使用统一的CharacterAssets获取视频路径
+    String videoPath = CharacterAssets.getVideoPath(widget.characterId, widget.emotion);
     
     try {
       // 创建新控制器
@@ -150,10 +101,8 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
   }
 
   Widget _buildFallback() {
-    String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-    String imagePath = 'assets/people/$folderName/$folderName.png';
-    
-    // woman文件夹已经使用正确的文件名woman.png
+    // 使用统一的CharacterAssets获取头像路径
+    String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
     
     return ClipOval(
       child: Image.asset(

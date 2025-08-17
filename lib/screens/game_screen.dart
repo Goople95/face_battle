@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:provider/provider.dart';
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
 import '../models/player_profile.dart';
 import '../models/drinking_state.dart';
 import '../services/ai_service.dart';
 import '../services/gemini_service.dart';
+import '../services/auth_service.dart';
+import '../utils/ad_helper.dart';
 import '../config/api_config.dart';
+import '../config/character_assets.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/animated_ai_face.dart';
 import '../widgets/simple_ai_avatar.dart';
@@ -39,7 +43,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _playerChallenged = false; // Track who challenged
   
   // UI Controllers
-  int _selectedQuantity = 1;
+  int _selectedQuantity = 2;  // 起叫最少2个
   int _selectedValue = 2;
   
   // AI Expression and Dialogue
@@ -301,9 +305,20 @@ class _GameScreenState extends State<GameScreen> {
     final newBid = Bid(quantity: _selectedQuantity, value: _selectedValue);
     
     // Validate bid
+    // 检查起叫最少2个
+    if (_currentRound!.currentBid == null && newBid.quantity < 2) {
+      _showSnackBar('起叫最少2个');
+      return;
+    }
+    
     if (_currentRound!.currentBid != null &&
-        !newBid.isHigherThan(_currentRound!.currentBid!)) {
-      _showSnackBar('出价必须高于当前报数');
+        !newBid.isHigherThan(_currentRound!.currentBid!, onesAreCalled: _currentRound!.onesAreCalled)) {
+      // 特殊提示：如果之前叫了1，换其他数字必须增加数量
+      if (_currentRound!.currentBid!.value == 1 && newBid.value != 1) {
+        _showSnackBar('叫了1之后，换其他数字必须增加数量');
+      } else {
+        _showSnackBar('出价必须高于当前报数');
+      }
       return;
     }
     
@@ -533,25 +548,28 @@ class _GameScreenState extends State<GameScreen> {
       
       // 更新饮酒状态
       if (_drinkingState != null) {
-        if (playerWon) {
-          _drinkingState!.playerWin(widget.aiPersonality.id); // 玩家赢，AI喝酒
-          
-          // 如果AI喝醉了，显示胜利提示
-          if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showAIDrunkDialog();
-            });
+        // 在setState中更新饮酒状态，确保界面立即刷新
+        setState(() {
+          if (playerWon) {
+            _drinkingState!.playerWin(widget.aiPersonality.id); // 玩家赢，AI喝酒
+            
+            // 如果AI喝醉了，显示胜利提示
+            if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showAIDrunkDialog();
+              });
+            }
+          } else {
+            _drinkingState!.aiWin(widget.aiPersonality.id); // AI赢，玩家喝酒
+            
+            // 如果玩家喝醉了，显示提示
+            if (_drinkingState!.isDrunk) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showDrunkAnimation();
+              });
+            }
           }
-        } else {
-          _drinkingState!.aiWin(widget.aiPersonality.id); // AI赢，玩家喝酒
-          
-          // 如果玩家喝醉了，显示提示
-          if (_drinkingState!.isDrunk) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showDrunkAnimation();
-            });
-          }
-        }
+        });
         // 直接保存，不需要在这里更新醒酒状态
         // updateSoberStatus会根据时间自动减少酒杯数，但游戏刚结束时不应该立即减少
         _drinkingState!.save();
@@ -856,6 +874,104 @@ class _GameScreenState extends State<GameScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
+              colors: [Colors.orange.shade700, Colors.red.shade900],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '🥴',
+                style: TextStyle(fontSize: 60),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '${widget.aiPersonality.name}醉倒了！',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'AI已经喝了${_drinkingState!.getAIDrinks(widget.aiPersonality.id)}杯酒',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '要帮AI醒酒继续游戏吗？',
+                style: TextStyle(
+                  color: Colors.yellow,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // 帮AI看广告醒酒
+              ElevatedButton.icon(
+                onPressed: () {
+                  AdHelper.showRewardedAdAfterDialogClose(
+                    context: context,
+                    onRewarded: (rewardAmount) {
+                      // 获得奖励时更新状态
+                      setState(() {
+                        _drinkingState!.watchAdToSoberAI(widget.aiPersonality.id);
+                        _drinkingState!.save();
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('✨ ${widget.aiPersonality.name}醒酒了，继续对战！'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.play_circle_outline),
+                label: const Text('看广告帮AI醒酒'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+              ),
+              const SizedBox(height: 10),
+              
+              // 不帮AI，直接胜利
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _showVictoryDialog();
+                },
+                icon: const Icon(Icons.emoji_events),
+                label: const Text('直接获胜'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.greenAccent,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // 显示胜利对话框
+  void _showVictoryDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
               colors: [Colors.green.shade700, Colors.green.shade900],
             ),
             borderRadius: BorderRadius.circular(20),
@@ -878,26 +994,10 @@ class _GameScreenState extends State<GameScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                '${widget.aiPersonality.name}醉倒了！',
+                '你成功灌醉了${widget.aiPersonality.name}！',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
-                ),
-              ),
-              Text(
-                'AI已经喝了${_drinkingState!.getAIDrinks(widget.aiPersonality.id)}杯酒',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                '失去战斗力，你赢了！',
-                style: TextStyle(
-                  color: Colors.yellow,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 20),
@@ -980,13 +1080,27 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context) => SoberDialog(
         drinkingState: _drinkingState!,
         onWatchAd: () {
-          // 模拟看广告
-          setState(() {
-            _drinkingState!.watchAdToSoberPlayer();
-            _drinkingState!.save();
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('看完广告，完全清醒了！')),
+          LoggerUtils.debug('点击观看广告醒酒按钮');
+          // 使用公用方法显示广告
+          AdHelper.showRewardedAdWithLoading(
+            context: context,
+            onRewarded: (rewardAmount) {
+              LoggerUtils.debug('广告奖励回调触发: $rewardAmount');
+              // 广告观看完成，获得奖励
+              setState(() {
+                _drinkingState!.watchAdToSoberPlayer();
+                _drinkingState!.save();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✨ 广告观看完成，完全清醒了！'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            onCompleted: () {
+              LoggerUtils.debug('广告流程完成');
+            },
           );
         },
         onUsePotion: () {
@@ -1437,42 +1551,6 @@ class _GameScreenState extends State<GameScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 表情文字标签（用于调试）- 移到这里
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                              margin: const EdgeInsets.only(bottom: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '表情: $_currentEmotion',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'API: $_aiExpression',
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      color: Colors.yellow,
-                                    ),
-                                  ),
-                                  Text(
-                                    '文件: $_currentVideoFile',
-                                    style: const TextStyle(
-                                      fontSize: 8,
-                                      color: Colors.greenAccent,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                             Text(
                               widget.aiPersonality.name,
                               style: const TextStyle(
@@ -2009,24 +2087,11 @@ class _GameScreenState extends State<GameScreen> {
               // Player
               Column(
                 children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.blue, width: 2),
-                      color: Colors.blue.withOpacity(0.2),
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.blue,
-                      size: 30,
-                    ),
-                  ),
+                  _buildPlayerAvatar(),
                   const SizedBox(height: 4),
-                  const Text(
-                    '玩家',
-                    style: TextStyle(
+                  Text(
+                    _getPlayerName(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                     ),
@@ -2053,7 +2118,7 @@ class _GameScreenState extends State<GameScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.red, width: 2),
                       image: DecorationImage(
-                        image: AssetImage(widget.aiPersonality.avatarPath),
+                        image: AssetImage(CharacterAssets.getFullAvatarPath(widget.aiPersonality.avatarPath)),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -2839,6 +2904,55 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
   
+  // Build player avatar with photo or default icon
+  Widget _buildPlayerAvatar() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.user;
+    
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.blue, width: 2),
+        color: Colors.blue.withOpacity(0.2),
+      ),
+      child: ClipOval(
+        child: user?.photoURL != null
+            ? Image.network(
+                user!.photoURL!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.person,
+                  color: Colors.blue,
+                  size: 30,
+                ),
+              )
+            : const Icon(
+                Icons.person,
+                color: Colors.blue,
+                size: 30,
+              ),
+      ),
+    );
+  }
+  
+  // Get player display name
+  String _getPlayerName() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.user;
+    
+    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+      // 如果名字太长，截取前8个字符
+      String name = user.displayName!;
+      if (name.length > 8) {
+        return '${name.substring(0, 8)}...';
+      }
+      return name;
+    }
+    return '玩家';
+  }
+  
   // Build compact drinks display (3 drinks on left or right side)
   Widget _buildCompactDrinks(bool isAI, bool leftSide) {
     if (_drinkingState == null) return const SizedBox.shrink();
@@ -2969,7 +3083,9 @@ class _GameScreenState extends State<GameScreen> {
                 value: _selectedQuantity,
                 onDecrease: () {
                   setState(() {
-                    _selectedQuantity = math.max(1, _selectedQuantity - 1);
+                    // 起叫最少2个，如果是第一次叫牌
+                    int minQuantity = _currentRound?.currentBid == null ? 2 : 1;
+                    _selectedQuantity = math.max(minQuantity, _selectedQuantity - 1);
                   });
                 },
                 onIncrease: () {

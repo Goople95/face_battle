@@ -109,8 +109,11 @@ class SoberDialog extends StatelessWidget {
                     subtitle: '剩余 ${drinkingState.soberPotions} 瓶',
                     color: Colors.green,
                     onTap: () {
-                      onUsePotion();
                       Navigator.of(context).pop();
+                      // 延迟执行以确保对话框关闭后再执行
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        onUsePotion();
+                      });
                     },
                   ),
                 
@@ -123,8 +126,11 @@ class SoberDialog extends StatelessWidget {
                   subtitle: '免费，立即完全清醒',
                   color: Colors.blue,
                   onTap: () {
-                    onWatchAd();
                     Navigator.of(context).pop();
+                    // 延迟执行以确保对话框关闭后再显示广告
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      onWatchAd();
+                    });
                   },
                 ),
                 

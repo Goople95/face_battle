@@ -1,0 +1,226 @@
+{
+  "npcs": {
+    "0001": {
+      "id": "0001",
+      "name": "稳重大叔",
+      "nameEn": "Professor",
+      "description": "精于计算，善于分析",
+      "avatarPath": "assets/people/0001/",
+      "videosPath": "assets/people/0001/videos/",
+      "isVIP": false,
+      "unlocked": true,
+      "personality": {
+        "bluffRatio": 0.3,
+        "challengeThreshold": 0.45,
+        "riskAppetite": 0.35,
+        "mistakeRate": 0.02,
+        "tellExposure": 0.08,
+        "reverseActingProb": 0.1,
+        "bidPreferenceThreshold": 0.08
+      },
+      "difficulty": "medium",
+      "country": "China",
+      "taunts": [
+        "根据我的计算，你在虚张声势",
+        "概率论不会骗人",
+        "让我教你什么是数学"
+      ]
+    },
+    "0002": {
+      "id": "0002",
+      "name": "冲动小哥",
+      "nameEn": "Gambler",
+      "description": "大胆激进，喜欢冒险",
+      "avatarPath": "assets/people/0002/",
+      "videosPath": "assets/people/0002/videos/",
+      "isVIP": false,
+      "unlocked": true,
+      "personality": {
+        "bluffRatio": 0.55,
+        "challengeThreshold": 0.5,
+        "riskAppetite": 0.75,
+        "mistakeRate": 0.05,
+        "tellExposure": 0.2,
+        "reverseActingProb": 0.15,
+        "bidPreferenceThreshold": 0.15
+      },
+      "difficulty": "easy",
+      "country": "China",
+      "taunts": [
+        "敢不敢跟我赌一把大的？",
+        "运气总是站在勇敢者这边",
+        "你太保守了，朋友"
+      ]
+    },
+    "0003": {
+      "id": "0003",
+      "name": "心机御姐",
+      "nameEn": "Provocateur",
+      "description": "善于心理战，喜欢误导",
+      "avatarPath": "assets/people/0003/",
+      "videosPath": "assets/people/0003/videos/",
+      "isVIP": false,
+      "unlocked": true,
+      "personality": {
+        "bluffRatio": 0.45,
+        "challengeThreshold": 0.48,
+        "riskAppetite": 0.55,
+        "mistakeRate": 0.03,
+        "tellExposure": 0.1,
+        "reverseActingProb": 0.3,
+        "bidPreferenceThreshold": 0.12
+      },
+      "difficulty": "hard",
+      "country": "China",
+      "taunts": [
+        "你确定要这么叫吗？",
+        "我知道你在想什么",
+        "你的表情出卖了你",
+        "别紧张，放轻松"
+      ]
+    },
+    "0004": {
+      "id": "0004",
+      "name": "活泼少女",
+      "nameEn": "Young Woman",
+      "description": "直觉敏锐，偶尔任性",
+      "avatarPath": "assets/people/0004/",
+      "videosPath": "assets/people/0004/videos/",
+      "isVIP": false,
+      "unlocked": true,
+      "personality": {
+        "bluffRatio": 0.42,
+        "challengeThreshold": 0.46,
+        "riskAppetite": 0.6,
+        "mistakeRate": 0.04,
+        "tellExposure": 0.15,
+        "reverseActingProb": 0.2,
+        "bidPreferenceThreshold": 0.13
+      },
+      "difficulty": "medium",
+      "country": "China",
+      "taunts": [
+        "我的直觉告诉我你在骗人",
+        "哼，你肯定没有那么多",
+        "让本小姐来教训你",
+        "你的运气到此为止了"
+      ]
+    },
+    "1001": {
+      "id": "1001",
+      "name": "亚希",
+      "nameEn": "Aki",
+      "description": "温柔可爱，暗藏心机",
+      "avatarPath": "assets/people/1001/",
+      "videosPath": "assets/people/1001/videos/",
+      "isVIP": true,
+      "unlocked": false,
+      "unlockPrice": 30,
+      "unlockItemId": "vip_1001_unlock",
+      "personality": {
+        "bluffRatio": 0.48,
+        "challengeThreshold": 0.42,
+        "riskAppetite": 0.65,
+        "mistakeRate": 0.025,
+        "tellExposure": 0.05,
+        "reverseActingProb": 0.35,
+        "bidPreferenceThreshold": 0.1
+      },
+      "difficulty": "hard",
+      "country": "Japan",
+      "taunts": [
+        "あら、嘘をついているでしょう？",
+        "かわいそうね〜",
+        "私の勝ちですわ",
+        "もう一度考えてみて"
+      ],
+      "tauntsTranslated": [
+        "啊啦，你在说谎吧？",
+        "真可怜呢~",
+        "是我赢了哦",
+        "再想想看吧"
+      ]
+    },
+    "1002": {
+      "id": "1002",
+      "name": "卡捷琳娜",
+      "nameEn": "Katerina",
+      "description": "冷艳高贵，算无遗策",
+      "avatarPath": "assets/people/1002/",
+      "videosPath": "assets/people/1002/videos/",
+      "isVIP": true,
+      "unlocked": false,
+      "unlockPrice": 30,
+      "unlockItemId": "vip_1002_unlock",
+      "personality": {
+        "bluffRatio": 0.4,
+        "challengeThreshold": 0.38,
+        "riskAppetite": 0.5,
+        "mistakeRate": 0.015,
+        "tellExposure": 0.03,
+        "reverseActingProb": 0.4,
+        "bidPreferenceThreshold": 0.06
+      },
+      "difficulty": "expert",
+      "country": "Russia",
+      "taunts": [
+        "Ты блефуешь, дорогой",
+        "Это слишком просто",
+        "Я вижу тебя насквозь",
+        "Удачи в следующий раз"
+      ],
+      "tauntsTranslated": [
+        "你在虚张声势，亲爱的",
+        "这太简单了",
+        "我看透你了",
+        "下次祝你好运"
+      ]
+    },
+    "1003": {
+      "id": "1003",
+      "name": "莱娜",
+      "nameEn": "Lena",
+      "description": "严谨理性，精确计算",
+      "avatarPath": "assets/people/1003/",
+      "videosPath": "assets/people/1003/videos/",
+      "isVIP": true,
+      "unlocked": false,
+      "unlockPrice": 30,
+      "unlockItemId": "vip_1003_unlock",
+      "personality": {
+        "bluffRatio": 0.25,
+        "challengeThreshold": 0.4,
+        "riskAppetite": 0.3,
+        "mistakeRate": 0.01,
+        "tellExposure": 0.02,
+        "reverseActingProb": 0.25,
+        "bidPreferenceThreshold": 0.05
+      },
+      "difficulty": "expert",
+      "country": "Germany",
+      "taunts": [
+        "Das ist mathematisch unmöglich",
+        "Ich habe alles berechnet",
+        "Du machst einen Fehler",
+        "Sehr gut, aber nicht gut genug"
+      ],
+      "tauntsTranslated": [
+        "这在数学上是不可能的",
+        "我已经计算好了一切",
+        "你犯了一个错误",
+        "很好，但还不够好"
+      ]
+    }
+  },
+  "vipConfig": {
+    "adRequiredPerGame": true,
+    "adRewardDuration": 1,
+    "unlockPriceGems": 30,
+    "vipBenefits": [
+      "无需观看广告",
+      "独特的对话和表情",
+      "更高的游戏难度",
+      "专属成就奖励"
+    ]
+  }
+}

@@ -34,8 +34,16 @@ class Bid {
   Bid({required this.quantity, required this.value});
   
   /// Check if this bid is higher than another
-  bool isHigherThan(Bid other) {
-    // 1 is higher than 6 when same quantity
+  /// Special rule: After someone calls 1s, switching to another number requires increasing quantity
+  bool isHigherThan(Bid other, {bool onesAreCalled = false}) {
+    // Special rule: if previous bid was 1s and we're bidding a different number
+    // we MUST increase the quantity
+    if (other.value == 1 && value != 1) {
+      // Switching from 1s to another number - must increase quantity
+      return quantity > other.quantity;
+    }
+    
+    // Normal rules when not switching from 1s
     if (quantity == other.quantity) {
       // Same quantity: 2 < 3 < 4 < 5 < 6 < 1
       if (value == 1 && other.value != 1) return true;

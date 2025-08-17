@@ -1,0 +1,307 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
+import '../utils/logger_utils.dart';
+
+/// 登录页面
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+    ));
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
+    ));
+    
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1B4332), // 深墨绿色
+              Color(0xFF2D6A4F), // 中墨绿色
+              Color(0xFF40916C), // 浅墨绿色
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo和标题
+                    _buildLogo(),
+                    const SizedBox(height: 48),
+                    
+                    // 登录卡片
+                    SlideTransition(
+                      position: _slideAnimation,
+                      child: _buildLoginCard(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Column(
+      children: [
+        // 骰子图标
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.casino,
+            size: 60,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // 游戏标题
+        const Text(
+          '骰子吹牛',
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "Liar's Dice",
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.white70,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginCard(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      constraints: const BoxConstraints(maxWidth: 380),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Google登录按钮
+          _buildGoogleSignInButton(authService),
+          const SizedBox(height: 20),
+          
+          // Facebook登录按钮（暂时隐藏，需要配置）
+          // _buildFacebookSignInButton(authService),
+          
+          // 错误信息显示
+          if (authService.errorMessage != null) ...[
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      authService.errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoogleSignInButton(AuthService authService) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: Material(
+        color: Colors.white,
+        elevation: 1,
+        borderRadius: BorderRadius.circular(27),
+        child: InkWell(
+          onTap: authService.isLoading
+              ? null
+              : () async {
+                  LoggerUtils.info('用户点击Google登录');
+                  final user = await authService.signInWithGoogle();
+                  if (user != null && mounted) {
+                    LoggerUtils.info('Google登录成功: ${user.email}');
+                    Navigator.pushReplacementNamed(context, '/home');
+                  }
+                },
+          borderRadius: BorderRadius.circular(27),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(27),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+            ),
+            child: authService.isLoading
+                ? const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                      ),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        margin: const EdgeInsets.only(right: 12),
+                        child: Image.asset(
+                          'assets/icons/google_logo.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const Text(
+                        '使用 Google 账号登录',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF3C4043),
+                          letterSpacing: 0.25,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFacebookSignInButton(AuthService authService) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: Material(
+        color: const Color(0xFF1877F2),
+        elevation: 1,
+        borderRadius: BorderRadius.circular(27),
+        child: InkWell(
+          onTap: authService.isLoading
+              ? null
+              : () async {
+                  LoggerUtils.info('用户点击Facebook登录');
+                  final user = await authService.signInWithFacebook();
+                  if (user != null && mounted) {
+                    LoggerUtils.info('Facebook登录成功: ${user.email}');
+                    Navigator.pushReplacementNamed(context, '/home');
+                  }
+                },
+          borderRadius: BorderRadius.circular(27),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(27),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Image.asset(
+                    'assets/icons/facebook_logo.png',
+                    fit: BoxFit.contain,
+                    color: Colors.white,
+                  ),
+                ),
+                const Text(
+                  '使用 Facebook 账号登录',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    letterSpacing: 0.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

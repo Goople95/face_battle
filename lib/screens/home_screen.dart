@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
 import 'game_screen.dart';
 import '../models/ai_personality.dart';
 import '../models/player_profile.dart';
 import '../models/drinking_state.dart';
 import '../widgets/sober_dialog.dart';
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import '../utils/ad_helper.dart';
+import '../services/vip_unlock_service.dart';
+import '../config/character_assets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -108,6 +114,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final userService = Provider.of<UserService>(context);
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -125,7 +134,95 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                const SizedBox(height: 40),
+                // 用户信息栏
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // 用户信息
+                      Row(
+                        children: [
+                          // 头像
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundImage: authService.photoURL != null
+                                ? NetworkImage(authService.photoURL!)
+                                : null,
+                            backgroundColor: Colors.white24,
+                            child: authService.photoURL == null
+                                ? Icon(
+                                    authService.isAnonymous
+                                        ? Icons.person_outline
+                                        : Icons.person,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          // 名字
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                userService.displayName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (userService.playerProfile != null)
+                                Text(
+                                  '胜率: ${(userService.winRate * 100).toStringAsFixed(1)}%',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      // 登出按钮
+                      IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () async {
+                          // 显示确认对话框
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('确认登出'),
+                              content: Text(authService.isAnonymous
+                                  ? '登出后游客数据将丢失，确定要登出吗？'
+                                  : '确定要登出吗？'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('取消'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('确定'),
+                                ),
+                              ],
+                            ),
+                          );
+                          
+                          if (confirm == true) {
+                            await authService.signOut();
+                            userService.clear();
+                            if (context.mounted) {
+                              Navigator.pushReplacementNamed(context, '/login');
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
                 // Title - get from app name
                 const Text(
                   '骰子吹牛',
@@ -213,6 +310,53 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // VIP Characters Section
+                const Text(
+                  'VIP对手',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                
+                // VIP Character Cards
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    height: 200,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        _buildVIPPersonalityCard(
+                          context,
+                          AIPersonalities.aki,
+                          Icons.favorite,
+                          Colors.pink,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildVIPPersonalityCard(
+                          context,
+                          AIPersonalities.katerina,
+                          Icons.diamond,
+                          Colors.deepPurple,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildVIPPersonalityCard(
+                          context,
+                          AIPersonalities.lena,
+                          Icons.calculate,
+                          Colors.indigo,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 
@@ -391,13 +535,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           builder: (context) => SoberDialog(
                             drinkingState: _drinkingState!,
                             onWatchAd: () {
-                              setState(() {
-                                _drinkingState!.watchAdToSoberPlayer();
-                                _drinkingState!.save();
-                              });
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('看完广告，完全清醒了！')),
+                              // 使用公用方法显示广告
+                              AdHelper.showRewardedAdWithLoading(
+                                context: context,
+                                onRewarded: (rewardAmount) {
+                                  // 广告观看完成，获得奖励
+                                  setState(() {
+                                    _drinkingState!.watchAdToSoberPlayer();
+                                    _drinkingState!.save();
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✨ 看完广告，完全清醒了！'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                },
+                                onCompleted: () {
+                                  // 广告流程完成后关闭醒酒对话框
+                                  if (mounted && Navigator.canPop(context)) {
+                                    Navigator.of(context).pop();
+                                  }
+                                },
                               );
                             },
                             onUsePotion: () {
@@ -482,18 +641,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             
             String aiName = '';
             Color aiColor = Colors.grey;
-            if (aiId == 'professor') {
+            if (aiId == '0001' || aiId == 'professor') { // 兼容旧ID
               aiName = '稳重大叔';
               aiColor = Colors.blue;
-            } else if (aiId == 'gambler') {
+            } else if (aiId == '0002' || aiId == 'gambler') {
               aiName = '冲动小哥';
               aiColor = Colors.red;
-            } else if (aiId == 'provocateur') {
+            } else if (aiId == '0003' || aiId == 'provocateur') {
               aiName = '心机御姐';
               aiColor = Colors.purple;
-            } else if (aiId == 'youngwoman') {
+            } else if (aiId == '0004' || aiId == 'youngwoman') {
               aiName = '活泼少女';
               aiColor = Colors.pink;
+            } else if (aiId == '1001' || aiId == 'aki') {
+              aiName = '亚希';
+              aiColor = Colors.pink;
+            } else if (aiId == '1002' || aiId == 'katerina') {
+              aiName = '卡捷琳娜';
+              aiColor = Colors.deepPurple;
+            } else if (aiId == '1003' || aiId == 'lena') {
+              aiName = '莱娜';
+              aiColor = Colors.indigo;
             }
             
             if (total == 0) return const SizedBox.shrink();
@@ -716,7 +884,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           width: 2,
                         ),
                         image: DecorationImage(
-                          image: AssetImage(personality.avatarPath),
+                          image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
                           fit: BoxFit.cover,
                           colorFilter: isUnavailable 
                             ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
@@ -898,6 +1066,323 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
   
+  Widget _buildVIPPersonalityCard(
+    BuildContext context,
+    AIPersonality personality,
+    IconData icon,
+    Color color,
+  ) {
+    // 检查AI是否不能游戏（3杯以上）
+    bool isUnavailable = _drinkingState != null && 
+                        _drinkingState!.isAIUnavailable(personality.id);
+    int aiDrinks = _drinkingState?.getAIDrinks(personality.id) ?? 0;
+    
+    return FutureBuilder<VIPStatus>(
+      future: VIPUnlockService().getVIPStatus(personality.id),
+      builder: (context, snapshot) {
+        final vipStatus = snapshot.data ?? VIPStatus.locked;
+        final isLocked = vipStatus == VIPStatus.locked;
+        
+        return GestureDetector(
+          onTap: () async {
+            if (isLocked) {
+              // 显示VIP解锁对话框
+              await VIPUnlockService.showVIPUnlockDialog(
+                context: context,
+                character: personality,
+              );
+              
+              // 对话框关闭后，刷新界面以检查是否已解锁
+              setState(() {});
+              
+              // 延迟一下让界面刷新
+              await Future.delayed(const Duration(milliseconds: 500));
+              
+              // 再次检查解锁状态
+              bool nowUnlocked = await VIPUnlockService().isUnlocked(personality.id);
+              
+              // 如果现在已解锁且AI不醉，直接进入游戏
+              if (nowUnlocked && !isUnavailable) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameScreen(aiPersonality: personality),
+                  ),
+                );
+                await _loadData();
+                _startTimer();
+              }
+            } else if (isUnavailable) {
+              // AI醉了，显示醒酒对话框
+              _showAISoberDialog(personality);
+            } else {
+              // 已解锁且AI清醒，直接进入游戏
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GameScreen(aiPersonality: personality),
+                ),
+              );
+              await _loadData();
+              _startTimer();
+            }
+          },
+          child: Container(
+            width: 160,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isLocked
+                  ? [Colors.grey.shade700, Colors.grey.shade800]
+                  : [
+                      color.withOpacity(0.8),
+                      color.withOpacity(0.4),
+                    ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isLocked ? Colors.grey : Colors.amber,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isLocked ? Colors.black26 : Colors.amber.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // VIP标记
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'VIP',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // 锁定图标
+                if (isLocked)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Icon(
+                      Icons.lock,
+                      color: Colors.white.withOpacity(0.7),
+                      size: 20,
+                    ),
+                  )
+                else if (vipStatus == VIPStatus.tempUnlocked)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: FutureBuilder<Duration?>(
+                      future: VIPUnlockService().getTempUnlockRemaining(personality.id),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data != null) {
+                          final minutes = snapshot.data!.inMinutes;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orange,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${minutes}分钟',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 头像
+                      Stack(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isLocked 
+                                  ? Colors.grey 
+                                  : (isUnavailable ? Colors.red : Colors.amber), 
+                                width: 2,
+                              ),
+                              image: DecorationImage(
+                                image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
+                                fit: BoxFit.cover,
+                                colorFilter: (isLocked || isUnavailable)
+                                  ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
+                                  : null,
+                              ),
+                            ),
+                          ),
+                          // 醉酒标记
+                          if (isUnavailable && !isLocked)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 1),
+                                ),
+                                child: const Text(
+                                  '🥴',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      
+                      // 名字
+                      Text(
+                        personality.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isLocked ? Colors.grey.shade300 : Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      
+                      // 难度标签
+                      if (personality.difficulty != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getDifficultyColor(personality.difficulty!).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _getDifficultyColor(personality.difficulty!),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            _getDifficultyText(personality.difficulty!),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isLocked 
+                                ? Colors.grey.shade400 
+                                : _getDifficultyColor(personality.difficulty!),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      
+                      // 描述
+                      const SizedBox(height: 4),
+                      Flexible(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            personality.description,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isLocked ? Colors.grey.shade500 : Colors.white70,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      
+                      // 酒杯状态（只有解锁后才显示）
+                      if (!isLocked && aiDrinks > 0) ...[  
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ...List.generate(6, (index) {
+                              return Icon(
+                                Icons.local_bar,
+                                size: 10,
+                                color: index < aiDrinks
+                                  ? Colors.red.shade300
+                                  : Colors.grey.withOpacity(0.3),
+                              );
+                            }),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty) {
+      case 'easy':
+        return Colors.green;
+      case 'medium':
+        return Colors.orange;
+      case 'hard':
+        return Colors.red;
+      case 'expert':
+        return Colors.purple;
+      default:
+        return Colors.blue;
+    }
+  }
+  
+  String _getDifficultyText(String difficulty) {
+    switch (difficulty) {
+      case 'easy':
+        return '简单';
+      case 'medium':
+        return '中等';
+      case 'hard':
+        return '困难';
+      case 'expert':
+        return '专家';
+      default:
+        return difficulty;
+    }
+  }
+  
   // 显示AI醒酒对话框
   void _showAISoberDialog(AIPersonality personality) {
     showDialog(
@@ -930,7 +1415,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.red, width: 3),
                   image: DecorationImage(
-                    image: AssetImage(personality.avatarPath),
+                    image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(Colors.grey, BlendMode.saturation),
                   ),
@@ -976,13 +1461,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   // 看广告
                   ElevatedButton.icon(
                     onPressed: () {
-                      setState(() {
-                        _drinkingState!.watchAdToSoberAI(personality.id);
-                        _drinkingState!.save();
-                      });
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${personality.name}醒酒成功！')),
+                      // 使用公用方法显示广告（先关闭当前对话框）
+                      AdHelper.showRewardedAdAfterDialogClose(
+                        context: context,
+                        onRewarded: (rewardAmount) {
+                          // 广告观看完成，获得奖励
+                          setState(() {
+                            _drinkingState!.watchAdToSoberAI(personality.id);
+                            _drinkingState!.save();
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('✨ ${personality.name}醒酒成功！'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
                       );
                     },
                     icon: const Icon(Icons.play_circle_outline, size: 20),

@@ -327,10 +327,22 @@ class DrinkingState {
     state.drinksConsumed = prefs.getInt('drinks_consumed') ?? 0;
     
     // 加载每个AI的酒杯数
+    // 普通NPC（兼容旧ID）
     state.aiDrinks['professor'] = prefs.getInt('ai_drinks_professor') ?? 0;
     state.aiDrinks['gambler'] = prefs.getInt('ai_drinks_gambler') ?? 0;
     state.aiDrinks['provocateur'] = prefs.getInt('ai_drinks_provocateur') ?? 0;
     state.aiDrinks['youngwoman'] = prefs.getInt('ai_drinks_youngwoman') ?? 0;
+    
+    // 新ID格式
+    state.aiDrinks['0001'] = prefs.getInt('ai_drinks_0001') ?? state.aiDrinks['professor'] ?? 0;
+    state.aiDrinks['0002'] = prefs.getInt('ai_drinks_0002') ?? state.aiDrinks['gambler'] ?? 0;
+    state.aiDrinks['0003'] = prefs.getInt('ai_drinks_0003') ?? state.aiDrinks['provocateur'] ?? 0;
+    state.aiDrinks['0004'] = prefs.getInt('ai_drinks_0004') ?? state.aiDrinks['youngwoman'] ?? 0;
+    
+    // VIP NPC
+    state.aiDrinks['1001'] = prefs.getInt('ai_drinks_1001') ?? prefs.getInt('ai_drinks_aki') ?? 0;
+    state.aiDrinks['1002'] = prefs.getInt('ai_drinks_1002') ?? prefs.getInt('ai_drinks_katerina') ?? 0;
+    state.aiDrinks['1003'] = prefs.getInt('ai_drinks_1003') ?? prefs.getInt('ai_drinks_lena') ?? 0;
     
     
     state.soberPotions = prefs.getInt('sober_potions') ?? 0;

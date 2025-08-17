@@ -16,6 +16,12 @@ dependencies:
   logger: ^2.0.2
   shared_preferences: ^2.2.0
   video_player: ^2.8.2
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+  google_sign_in: ^6.2.1
+  flutter_facebook_auth: ^6.0.3
+  google_mobile_ads: ^5.0.0
 
 dev_dependencies:
   flutter_test:
@@ -27,15 +33,23 @@ flutter:
   uses-material-design: true
   assets:
     - assets/dice/
+    - assets/icons/
+    - assets/config/
     - assets/people/
-    - assets/people/man/
-    - assets/people/man/videos/
-    - assets/people/woman/
-    - assets/people/woman/videos/
-    - assets/people/youngman/
-    - assets/people/youngman/videos/
-    - assets/people/youngwoman/
-    - assets/people/youngwoman/videos/
+    - assets/people/0001/
+    - assets/people/0001/videos/
+    - assets/people/0002/
+    - assets/people/0002/videos/
+    - assets/people/0003/
+    - assets/people/0003/videos/
+    - assets/people/0004/
+    - assets/people/0004/videos/
+    - assets/people/1001/
+    - assets/people/1001/videos/
+    - assets/people/1002/
+    - assets/people/1002/videos/
+    - assets/people/1003/
+    - assets/people/1003/videos/
 
 flutter_launcher_icons:
   android: true

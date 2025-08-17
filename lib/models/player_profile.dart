@@ -4,6 +4,12 @@ import 'game_state.dart';
 
 /// 玩家画像 - 记录玩家的游戏风格和特征
 class PlayerProfile {
+  // 用户基础信息
+  String id = '';
+  String nickname = '';
+  String avatar = '';
+  DateTime lastPlayTime = DateTime.now();
+  
   // 基础统计
   int totalGames = 0;
   int totalWins = 0;
@@ -11,6 +17,8 @@ class PlayerProfile {
   int successfulChallenges = 0;
   int totalBluffs = 0;  // 虚张声势的次数
   int caughtBluffing = 0;  // 被抓到虚张的次数
+  int totalBids = 0;  // 总叫牌次数
+  int successfulBids = 0;  // 成功的叫牌次数
   
   // 与每个AI的对战记录
   Map<String, Map<String, int>> vsAIRecords = {
@@ -45,8 +53,35 @@ class PlayerProfile {
   double aggressiveness = 0.5; // 激进程度 (0-1)
   double predictability = 0.5; // 可预测性 (0-1)
   double challengeRate = 0.0; // 质疑率（平均每局质疑次数）
+  double challengeTendency = 0.4; // 质疑倾向（用于用户服务）
   
-  PlayerProfile();
+  PlayerProfile({
+    String? id,
+    String? nickname,
+    String? avatar,
+    int? totalGames,
+    int? totalWins,
+    int? totalChallenges,
+    int? successfulChallenges,
+    int? totalBids,
+    int? successfulBids,
+    double? bluffingTendency,
+    double? challengeTendency,
+    DateTime? lastPlayTime,
+  }) {
+    this.id = id ?? '';
+    this.nickname = nickname ?? '';
+    this.avatar = avatar ?? '';
+    this.totalGames = totalGames ?? 0;
+    this.totalWins = totalWins ?? 0;
+    this.totalChallenges = totalChallenges ?? 0;
+    this.successfulChallenges = successfulChallenges ?? 0;
+    this.totalBids = totalBids ?? 0;
+    this.successfulBids = successfulBids ?? 0;
+    this.bluffingTendency = bluffingTendency ?? 0.5;
+    this.challengeTendency = challengeTendency ?? 0.4;
+    this.lastPlayTime = lastPlayTime ?? DateTime.now();
+  }
   
   /// 从一局游戏中学习
   void learnFromGame(GameRound round, bool playerWon, {String? aiId}) {
@@ -511,6 +546,93 @@ ${_getSuggestedStrategy()}
     }
     
     return strategies.isEmpty ? '• 标准策略，见机行事' : strategies.join('\n');
+  }
+  
+  /// 转换为JSON
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'nickname': nickname,
+    'avatar': avatar,
+    'lastPlayTime': lastPlayTime.toIso8601String(),
+    'totalGames': totalGames,
+    'totalWins': totalWins,
+    'totalChallenges': totalChallenges,
+    'successfulChallenges': successfulChallenges,
+    'totalBids': totalBids,
+    'successfulBids': successfulBids,
+    'totalBluffs': totalBluffs,
+    'caughtBluffing': caughtBluffing,
+    'bluffingTendency': bluffingTendency,
+    'challengeTendency': challengeTendency,
+    'aggressiveness': aggressiveness,
+    'predictability': predictability,
+    'challengeRate': challengeRate,
+    'preferredValues': preferredValues.map((k, v) => MapEntry(k.toString(), v)),
+    'averageBidIncrease': averageBidIncrease,
+    'totalPlayerBids': totalPlayerBids,
+    'aggressiveBids': aggressiveBids,
+    'normalBids': normalBids,
+    'patterns': patterns,
+    'lastGameTime': lastGameTime?.toIso8601String(),
+    'recentGames': recentGames.map((g) => g.toJson()).toList(),
+    'vsAIRecords': vsAIRecords,
+  };
+  
+  /// 从JSON创建
+  factory PlayerProfile.fromJson(Map<String, dynamic> json) {
+    PlayerProfile profile = PlayerProfile(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? '',
+      avatar: json['avatar'] ?? '',
+      totalGames: json['totalGames'] ?? 0,
+      totalWins: json['totalWins'] ?? 0,
+      totalChallenges: json['totalChallenges'] ?? 0,
+      successfulChallenges: json['successfulChallenges'] ?? 0,
+      totalBids: json['totalBids'] ?? 0,
+      successfulBids: json['successfulBids'] ?? 0,
+      bluffingTendency: json['bluffingTendency'] ?? 0.5,
+      challengeTendency: json['challengeTendency'] ?? 0.4,
+      lastPlayTime: json['lastPlayTime'] != null 
+          ? DateTime.parse(json['lastPlayTime']) 
+          : DateTime.now(),
+    );
+    
+    // 恢复其他属性
+    profile.totalBluffs = json['totalBluffs'] ?? 0;
+    profile.caughtBluffing = json['caughtBluffing'] ?? 0;
+    profile.aggressiveness = json['aggressiveness'] ?? 0.5;
+    profile.predictability = json['predictability'] ?? 0.5;
+    profile.challengeRate = json['challengeRate'] ?? 0.0;
+    profile.averageBidIncrease = json['averageBidIncrease'] ?? 0.0;
+    profile.totalPlayerBids = json['totalPlayerBids'] ?? 0;
+    profile.aggressiveBids = json['aggressiveBids'] ?? 0;
+    profile.normalBids = json['normalBids'] ?? 0;
+    
+    if (json['preferredValues'] != null) {
+      Map<String, dynamic> prefValues = json['preferredValues'];
+      profile.preferredValues = prefValues.map((k, v) => MapEntry(int.parse(k), v as int));
+    }
+    
+    profile.patterns = Map<String, int>.from(json['patterns'] ?? profile.patterns);
+    
+    if (json['lastGameTime'] != null) {
+      profile.lastGameTime = DateTime.parse(json['lastGameTime']);
+    }
+    
+    if (json['recentGames'] != null) {
+      profile.recentGames = (json['recentGames'] as List)
+        .map((g) => GameRecord.fromJson(g))
+        .toList();
+    }
+    
+    if (json['vsAIRecords'] != null) {
+      Map<String, dynamic> records = json['vsAIRecords'];
+      records.forEach((key, value) {
+        profile.vsAIRecords[key] = Map<String, int>.from(value);
+      });
+    }
+    
+    return profile;
   }
   
   /// 保存到本地存储

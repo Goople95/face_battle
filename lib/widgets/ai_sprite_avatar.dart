@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../config/character_assets.dart';
 
 /// 基于图片序列帧的 AI 头像组件
 /// 比视频播放器内存占用更少，性能更好
@@ -35,14 +36,6 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
   static final Map<String, List<Image>> _frameCache = {};
   static const int _maxCacheSize = 3;
   
-  // 映射personality ID到文件夹名
-  static const Map<String, String> personalityToFolder = {
-    'professor': 'man',
-    'gambler': 'youngman',
-    'provocateur': 'woman',
-    'youngwoman': 'youngwoman',
-  };
-  
   @override
   void initState() {
     super.initState();
@@ -71,8 +64,8 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
       _isLoading = true;
     });
     
-    String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-    String cacheKey = '${widget.characterId}_$emotion';
+    String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
+    String cacheKey = '${normalizedId}_$emotion';
     
     // 检查缓存
     if (_frameCache.containsKey(cacheKey)) {
@@ -94,8 +87,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
     int frameCount = 30;
     
     for (int i = 1; i <= frameCount; i++) {
-      String frameNumber = i.toString().padLeft(3, '0');
-      String framePath = 'assets/people/$folderName/frames/${emotion}_$frameNumber.png';
+      String framePath = CharacterAssets.getSpritePath(widget.characterId, emotion, i);
       
       // 预加载图片
       try {
@@ -117,10 +109,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
     
     if (frames.isEmpty) {
       // 如果没有帧序列，回退到静态图片
-      String staticImagePath = 'assets/people/$folderName/$folderName.png';
-      if (folderName == 'woman') {
-        staticImagePath = 'assets/people/woman/women.png';
-      }
+      String staticImagePath = CharacterAssets.getAvatarPath(widget.characterId);
       
       frames.add(Image.asset(
         staticImagePath,
@@ -179,12 +168,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
   }
   
   Widget _buildFallbackImage() {
-    String folderName = personalityToFolder[widget.characterId] ?? widget.characterId;
-    String imagePath = 'assets/people/$folderName/$folderName.png';
-    
-    if (folderName == 'woman') {
-      imagePath = 'assets/people/woman/women.png';
-    }
+    String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
     
     return ClipOval(
       child: Image.asset(
