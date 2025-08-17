@@ -106,11 +106,13 @@ class EliteAIEngine {
     Map<int, double> opponentDist,
     GameRound round,
   ) {
+    // AI知道自己有多少个该点数
     int ourCount = ourCounts[currentBid.value] ?? 0;
-    int needed = currentBid.quantity - ourCount;
+    // 对手（玩家）需要有多少个才能让叫牌成立
+    int opponentNeeded = currentBid.quantity - ourCount;
     
-    if (needed <= 0) return -100.0; // 我们已经有足够，不应质疑
-    if (needed > 5) return 100.0;    // 不可能，必须质疑
+    if (opponentNeeded <= 0) return -100.0; // 我们已经有足够，叫牌必定成立，不应质疑
+    if (opponentNeeded > 5) return 100.0;    // 对手不可能有这么多，必须质疑
     
     // 使用贝叶斯后验分布计算对手有足够骰子的概率
     double opponentHasEnough = 0.0;
@@ -118,8 +120,8 @@ class EliteAIEngine {
     // 考虑对手的模式和历史
     double bluffAdjustment = opponentModel.estimatedBluffRate;
     
-    // 计算基础概率
-    for (int k = needed; k <= 5; k++) {
+    // 计算基础概率 - 对手至少有opponentNeeded个的概率
+    for (int k = opponentNeeded; k <= 5; k++) {
       double prob = _binomialProb(5, k, opponentDist[currentBid.value] ?? (1.0/6.0));
       opponentHasEnough += prob;
     }
@@ -129,8 +131,15 @@ class EliteAIEngine {
     
     // 期望值 = 成功概率 * 收益 - 失败概率 * 损失
     double successProb = 1.0 - opponentHasEnough;
-    double winValue = 10.0 + (round.bidHistory.length * 2.0); // 后期质疑价值更高
-    double loseValue = -15.0; // 质疑失败的代价
+    
+    // 动态调整收益和损失权重
+    double winValue = 15.0 + (round.bidHistory.length * 3.0); // 后期质疑价值更高
+    double loseValue = -10.0; // 降低质疑失败的代价，鼓励更激进
+    
+    // 如果成功率超过60%，额外奖励
+    if (successProb > 0.6) {
+      winValue *= 1.5;
+    }
     
     return successProb * winValue + (1.0 - successProb) * loseValue;
   }
@@ -238,10 +247,10 @@ class EliteAIEngine {
       }
     }
     
-    // 添加特殊心理战术选项
-    if (round.bidHistory.length >= 3) {
+    // 添加特殊心理战术选项（降低触发门槛）
+    if (round.bidHistory.length >= 2) {  // 从第2轮就可以开始心理战
       // 反向陷阱：故意示弱引诱质疑
-      if (strategyState.hasEstablishedPattern && !strategyState.hasExecutedTrap) {
+      if (!strategyState.hasExecutedTrap && random.nextDouble() < 0.3) {  // 30%概率尝试陷阱
         var trapOption = _createReverseTrap(round);
         if (trapOption != null) {
           options.add(trapOption);
@@ -249,7 +258,7 @@ class EliteAIEngine {
       }
       
       // 压力升级：突然大幅加注
-      if (round.currentBid != null && round.currentBid!.quantity <= 5) {
+      if (round.currentBid != null && round.currentBid!.quantity <= 6 && random.nextDouble() < 0.25) {  // 25%概率施压
         var pressureOption = _createPressurePlay(round);
         if (pressureOption != null) {
           options.add(pressureOption);
@@ -314,7 +323,7 @@ class EliteAIEngine {
       }
     });
     
-    if (maxCount >= 3) {
+    if (maxCount >= 2) {  // 降低门槛，有2个就可以设陷阱
       // 故意叫得保守，引诱质疑
       Bid trapBid = Bid(
         quantity: round.currentBid!.quantity + 1,

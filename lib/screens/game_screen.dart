@@ -118,14 +118,14 @@ class _GameScreenState extends State<GameScreen> {
     int aiNeeded = bid.quantity - ourCount;
     int aiDiceCount = 5; // AI has 5 dice
     
-    // 调试日志 - 增加更详细的信息
-    GameLogger.logGameState('质疑概率计算', details: {
+    // 调试日志 - 修正显示信息
+    GameLogger.logGameState('质疑概率计算（玩家视角）', details: {
       '叫牌': bid.toString(),
       '叫牌值': bid.value,
       '叫牌量': bid.quantity,
       '玩家骰子': _currentRound!.playerDice.values.toString(),
       'AI骰子数': aiDiceCount,
-      '我们有': ourCount,
+      '玩家有': ourCount,
       'AI需要': aiNeeded,
       '1是否被叫': _currentRound!.onesAreCalled,
     });
@@ -144,9 +144,9 @@ class _GameScreenState extends State<GameScreen> {
     // 如果AI需要的数量小于等于0，叫牌已经成立（我们已经有足够了）
     if (aiNeeded <= 0) {
       GameLogger.logGameState('质疑必定失败', details: {
-        '原因': '我们已有${ourCount}个，叫牌已成立',
+        '原因': '玩家已有${ourCount}个，叫牌已成立',
         '叫牌量': bid.quantity,
-        '我们有': ourCount,
+        '玩家有': ourCount,
       });
       return 0.0; // 0% chance challenge succeeds (bid is already satisfied)
     }
