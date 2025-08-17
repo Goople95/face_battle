@@ -7,6 +7,7 @@ import '../models/player_profile.dart';
 import '../config/api_config.dart';
 import '../utils/logger_utils.dart';
 import 'bid_options_calculator.dart';
+import 'elite_ai_engine.dart';
 
 /// 精简版Gemini服务 - 只保留必要功能
 class GeminiService {
@@ -16,9 +17,12 @@ class GeminiService {
   
   final AIPersonality personality;
   final PlayerProfile? playerProfile;
+  late final EliteAIEngine eliteEngine;
   
   
-  GeminiService({required this.personality, this.playerProfile});
+  GeminiService({required this.personality, this.playerProfile}) {
+    eliteEngine = EliteAIEngine(personality: personality);
+  }
   
   /// 合并的AI决策方法 - 一次调用完成决策和叫牌
   /// 返回完整的决策信息，包括是否质疑、具体叫牌、表情等
@@ -29,61 +33,80 @@ class GeminiService {
       'aiDice': round.aiDice.values.toString(),
     });
     
-    // 使用统一的选项计算器
-    Map<int, int> ourCounts = {};
-    for (int i = 1; i <= 6; i++) {
-      ourCounts[i] = round.aiDice.countValue(i, onesAreCalled: round.onesAreCalled);
-    }
-    List<Map<String, dynamic>> options = BidOptionsCalculator.calculateAllOptions(round, ourCounts);
+    // 首先使用Elite AI引擎获取高级决策
+    var eliteDecision = eliteEngine.makeEliteDecision(round);
     
-    // 记录本地计算的选项
-    AILogger.logParsing('本地计算选项', {
-      'options_count': options.length,
-      'best_option': options.isNotEmpty ? options[0] : null,
-      'all_options': options.take(5).toList()
+    AILogger.logParsing('Elite AI决策', {
+      'type': eliteDecision['type'],
+      'confidence': eliteDecision['confidence'],
+      'strategy': eliteDecision['strategy'],
+      'expectedValue': eliteDecision['expectedValue'],
     });
     
-    // 构建简化的性格化prompt
-    String prompt = _buildPersonalityDecisionPrompt(round);
+    // 构建增强的性格化prompt（结合Elite AI的洞察）
+    String prompt = _buildEnhancedPersonalityPrompt(round, eliteDecision);
     AILogger.logPrompt(prompt);
     
     try {
       final response = await _callGeminiAPI(prompt);
       AILogger.logResponse(response);
       
-      // 解析AI的性格化选择
-      final result = _parsePersonalityChoice(response, options, round);
+      // 解析AI的性格化选择（结合Elite决策）
+      final result = _parseEnhancedChoice(response, eliteDecision, round);
       
       AILogger.apiCallSuccess('Gemini', 'personalityDecision', 
         result: result.$1.action == GameAction.challenge ? 'challenge' : result.$2.toString());
       return result;
     } catch (e) {
       AILogger.apiCallError('Gemini', 'personalityDecision', e);
-      GameLogger.logGameState('降级到本地最优选择');
+      GameLogger.logGameState('使用Elite AI降级决策');
       
-      // 降级处理
-      if (_fallbackDecision(round).action == GameAction.challenge) {
-        final decision = AIDecision(
-          playerBid: round.currentBid,
-          action: GameAction.challenge,
-          probability: 0.3,
-          wasBluffing: false,
-          reasoning: 'API不可用',
-        );
-        return (decision, null, ['thinking'], '让我看看...', false, null);
-      } else {
-        final bid = _fallbackBid(round);
-        final decision = AIDecision(
-          playerBid: round.currentBid,
-          action: GameAction.bid,
-          aiBid: bid,
-          probability: 0.5,
-          wasBluffing: false,
-          reasoning: 'API不可用',
-        );
-        return (decision, bid, ['thinking'], '让我想想...', false, null);
-      }
+      // 使用Elite AI的决策作为降级
+      return _convertEliteDecisionToResult(eliteDecision, round);
     }
+  }
+  
+  /// 构建增强的性格化prompt（使用Elite AI洞察）
+  String _buildEnhancedPersonalityPrompt(GameRound round, Map<String, dynamic> eliteDecision) {
+    String personalityDesc = _getPersonalityDescription();
+    
+    // 获取Elite AI的建议
+    String eliteAdvice = '';
+    if (eliteDecision['type'] == 'challenge') {
+      eliteAdvice = '数学分析强烈建议质疑（期望值:${eliteDecision['expectedValue']?.toStringAsFixed(1)})';
+    } else {
+      Bid? suggestedBid = eliteDecision['bid'];
+      eliteAdvice = '推荐叫牌:$suggestedBid (策略:${eliteDecision['strategy']})';
+    }
+    
+    // 心理战术建议
+    String psychAdvice = '';
+    if (eliteDecision['psychTactic'] != null) {
+      psychAdvice = '\n心理战术机会: ${eliteDecision['psychTactic']}';
+    }
+    
+    String prompt = '''你是$personalityDesc
+
+当前游戏状态：
+- 你的骰子：${round.aiDice.values.join(',')}
+- 对手叫牌：${round.currentBid?.toString() ?? '首轮'}
+- 回合数：${round.bidHistory.length}
+- 1是否被叫：${round.onesAreCalled ? '是' : '否'}
+
+高级分析建议：
+$eliteAdvice$psychAdvice
+
+根据你的性格特点和分析建议，做出决策。输出JSON格式：
+{
+  "decision": "challenge" 或 "bid",
+  "bid": {"quantity": 数量, "value": 点数} (仅在bid时需要),
+  "emotions": ["表情1", "表情2"],  // 从thinking/happy/confident/nervous/suspicious中选
+  "dialogue": "对话内容",
+  "reasoning": "决策理由",
+  "bluffing": true/false
+}''';
+    
+    return prompt;
   }
   
   /// 构建性格化决策prompt
@@ -182,6 +205,205 @@ $optionsText
     } else {
       AILogger.apiCallError('Gemini', 'HTTP ${response.statusCode}', response.body);
       throw Exception('API调用失败: ${response.statusCode}');
+    }
+  }
+  
+  /// 解析增强的AI选择（结合Elite决策）
+  (AIDecision, Bid?, List<String>, String, bool, double?) _parseEnhancedChoice(
+    String response,
+    Map<String, dynamic> eliteDecision,
+    GameRound round,
+  ) {
+    try {
+      // 清理响应并提取JSON
+      String cleanResponse = response;
+      if (response.contains('```json')) {
+        cleanResponse = response.replaceAll(RegExp(r'```json\s*'), '')
+                                .replaceAll(RegExp(r'```'), '');
+      }
+      
+      final jsonMatch = RegExp(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', 
+                               multiLine: true, dotAll: true).firstMatch(cleanResponse);
+      
+      if (jsonMatch != null) {
+        final jsonStr = jsonMatch.group(0)!;
+        final json = jsonDecode(jsonStr);
+        
+        AILogger.logParsing('Enhanced选择JSON', json);
+        
+        // 获取决策类型
+        String decision = json['decision'] ?? (eliteDecision['type'] == 'challenge' ? 'challenge' : 'bid');
+        
+        // 获取表情
+        List<String> emotions = [];
+        if (json['emotions'] != null && json['emotions'] is List) {
+          emotions = List<String>.from(json['emotions']);
+        }
+        if (emotions.isEmpty) {
+          // 根据策略生成默认表情
+          if (eliteDecision['strategy'] == 'reverse_trap') {
+            emotions = ['nervous', 'thinking'];
+          } else if (eliteDecision['strategy'] == 'pressure_play') {
+            emotions = ['confident', 'happy'];
+          } else {
+            emotions = ['thinking'];
+          }
+        }
+        
+        // 获取对话
+        String dialogue = json['dialogue'] ?? _generateEliteDialogue(eliteDecision);
+        String reasoning = json['reasoning'] ?? eliteDecision['reasoning'] ?? '';
+        bool bluffing = json['bluffing'] ?? (eliteDecision['strategy']?.contains('bluff') ?? false);
+        
+        // 构建决策
+        if (decision == 'challenge') {
+          final aiDecision = AIDecision(
+            playerBid: round.currentBid,
+            action: GameAction.challenge,
+            probability: eliteDecision['confidence'] ?? 0.5,
+            wasBluffing: bluffing,
+            reasoning: reasoning,
+          );
+          
+          // 估计对手虚张概率
+          double playerBluffProb = eliteEngine.opponentModel.estimatedBluffRate;
+          
+          return (aiDecision, null, emotions, dialogue, false, playerBluffProb);
+        } else {
+          // 解析叫牌
+          Bid newBid;
+          if (json['bid'] != null) {
+            newBid = Bid(
+              quantity: json['bid']['quantity'],
+              value: json['bid']['value'],
+            );
+          } else {
+            newBid = eliteDecision['bid'] ?? _fallbackBid(round);
+          }
+          
+          final aiDecision = AIDecision(
+            playerBid: round.currentBid,
+            action: GameAction.bid,
+            aiBid: newBid,
+            probability: eliteDecision['confidence'] ?? 0.5,
+            wasBluffing: bluffing,
+            reasoning: reasoning,
+          );
+          
+          return (aiDecision, newBid, emotions, dialogue, bluffing, null);
+        }
+      }
+    } catch (e) {
+      AILogger.apiCallError('Gemini', '解析增强选择失败', e);
+    }
+    
+    // 降级到Elite决策
+    return _convertEliteDecisionToResult(eliteDecision, round);
+  }
+  
+  /// 将Elite决策转换为结果格式
+  (AIDecision, Bid?, List<String>, String, bool, double?) _convertEliteDecisionToResult(
+    Map<String, dynamic> eliteDecision,
+    GameRound round,
+  ) {
+    // 生成表情
+    List<String> emotions = _generateEliteEmotions(eliteDecision);
+    
+    // 生成对话
+    String dialogue = _generateEliteDialogue(eliteDecision);
+    
+    // 判断是否虚张
+    bool isBluffing = eliteDecision['strategy']?.toString().contains('bluff') ?? false;
+    
+    if (eliteDecision['type'] == 'challenge') {
+      final decision = AIDecision(
+        playerBid: round.currentBid,
+        action: GameAction.challenge,
+        probability: eliteDecision['confidence'] ?? 0.5,
+        wasBluffing: false,
+        reasoning: eliteDecision['reasoning'] ?? '战术质疑',
+      );
+      
+      double playerBluffProb = eliteEngine.opponentModel.estimatedBluffRate;
+      return (decision, null, emotions, dialogue, false, playerBluffProb);
+    } else {
+      Bid newBid = eliteDecision['bid'] ?? _fallbackBid(round);
+      
+      final decision = AIDecision(
+        playerBid: round.currentBid,
+        action: GameAction.bid,
+        aiBid: newBid,
+        probability: eliteDecision['confidence'] ?? 0.5,
+        wasBluffing: isBluffing,
+        reasoning: eliteDecision['reasoning'] ?? '战术叫牌',
+      );
+      
+      return (decision, newBid, emotions, dialogue, isBluffing, null);
+    }
+  }
+  
+  /// 根据Elite策略生成表情
+  List<String> _generateEliteEmotions(Map<String, dynamic> eliteDecision) {
+    String strategy = eliteDecision['strategy'] ?? '';
+    
+    switch (strategy) {
+      case 'reverse_trap':
+        return ['nervous', 'thinking'];
+      case 'pressure_play':
+        return ['confident', 'suspicious'];
+      case 'value_bet':
+        return ['confident', 'happy'];
+      case 'pure_bluff':
+        return ['thinking', 'nervous'];
+      case 'style_switch_aggressive':
+        return ['confident', 'happy'];
+      default:
+        double confidence = eliteDecision['confidence'] ?? 0.5;
+        if (confidence > 0.8) return ['confident'];
+        if (confidence > 0.6) return ['thinking', 'happy'];
+        if (confidence > 0.4) return ['thinking'];
+        return ['nervous', 'thinking'];
+    }
+  }
+  
+  /// 根据Elite策略生成对话
+  String _generateEliteDialogue(Map<String, dynamic> eliteDecision) {
+    String strategy = eliteDecision['strategy'] ?? '';
+    String psychTactic = eliteDecision['psychTactic'] ?? '';
+    
+    // 心理战术对话
+    if (psychTactic.isNotEmpty) {
+      switch (psychTactic) {
+        case '反向陷阱':
+          return '我...不太确定';
+        case '压力升级':
+          return '来真的吧！';
+        case '模式破坏':
+          return '换个玩法';
+        case '后期施压':
+          return '该结束了';
+        case '诱导激进':
+          return '你敢跟吗？';
+      }
+    }
+    
+    // 策略对话
+    switch (strategy) {
+      case 'value_bet':
+        return '稳稳的';
+      case 'semi_bluff':
+        return '试试看';
+      case 'bluff':
+        return '就这样';
+      case 'pure_bluff':
+        return '全押了';
+      case 'emergency':
+        return '继续';
+      default:
+        if (eliteDecision['type'] == 'challenge') {
+          return '不可能吧';
+        }
+        return '我叫${eliteDecision['bid']}';
     }
   }
   

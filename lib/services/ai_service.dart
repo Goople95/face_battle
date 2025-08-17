@@ -2,98 +2,110 @@ import 'dart:math' as math;
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
 import '../models/player_profile.dart';
-import 'bid_options_calculator.dart';
+import '../utils/logger_utils.dart';
+import 'elite_ai_engine.dart';
 
 /// 精简版AI服务 - 作为Gemini API的降级备用
 class AIService {
   final AIPersonality personality;
   final PlayerProfile? playerProfile;
   final random = math.Random();
+  late final EliteAIEngine eliteEngine;
   
   AIService({
     required this.personality,
     this.playerProfile,
-  });
+  }) {
+    eliteEngine = EliteAIEngine(personality: personality);
+  }
   
-  /// 决定AI行动 - 使用BidOptionsCalculator
+  /// 决定AI行动 - 使用Elite AI引擎
   AIDecision decideAction(GameRound round, dynamic playerFaceData) {
-    if (round.currentBid == null) {
-      // 首轮总是叫牌
-      return AIDecision(
-        playerBid: null,
-        action: GameAction.bid,
-        probability: 0.5,
-        wasBluffing: false,
-        reasoning: '开局策略',
-      );
-    }
+    // 使用Elite AI引擎获取决策
+    var eliteDecision = eliteEngine.makeEliteDecision(round);
     
-    // 使用统一的选项计算器
-    Map<int, int> ourCounts = {};
-    for (int value = 1; value <= 6; value++) {
-      ourCounts[value] = round.aiDice.countValue(value, onesAreCalled: round.onesAreCalled);
-    }
+    AILogger.logParsing('Local Elite AI决策', {
+      'type': eliteDecision['type'],
+      'confidence': eliteDecision['confidence'],
+      'strategy': eliteDecision['strategy'],
+    });
     
-    List<Map<String, dynamic>> options = BidOptionsCalculator.calculateAllOptions(round, ourCounts);
-    
-    // 基于性格选择方案
-    var chosen = _chooseOptionBasedOnPersonality(options, round);
-    
-    // 如果选择质疑
-    if (chosen['type'] == 'challenge') {
+    // 转换为AIDecision格式
+    if (eliteDecision['type'] == 'challenge') {
       return AIDecision(
         playerBid: round.currentBid,
         action: GameAction.challenge,
-        probability: 1.0 - chosen['successRate'],
+        probability: eliteDecision['confidence'] ?? 0.5,
         wasBluffing: false,
-        reasoning: '成功率${(chosen['successRate'] * 100).toStringAsFixed(1)}%',
+        reasoning: eliteDecision['reasoning'] ?? '战术质疑',
       );
     }
     
     // 继续叫牌
+    Bid newBid = eliteDecision['bid'] ?? _generateFallbackBid(round);
+    bool isBluffing = (eliteDecision['strategy'] ?? '').contains('bluff');
+    
     return AIDecision(
       playerBid: round.currentBid,
       action: GameAction.bid,
-      aiBid: chosen['bid'],
-      probability: chosen['successRate'],
-      wasBluffing: chosen['strategy'] == 'tactical_bluff',
-      reasoning: chosen['reasoning'] ?? '继续加注',
+      aiBid: newBid,
+      probability: eliteDecision['confidence'] ?? 0.5,
+      wasBluffing: isBluffing,
+      reasoning: eliteDecision['reasoning'] ?? '战术叫牌',
+    );
+  }
+  
+  /// 生成降级叫牌
+  Bid _generateFallbackBid(GameRound round) {
+    if (round.currentBid == null) {
+      return Bid(quantity: 2, value: random.nextInt(6) + 1);
+    }
+    
+    // 简单增加数量
+    return Bid(
+      quantity: round.currentBid!.quantity + 1,
+      value: round.currentBid!.value,
     );
   }
   
   /// 生成AI叫牌
   (Bid, bool) generateBidWithAnalysis(GameRound round) {
-    Map<int, int> ourCounts = {};
-    for (int value = 1; value <= 6; value++) {
-      ourCounts[value] = round.aiDice.countValue(value, onesAreCalled: round.onesAreCalled);
+    // 使用Elite AI引擎
+    var eliteDecision = eliteEngine.makeEliteDecision(round);
+    
+    // 确保是叫牌决策（不是质疑）
+    if (eliteDecision['type'] == 'challenge') {
+      // 如果Elite建议质疑，但我们需要叫牌，重新生成一个保守的叫牌
+      Map<int, int> ourCounts = {};
+      for (int value = 1; value <= 6; value++) {
+        ourCounts[value] = round.aiDice.countValue(value, onesAreCalled: round.onesAreCalled);
+      }
+      
+      // 找到我们最多的点数进行保守叫牌
+      int maxCount = 0;
+      int bestValue = 1;
+      ourCounts.forEach((value, count) {
+        if (count > maxCount) {
+          maxCount = count;
+          bestValue = value;
+        }
+      });
+      
+      Bid safeBid;
+      if (round.currentBid == null) {
+        safeBid = Bid(quantity: math.max(2, maxCount), value: bestValue);
+      } else {
+        safeBid = Bid(
+          quantity: round.currentBid!.quantity + 1,
+          value: bestValue,
+        );
+      }
+      
+      return (safeBid, false);
     }
     
-    List<Map<String, dynamic>> options = BidOptionsCalculator.calculateAllOptions(round, ourCounts);
-    
-    var chosen = _chooseOptionBasedOnPersonality(options, round);
-    
-    // 如果选择质疑，降级到安全叫牌
-    if (chosen['type'] == 'challenge') {
-      for (var opt in options) {
-        if (opt['type'] == 'bid' && opt['riskLevel'] == 'safe') {
-          chosen = opt;
-          break;
-        }
-      }
-      // 如果还是没有，选第一个叫牌
-      if (chosen['type'] == 'challenge') {
-        for (var opt in options) {
-          if (opt['type'] == 'bid') {
-            chosen = opt;
-            break;
-          }
-        }
-      }
-    }
-    
-    Bid newBid = chosen['bid'] ?? Bid(quantity: chosen['quantity'], value: chosen['value']);
-    bool isBluffing = chosen['strategy'] == 'tactical_bluff' || 
-                      (chosen['successRate'] ?? 0.5) < 0.4;
+    Bid newBid = eliteDecision['bid'] ?? _generateFallbackBid(round);
+    bool isBluffing = (eliteDecision['strategy'] ?? '').contains('bluff');
     
     return (newBid, isBluffing);
   }
@@ -298,63 +310,108 @@ class AIService {
     return coefficient * math.pow(p, k) * math.pow(1 - p, n - k);
   }
   
-  /// 生成对话和表情（简化版）
+  /// 生成对话和表情（使用Elite引擎）
   (String dialogue, String expression) generateDialogue(GameRound round, GameAction? lastAction, Bid? newBid) {
+    // 生成Elite决策获取策略信息
+    var eliteDecision = eliteEngine.makeEliteDecision(round);
+    
+    // 基于策略生成对话
     String dialogue = '';
     String expression = 'thinking';
     
-    if (lastAction == GameAction.challenge) {
-      // 质疑时的对话
-      dialogue = _getRandomFrom([
-        '我不信',
-        '你在虚张',
-        '不可能',
-        '让我看看',
-      ]);
-      expression = 'suspicious';
-    } else if (newBid != null) {
-      // 叫牌时的对话
-      bool isHighBid = round.currentBid != null && 
-                       newBid.quantity > round.currentBid!.quantity + 1;
-      
-      if (isHighBid) {
-        dialogue = _getRandomFrom([
-          '加大注码',
-          '来真的了',
-          '提高赌注',
-        ]);
-        expression = 'confident';
-      } else {
-        dialogue = _getRandomFrom([
-          '继续',
-          '跟注',
-          '我叫${newBid}',
-        ]);
-        expression = random.nextDouble() < 0.5 ? 'thinking' : 'happy';
+    // 如果有心理战术，优先使用
+    if (eliteDecision['psychTactic'] != null) {
+      switch (eliteDecision['psychTactic']) {
+        case '反向陷阱':
+          dialogue = '我...不太确定';
+          expression = 'nervous';
+          break;
+        case '压力升级':
+          dialogue = '来真的吧！';
+          expression = 'confident';
+          break;
+        case '模式破坏':
+          dialogue = '换个玩法';
+          expression = 'suspicious';
+          break;
+        case '后期施压':
+          dialogue = '该结束了';
+          expression = 'confident';
+          break;
+        case '诱导激进':
+          dialogue = '你敢跟吗？';
+          expression = 'happy';
+          break;
+        default:
+          dialogue = _getStrategyDialogue(eliteDecision['strategy'] ?? '', lastAction, newBid);
       }
+    } else {
+      dialogue = _getStrategyDialogue(eliteDecision['strategy'] ?? '', lastAction, newBid);
     }
     
-    // 性格特定调整
+    // 根据策略调整表情
+    String strategy = eliteDecision['strategy'] ?? '';
+    if (strategy.contains('bluff')) {
+      expression = random.nextDouble() < 0.3 ? 'nervous' : 'thinking';
+    } else if (strategy.contains('value')) {
+      expression = 'confident';
+    } else if (strategy.contains('trap')) {
+      expression = 'nervous';
+    } else if (strategy.contains('pressure')) {
+      expression = 'confident';
+    }
+    
+    // 性格微调
     switch (personality.id) {
       case 'professor':
       case '0001':
-        if (expression == 'confident') expression = 'thinking';
+        if (expression == 'confident' && random.nextDouble() < 0.5) {
+          expression = 'thinking';
+        }
         break;
       case 'gambler':
       case '0002':
-        if (expression == 'thinking') expression = 'confident';
+        if (expression == 'thinking' && random.nextDouble() < 0.5) {
+          expression = 'confident';
+        }
         break;
       case 'provocateur':
       case '0003':
-        if (random.nextDouble() < 0.4) expression = 'suspicious';
+        if (random.nextDouble() < 0.3) expression = 'suspicious';
         break;
       case 'youngwoman':
       case '0004':
-        if (random.nextDouble() < 0.5) expression = 'happy';
+        if (random.nextDouble() < 0.3) expression = 'happy';
         break;
     }
     
     return (dialogue, expression);
+  }
+  
+  /// 根据策略生成对话
+  String _getStrategyDialogue(String strategy, GameAction? lastAction, Bid? newBid) {
+    if (lastAction == GameAction.challenge) {
+      return _getRandomFrom(['我不信', '你在虚张', '不可能', '让我看看']);
+    }
+    
+    switch (strategy) {
+      case 'value_bet':
+        return _getRandomFrom(['稳稳的', '我有货', '跟上来']);
+      case 'semi_bluff':
+        return _getRandomFrom(['试试看', '继续玩', '跟不跟']);
+      case 'bluff':
+      case 'pure_bluff':
+        return _getRandomFrom(['就这样', '全押了', '敢跟吗']);
+      case 'reverse_trap':
+        return '我...不太确定';
+      case 'pressure_play':
+        return '来真的吧！';
+      default:
+        if (newBid != null) {
+          return '我叫${newBid}';
+        }
+        return '继续';
+    }
   }
   
   String _getRandomFrom(List<String> options) {
