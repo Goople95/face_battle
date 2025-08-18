@@ -8,6 +8,7 @@ import '../config/api_config.dart';
 import '../utils/logger_utils.dart';
 import 'bid_options_calculator.dart';
 import 'elite_ai_engine.dart';
+import 'master_ai_engine.dart';
 
 /// 精简版Gemini服务 - 只保留必要功能
 class GeminiService {
@@ -18,10 +19,11 @@ class GeminiService {
   final AIPersonality personality;
   final PlayerProfile? playerProfile;
   late final EliteAIEngine eliteEngine;
-  
+  late final MasterAIEngine masterEngine;  // 新的大师级AI
   
   GeminiService({required this.personality, this.playerProfile}) {
     eliteEngine = EliteAIEngine(personality: personality);
+    masterEngine = MasterAIEngine(personality: personality);  // 初始化大师AI
   }
   
   /// 合并的AI决策方法 - 一次调用完成决策和叫牌
@@ -33,15 +35,18 @@ class GeminiService {
       'aiDice': round.aiDice.values.toString(),
     });
     
-    // 首先使用Elite AI引擎获取高级决策
-    var eliteDecision = eliteEngine.makeEliteDecision(round);
+    // 使用新的Master AI引擎
+    var masterDecision = masterEngine.makeDecision(round);
     
-    AILogger.logParsing('Elite AI决策', {
-      'type': eliteDecision['type'],
-      'confidence': eliteDecision['confidence'],
-      'strategy': eliteDecision['strategy'],
-      'expectedValue': eliteDecision['expectedValue'],
+    AILogger.logParsing('Master AI决策', {
+      'type': masterDecision['type'],
+      'confidence': masterDecision['confidence'],
+      'strategy': masterDecision['strategy'],
+      'reasoning': masterDecision['reasoning'],
     });
+    
+    // 兼容旧的Elite AI决策格式（如果需要降级）
+    var eliteDecision = masterDecision;
     
     // 构建增强的性格化prompt（结合Elite AI的洞察）
     String prompt = _buildEnhancedPersonalityPrompt(round, eliteDecision);
@@ -281,6 +286,9 @@ $optionsText
             newBid = eliteDecision['bid'] ?? _fallbackBid(round);
           }
           
+          // 验证并调整叫牌（确保API决策遵守规则）
+          newBid = _validateAndAdjustBid(newBid, round, eliteDecision);
+          
           final aiDecision = AIDecision(
             playerBid: round.currentBid,
             action: GameAction.bid,
@@ -315,6 +323,9 @@ $optionsText
     // 判断是否虚张
     bool isBluffing = eliteDecision['strategy']?.toString().contains('bluff') ?? false;
     
+    // 获取Elite AI的所有选项
+    List<Map<String, dynamic>>? eliteOptions = eliteDecision['allOptions'] as List<Map<String, dynamic>>?;
+    
     if (eliteDecision['type'] == 'challenge') {
       final decision = AIDecision(
         playerBid: round.currentBid,
@@ -322,12 +333,16 @@ $optionsText
         probability: eliteDecision['confidence'] ?? 0.5,
         wasBluffing: false,
         reasoning: eliteDecision['reasoning'] ?? '战术质疑',
+        eliteOptions: eliteOptions,
       );
       
       double playerBluffProb = eliteEngine.opponentModel.estimatedBluffRate;
       return (decision, null, emotions, dialogue, false, playerBluffProb);
     } else {
       Bid newBid = eliteDecision['bid'] ?? _fallbackBid(round);
+      
+      // 验证并调整叫牌（确保本地决策也遵守规则）
+      newBid = _validateAndAdjustBid(newBid, round, eliteDecision);
       
       final decision = AIDecision(
         playerBid: round.currentBid,
@@ -336,6 +351,7 @@ $optionsText
         probability: eliteDecision['confidence'] ?? 0.5,
         wasBluffing: isBluffing,
         reasoning: eliteDecision['reasoning'] ?? '战术叫牌',
+        eliteOptions: eliteOptions,
       );
       
       return (decision, newBid, emotions, dialogue, isBluffing, null);
@@ -346,7 +362,25 @@ $optionsText
   List<String> _generateEliteEmotions(Map<String, dynamic> eliteDecision) {
     String strategy = eliteDecision['strategy'] ?? '';
     
+    // 支持新的Master AI策略
     switch (strategy) {
+      case 'aggressive':
+        return ['confident', 'happy'];
+      case 'conservative':
+        return ['thinking', 'nervous'];
+      case 'trap':
+        return ['nervous', 'thinking']; // 故意示弱
+      case 'pressure':
+        return ['confident', 'suspicious'];
+      case 'probe':
+        return ['thinking', 'happy'];
+      case 'balanced':
+        return ['thinking', 'confident'];
+      case 'forced':
+        return ['nervous'];
+      case 'absolute_rule':
+        return ['confident'];
+      // 兼容旧的Elite AI策略
       case 'reverse_trap':
         return ['nervous', 'thinking'];
       case 'pressure_play':
@@ -369,26 +403,39 @@ $optionsText
   /// 根据Elite策略生成对话
   String _generateEliteDialogue(Map<String, dynamic> eliteDecision) {
     String strategy = eliteDecision['strategy'] ?? '';
-    String psychTactic = eliteDecision['psychTactic'] ?? '';
+    String psychEffect = eliteDecision['psychEffect'] ?? '';
     
-    // 心理战术对话
-    if (psychTactic.isNotEmpty) {
-      switch (psychTactic) {
-        case '反向陷阱':
+    // 心理效果对话（Master AI的新字段）
+    if (psychEffect.isNotEmpty) {
+      switch (psychEffect) {
+        case 'intimidation':
+          return '压力来了！';
+        case 'fake_weakness':
           return '我...不太确定';
-        case '压力升级':
-          return '来真的吧！';
-        case '模式破坏':
-          return '换个玩法';
-        case '后期施压':
-          return '该结束了';
-        case '诱导激进':
-          return '你敢跟吗？';
+        case 'sudden_escalation':
+          return '玩大点！';
       }
     }
     
-    // 策略对话
+    // 策略对话（支持新的Master AI策略）
     switch (strategy) {
+      case 'aggressive':
+        return '来真的！';
+      case 'conservative':
+        return '稳一点';
+      case 'trap':
+        return '嗯...';
+      case 'pressure':
+        return '你跟吗？';
+      case 'probe':
+        return '看看你';
+      case 'balanced':
+        return '继续';
+      case 'forced':
+        return '只能这样';
+      case 'absolute_rule':
+        return '必须的';
+      // 兼容旧策略
       case 'value_bet':
         return '稳稳的';
       case 'semi_bluff':
@@ -590,6 +637,88 @@ $optionsText
     } else {
       return Bid(quantity: lastBid.quantity + 1, value: 1);
     }
+  }
+  
+  /// 验证并调整叫牌（确保遵守改进后的规则）
+  Bid _validateAndAdjustBid(Bid bid, GameRound round, Map<String, dynamic> decision) {
+    int currentQty = round.currentBid?.quantity ?? 0;
+    String strategy = decision['strategy'] ?? '';
+    
+    // 规则1：限制增幅
+    if (bid.quantity > currentQty) {
+      int increase = bid.quantity - currentQty;
+      int maxIncrease;
+      
+      // 根据当前数量和策略确定最大增幅
+      if (currentQty < 3) {
+        // 早期
+        if (strategy == 'aggressive' || strategy == 'pressure') {
+          maxIncrease = 2;  // 激进策略可以跳2
+        } else {
+          maxIncrease = 1;  // 其他策略最多加1
+        }
+      } else if (currentQty < 5) {
+        // 中期
+        maxIncrease = 1;  // 中期都只能加1
+      } else {
+        // 后期
+        maxIncrease = 1;  // 后期必须谨慎
+        
+        // 压力策略在后期应该转质疑
+        if (strategy == 'pressure' && currentQty >= 6) {
+          // 这种情况本应质疑，但如果已经决定叫牌，限制增幅
+          maxIncrease = 1;
+        }
+      }
+      
+      // 应用限制
+      if (increase > maxIncrease) {
+        AILogger.logParsing('叫牌验证', {
+          'original': '${bid.quantity}个${bid.value}',
+          'currentQty': currentQty,
+          'increase': increase,
+          'maxIncrease': maxIncrease,
+          'adjusted': '${currentQty + maxIncrease}个${bid.value}',
+        });
+        
+        bid = Bid(quantity: currentQty + maxIncrease, value: bid.value);
+      }
+    }
+    
+    // 规则2：总量检查
+    if (bid.quantity >= 7) {
+      // 计算对手需要多少个
+      int opponentNeeds = bid.quantity - (round.aiDice.countValue(bid.value, onesAreCalled: round.onesAreCalled));
+      
+      if (opponentNeeds >= 4) {
+        // 总量不合理，降低到6
+        AILogger.logParsing('总量检查', {
+          'original': '${bid.quantity}个${bid.value}',
+          'opponentNeeds': opponentNeeds,
+          'adjusted': '6个${bid.value}',
+          'reason': '总量过高',
+        });
+        
+        bid = Bid(quantity: 6, value: bid.value);
+      }
+    }
+    
+    // 规则3：确保叫牌合法（必须高于当前叫牌）
+    if (round.currentBid != null && !bid.isHigherThan(round.currentBid!, onesAreCalled: round.onesAreCalled)) {
+      // 如果调整后的叫牌不合法，生成最小合法叫牌
+      if (round.currentBid!.value < 6) {
+        bid = Bid(quantity: round.currentBid!.quantity, value: round.currentBid!.value + 1);
+      } else {
+        bid = Bid(quantity: round.currentBid!.quantity + 1, value: 1);
+      }
+      
+      AILogger.logParsing('合法性调整', {
+        'adjusted': '${bid.quantity}个${bid.value}',
+        'reason': '确保高于当前叫牌',
+      });
+    }
+    
+    return bid;
   }
   
   /// 获取性格描述

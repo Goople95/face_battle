@@ -4,6 +4,7 @@ import '../models/ai_personality.dart';
 import '../models/player_profile.dart';
 import '../utils/logger_utils.dart';
 import 'elite_ai_engine.dart';
+import 'master_ai_engine.dart';
 
 /// 精简版AI服务 - 作为Gemini API的降级备用
 class AIService {
@@ -11,47 +12,57 @@ class AIService {
   final PlayerProfile? playerProfile;
   final random = math.Random();
   late final EliteAIEngine eliteEngine;
+  late final MasterAIEngine masterEngine;
   
   AIService({
     required this.personality,
     this.playerProfile,
   }) {
     eliteEngine = EliteAIEngine(personality: personality);
+    masterEngine = MasterAIEngine(personality: personality);
   }
   
-  /// 决定AI行动 - 使用Elite AI引擎
+  /// 决定AI行动 - 使用Master AI引擎
   AIDecision decideAction(GameRound round, dynamic playerFaceData) {
-    // 使用Elite AI引擎获取决策
+    // 同时获取Master和Elite决策
+    var masterDecision = masterEngine.makeDecision(round);
     var eliteDecision = eliteEngine.makeEliteDecision(round);
     
-    AILogger.logParsing('Local Elite AI决策', {
-      'type': eliteDecision['type'],
-      'confidence': eliteDecision['confidence'],
-      'strategy': eliteDecision['strategy'],
+    AILogger.logParsing('Local Master AI决策', {
+      'type': masterDecision['type'],
+      'confidence': masterDecision['confidence'],
+      'strategy': masterDecision['strategy'],
+      'reasoning': masterDecision['reasoning'],
     });
     
+    // 使用Master的决策，但提供Elite的选项列表用于UI显示
+    List<Map<String, dynamic>>? eliteOptions = eliteDecision['allOptions'] as List<Map<String, dynamic>>?;
+    
     // 转换为AIDecision格式
-    if (eliteDecision['type'] == 'challenge') {
+    if (masterDecision['type'] == 'challenge') {
       return AIDecision(
         playerBid: round.currentBid,
         action: GameAction.challenge,
-        probability: eliteDecision['confidence'] ?? 0.5,
+        probability: masterDecision['confidence'] ?? 0.5,
         wasBluffing: false,
-        reasoning: eliteDecision['reasoning'] ?? '战术质疑',
+        reasoning: masterDecision['reasoning'] ?? '战术质疑',
+        eliteOptions: eliteOptions, // 提供Elite选项列表供UI显示
       );
     }
     
     // 继续叫牌
-    Bid newBid = eliteDecision['bid'] ?? _generateFallbackBid(round);
-    bool isBluffing = (eliteDecision['strategy'] ?? '').contains('bluff');
+    Bid newBid = masterDecision['bid'] ?? _generateFallbackBid(round);
+    bool isBluffing = (masterDecision['strategy'] ?? '').contains('bluff') || 
+                     (masterDecision['strategy'] ?? '').contains('trap');
     
     return AIDecision(
       playerBid: round.currentBid,
       action: GameAction.bid,
       aiBid: newBid,
-      probability: eliteDecision['confidence'] ?? 0.5,
+      probability: masterDecision['confidence'] ?? 0.5,
       wasBluffing: isBluffing,
-      reasoning: eliteDecision['reasoning'] ?? '战术叫牌',
+      reasoning: masterDecision['reasoning'] ?? '战术叫牌',
+      eliteOptions: eliteOptions, // 提供Elite选项列表供UI显示
     );
   }
   
@@ -70,12 +81,12 @@ class AIService {
   
   /// 生成AI叫牌
   (Bid, bool) generateBidWithAnalysis(GameRound round) {
-    // 使用Elite AI引擎
-    var eliteDecision = eliteEngine.makeEliteDecision(round);
+    // 使用Master AI引擎（与decideAction保持一致）
+    var masterDecision = masterEngine.makeDecision(round);
     
     // 确保是叫牌决策（不是质疑）
-    if (eliteDecision['type'] == 'challenge') {
-      // 如果Elite建议质疑，但我们需要叫牌，重新生成一个保守的叫牌
+    if (masterDecision['type'] == 'challenge') {
+      // 如果Master AI建议质疑，但我们需要叫牌，重新生成一个保守的叫牌
       Map<int, int> ourCounts = {};
       for (int value = 1; value <= 6; value++) {
         ourCounts[value] = round.aiDice.countValue(value, onesAreCalled: round.onesAreCalled);
@@ -104,8 +115,9 @@ class AIService {
       return (safeBid, false);
     }
     
-    Bid newBid = eliteDecision['bid'] ?? _generateFallbackBid(round);
-    bool isBluffing = (eliteDecision['strategy'] ?? '').contains('bluff');
+    Bid newBid = masterDecision['bid'] ?? _generateFallbackBid(round);
+    bool isBluffing = (masterDecision['strategy'] ?? '').contains('bluff') || 
+                     (masterDecision['strategy'] ?? '').contains('trap');
     
     return (newBid, isBluffing);
   }

@@ -71,6 +71,7 @@ class AIDecision {
   final double probability;  // Calculated probability
   final bool wasBluffing;  // Was AI bluffing
   final String reasoning;  // Explanation of decision
+  final List<Map<String, dynamic>>? eliteOptions;  // Elite AI的决策选项
   
   AIDecision({
     this.playerBid,
@@ -79,6 +80,7 @@ class AIDecision {
     required this.probability,
     required this.wasBluffing,
     required this.reasoning,
+    this.eliteOptions,
   });
 }
 

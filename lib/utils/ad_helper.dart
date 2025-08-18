@@ -108,6 +108,7 @@ class AdHelper {
     required BuildContext context,
     required Function(int rewardAmount) onRewarded,
     VoidCallback? onCompleted,
+    VoidCallback? onFailed,
     String loadingText = '正在加载广告...',
   }) async {
     // 先关闭当前对话框
@@ -121,11 +122,17 @@ class AdHelper {
     if (!context.mounted) return;
     
     // 调用标准的广告显示流程
-    await showRewardedAdWithLoading(
-      context: context,
-      onRewarded: onRewarded,
-      onCompleted: onCompleted,
-      loadingText: loadingText,
-    );
+    try {
+      await showRewardedAdWithLoading(
+        context: context,
+        onRewarded: onRewarded,
+        onCompleted: onCompleted,
+        loadingText: loadingText,
+      );
+    } catch (e) {
+      if (onFailed != null) {
+        onFailed();
+      }
+    }
   }
 }

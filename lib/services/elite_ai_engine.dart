@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
 import '../utils/logger_utils.dart';
+import 'probability_calculator.dart';
 
 /// 顶级AI引擎 - 实现世界级大话骰策略
 /// 
@@ -13,6 +14,7 @@ import '../utils/logger_utils.dart';
 class EliteAIEngine {
   final AIPersonality personality;
   final random = math.Random();
+  final probabilityCalculator = ProbabilityCalculator();
   
   // 对手建模
   late OpponentModel opponentModel;
@@ -47,10 +49,20 @@ class EliteAIEngine {
     // 5. 元策略调整
     var finalChoice = _applyMetaStrategy(strategyChoice, round);
     
+    // 6. 保存所有选项供复盘使用（只保留前3个最佳选项）
+    List<Map<String, dynamic>> topOptions = [];
+    if (psychOptions.isNotEmpty) {
+      // 按期望值排序并取前3个
+      psychOptions.sort((a, b) => (b['expectedValue'] as double).compareTo(a['expectedValue'] as double));
+      topOptions = psychOptions.take(3).toList();
+    }
+    finalChoice['allOptions'] = topOptions;
+    
     AILogger.logParsing('Elite AI决策完成', {
       'choice': finalChoice['type'],
       'confidence': finalChoice['confidence'],
       'strategy': finalChoice['strategy'],
+      'optionsCount': topOptions.length,
     });
     
     return finalChoice;
@@ -81,11 +93,19 @@ class EliteAIEngine {
         round
       );
       
+      // 使用统一的概率计算器计算质疑成功率
+      double challengeSuccessRate = probabilityCalculator.calculateChallengeSuccessProbability(
+        currentBid: round.currentBid!,
+        ourDice: round.aiDice,
+        onesAreCalled: round.onesAreCalled,
+      );
+      
       options.add({
         'type': 'challenge',
         'expectedValue': challengeEV,
-        'confidence': _calculateConfidence(challengeEV),
-        'reasoning': '数学期望值: ${challengeEV.toStringAsFixed(2)}',
+        'confidence': challengeSuccessRate,  // 使用真实的质疑成功率
+        'successRate': challengeSuccessRate,  // 保存原始成功率
+        'reasoning': '质疑成功率: ${(challengeSuccessRate * 100).toStringAsFixed(1)}%',
       });
     }
     
@@ -106,25 +126,45 @@ class EliteAIEngine {
     Map<int, double> opponentDist,
     GameRound round,
   ) {
-    // AI知道自己有多少个该点数
+    // AI知道自己有多少个该点数（包括万能牌）
     int ourCount = ourCounts[currentBid.value] ?? 0;
     // 对手（玩家）需要有多少个才能让叫牌成立
     int opponentNeeded = currentBid.quantity - ourCount;
     
-    if (opponentNeeded <= 0) return -100.0; // 我们已经有足够，叫牌必定成立，不应质疑
-    if (opponentNeeded > 5) return 100.0;    // 对手不可能有这么多，必须质疑
+    // 调试日志
+    AILogger.logParsing('质疑决策计算', {
+      'currentBid': currentBid.toString(),
+      'bidValue': currentBid.value,
+      'bidQuantity': currentBid.quantity,
+      'ourCount': ourCount,
+      'opponentNeeded': opponentNeeded,
+      'aiDice': round.aiDice.values,
+      'onesAreCalled': round.onesAreCalled,
+      'ourCounts': ourCounts,
+    });
     
-    // 使用贝叶斯后验分布计算对手有足够骰子的概率
-    double opponentHasEnough = 0.0;
+    if (opponentNeeded <= 0) {
+      AILogger.logParsing('不应质疑', {'理由': '我们已经有足够的骰子'});
+      return -100.0; // 我们已经有足够，叫牌必定成立，不应质疑
+    }
+    if (opponentNeeded > 5) {
+      AILogger.logParsing('必须质疑', {'理由': '对手不可能有这么多'});
+      return 100.0;    // 对手不可能有这么多，必须质疑
+    }
+    
+    // 使用统一的概率计算器
+    // 计算玩家叫牌成功的概率（从AI角度看）
+    double bidSuccessProb = probabilityCalculator.calculateBidSuccessProbability(
+      bid: currentBid,
+      ourDice: round.aiDice,
+      onesAreCalled: round.onesAreCalled,
+    );
+    
+    // 对手有足够骰子的概率 = 叫牌成功概率
+    double opponentHasEnough = bidSuccessProb;
     
     // 考虑对手的模式和历史
     double bluffAdjustment = opponentModel.estimatedBluffRate;
-    
-    // 计算基础概率 - 对手至少有opponentNeeded个的概率
-    for (int k = opponentNeeded; k <= 5; k++) {
-      double prob = _binomialProb(5, k, opponentDist[currentBid.value] ?? (1.0/6.0));
-      opponentHasEnough += prob;
-    }
     
     // 根据对手虚张历史调整
     opponentHasEnough *= (1.0 - bluffAdjustment * 0.3);
@@ -167,6 +207,16 @@ class EliteAIEngine {
       // 生成所有合法的后续叫牌
       for (int qty = currentBid.quantity; qty <= math.min(10, currentBid.quantity + 3); qty++) {
         for (int val = 1; val <= 6; val++) {
+          // 对1进行特殊限制：当1被叫后，最多只能叫到合理范围
+          if (val == 1 && round.onesAreCalled) {
+            // 1失去万能牌地位后，最多只能有10个骰子中的一部分是1
+            // 合理的上限是总骰子数的40%（即最多4个1）
+            if (qty > 4) continue;
+          }
+          
+          // 一般性合理性检查：任何点数都不应该超过总骰子数的70%
+          if (qty > 7) continue;
+          
           Bid newBid = Bid(quantity: qty, value: val);
           if (newBid.isHigherThan(currentBid, onesAreCalled: round.onesAreCalled)) {
             candidates.add(newBid);
@@ -182,11 +232,19 @@ class EliteAIEngine {
       // 识别策略类型
       String strategy = _identifyBidStrategy(bid, ourCounts, round);
       
+      // 使用统一的概率计算器计算成功率
+      double successRate = probabilityCalculator.calculateBidSuccessProbability(
+        bid: bid,
+        ourDice: round.aiDice,
+        onesAreCalled: round.onesAreCalled,
+      );
+      
       bidOptions.add({
         'type': 'bid',
         'bid': bid,
         'expectedValue': ev,
-        'confidence': _calculateConfidence(ev),
+        'confidence': successRate,  // 使用真实的成功率而非期望值映射
+        'successRate': successRate,  // 保存原始成功率
         'strategy': strategy,
         'reasoning': _getBidReasoning(strategy, ev),
       });
@@ -210,14 +268,33 @@ class EliteAIEngine {
     // 计算对手质疑的概率（基于对手模型）
     double opponentChallengeProb = _estimateOpponentChallengeProb(bid, round);
     
+    // 对不合理的叫牌进行惩罚
+    if (bid.value == 1 && round.onesAreCalled && bid.quantity > 4) {
+      // 叫超过4个1（当1被叫后）是极不合理的
+      return -50.0;
+    }
+    
+    // 对纯诈唬进行额外风险评估
+    double ratio = ourCount.toDouble() / bid.quantity;
+    if (ratio < 0.2) {
+      // 纯诈唬：我们拥有的少于20%
+      // 增加被质疑的概率估计
+      opponentChallengeProb = math.min(0.9, opponentChallengeProb * 1.5);
+      
+      // 如果叫牌数量超过6，几乎肯定会被质疑
+      if (bid.quantity > 6) {
+        opponentChallengeProb = 0.95;
+      }
+    }
+    
     // 期望值计算
     double continueValue = 5.0; // 继续游戏的价值
     double winChallengeValue = 15.0; // 对手质疑但我们赢
     double loseChallengeValue = -20.0; // 对手质疑且我们输
     
-    // 考虑诈唬的额外价值
+    // 考虑诈唬的额外价值（但要合理）
     double bluffBonus = 0.0;
-    if (ourCount < bid.quantity * 0.6) {
+    if (ourCount < bid.quantity * 0.6 && bid.quantity <= 6) {
       bluffBonus = 3.0; // 成功的诈唬有额外价值
     }
     
@@ -416,6 +493,23 @@ class EliteAIEngine {
       chosen = filtered[0];
     }
     
+    // 最终安全检查：绝对不应该选择明显错误的质疑
+    if (chosen['type'] == 'challenge' && chosen['expectedValue'] < -50.0) {
+      AILogger.logParsing('拒绝错误质疑，选择其他选项', {
+        'originalChoice': chosen['type'],
+        'ev': chosen['expectedValue'],
+      });
+      
+      // 找一个叫牌选项
+      var bidOptions = filtered.where((o) => o['type'] == 'bid').toList();
+      if (bidOptions.isNotEmpty) {
+        chosen = bidOptions[0];
+      } else {
+        // 如果没有叫牌选项，生成一个保守的叫牌
+        chosen = _emergencyFallback(round);
+      }
+    }
+    
     // 更新策略状态
     _updateStrategyState(chosen, round);
     
@@ -592,9 +686,9 @@ class EliteAIEngine {
     
     // 阶段调整
     if (phase == GamePhase.endGame) {
-      // 后期更倾向于质疑
+      // 后期更倾向于质疑，但只有在EV足够高时
       var challenges = options.where((o) => o['type'] == 'challenge').toList();
-      if (challenges.isNotEmpty && challenges[0]['expectedValue'] > 0) {
+      if (challenges.isNotEmpty && challenges[0]['expectedValue'] > 10.0) { // 提高阈值，避免错误质疑
         return challenges;
       }
     }
@@ -603,10 +697,26 @@ class EliteAIEngine {
     var filtered = options.where((o) {
       double ev = o['expectedValue'];
       double confidence = o['confidence'] ?? 0.5;
+      
+      // 特殊处理：如果是质疑且EV极低，一定要过滤掉
+      if (o['type'] == 'challenge' && ev < -50.0) {
+        return false; // 绝对不应该质疑
+      }
+      
       return ev >= minEV && confidence <= maxRisk;
     }).toList();
     
-    return filtered.isEmpty ? options : filtered;
+    // 如果过滤后为空，只返回正期望值的选项，避免选择糟糕的决策
+    if (filtered.isEmpty) {
+      filtered = options.where((o) => o['expectedValue'] > 0).toList();
+      if (filtered.isEmpty) {
+        // 如果还是空，选择期望值最高的（可能是负的，但选最不糟的）
+        options.sort((a, b) => b['expectedValue'].compareTo(a['expectedValue']));
+        return [options.first];
+      }
+    }
+    
+    return filtered;
   }
   
   /// 是否应该应用战术
@@ -700,29 +810,45 @@ class EliteAIEngine {
   
   // ============= 数学工具方法 =============
   
-  /// 二项分布概率
-  double _binomialProb(int n, int k, double p) {
-    if (k > n || k < 0) return 0.0;
-    if (k == 0) return math.pow(1 - p, n).toDouble();
-    
-    double coeff = 1.0;
-    for (int i = 0; i < k; i++) {
-      coeff *= (n - i) / (i + 1);
-    }
-    
-    return coeff * math.pow(p, k) * math.pow(1 - p, n - k);
-  }
+  // 二项分布计算已移动到probability_calculator.dart
   
-  /// 二项分布"至少k个"的概率
+  // 为了兼容，添加一个内部方法
   double _binomialAtLeast(int n, int k, double p) {
     if (k > n) return 0.0;
     if (k <= 0) return 1.0;
     
-    double total = 0.0;
-    for (int i = k; i <= n; i++) {
-      total += _binomialProb(n, i, p);
+    // 使用probability_calculator的预计算值
+    if (n == 5 && p == 1.0 / 3.0) {
+      switch (k) {
+        case 1: return 0.8683;
+        case 2: return 0.5391;
+        case 3: return 0.2101;
+        case 4: return 0.0453;
+        case 5: return 0.0041;
+        default: return 0.0;
+      }
     }
     
+    if (n == 5 && p == 1.0 / 6.0) {
+      switch (k) {
+        case 1: return 0.5981;
+        case 2: return 0.1962;
+        case 3: return 0.0355;
+        case 4: return 0.0032;
+        case 5: return 0.0001;
+        default: return 0.0;
+      }
+    }
+    
+    // 其他情况的通用计算
+    double total = 0.0;
+    for (int i = k; i <= n; i++) {
+      double coeff = 1.0;
+      for (int j = 0; j < i; j++) {
+        coeff *= (n - j) / (j + 1);
+      }
+      total += coeff * math.pow(p, i) * math.pow(1 - p, n - i);
+    }
     return total.clamp(0.0, 1.0);
   }
 }

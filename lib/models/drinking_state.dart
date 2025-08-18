@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 饮酒状态管理
 class DrinkingState {
-  static const int maxDrinks = 6; // 最多喝6杯就醉了
+  static const int maxDrinks = 3; // 临时改为3杯就醉，便于调试
   static const int soberThreshold = 3; // 3杯以下算清醒，3杯及以上微醺不能游戏
   
   int drinksConsumed = 0; // 玩家已喝酒杯数

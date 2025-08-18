@@ -17,6 +17,8 @@ import '../widgets/simple_ai_avatar.dart';
 import '../widgets/simple_video_avatar.dart';  // 使用简化版
 import '../widgets/drunk_overlay.dart';
 import '../widgets/sober_dialog.dart';
+import '../widgets/victory_drunk_animation.dart';
+import '../services/share_image_service.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
@@ -230,6 +232,12 @@ class _GameScreenState extends State<GameScreen> {
   void _startNewRound() {
     final random = math.Random();
     
+    // 重置叫牌选择器为最小值 2个2
+    setState(() {
+      _selectedQuantity = 2;
+      _selectedValue = 2;
+    });
+    
     // 生成骰子的函数
     DiceRoll rollDice() {
       return DiceRoll([
@@ -434,10 +442,10 @@ class _GameScreenState extends State<GameScreen> {
       );
     }
     
-    // Record AI decision
-    _currentRound!.aiDecisions.add(decision);
-    
     if (decision.action == GameAction.challenge) {
+      // 记录质疑决策
+      _currentRound!.aiDecisions.add(decision);
+      
       // 使用Gemini或本地生成的表情
       setState(() {
         _aiDialogue = aiDialogue;
@@ -460,6 +468,18 @@ class _GameScreenState extends State<GameScreen> {
         final result = _aiService.generateBidWithAnalysis(_currentRound!);
         aiBid = result.$1;
         wasBluffing = result.$2;
+        
+        // 更新decision以反映实际的叫牌
+        decision = AIDecision(
+          playerBid: decision.playerBid,
+          action: decision.action,
+          aiBid: aiBid,
+          probability: decision.probability,
+          wasBluffing: wasBluffing,
+          reasoning: decision.reasoning,
+          eliteOptions: decision.eliteOptions,
+        );
+        
         // 使用本地AI生成表情
         final (dialogue, expression) = _aiService.generateDialogue(
           _currentRound!, 
@@ -470,6 +490,9 @@ class _GameScreenState extends State<GameScreen> {
         aiDialogue = dialogue;
         GameLogger.logAIAction('本地叫牌结果', data: {'bid': aiBid.toString(), 'bluffing': wasBluffing});
       }
+      
+      // 记录最终的AI决策（确保记录的是实际使用的bid）
+      _currentRound!.aiDecisions.add(decision);
       
       // Calculate bid probability for AI's own bid
       double bidProb = _aiService.calculateBidProbability(
@@ -486,8 +509,10 @@ class _GameScreenState extends State<GameScreen> {
         if (aiBid != null) {
           _currentRound!.addBid(aiBid, false); // false表示是AI叫牌
           
-          // 自动调整玩家选择器到AI的叫牌值，方便玩家操作
-          _selectedQuantity = aiBid.quantity;
+          // 自动调整玩家选择器：基于AI的叫牌，但不要设置得太高
+          // 数量：AI叫牌数量+1，但不超过4（避免误操作）
+          _selectedQuantity = math.min(4, aiBid.quantity + 1);
+          // 点数：保持AI叫的点数，方便玩家继续叫同样的点数
           _selectedValue = aiBid.value;
         }
         _currentRound!.isPlayerTurn = true;
@@ -702,11 +727,13 @@ class _GameScreenState extends State<GameScreen> {
                                   Expanded(
                                     child: Text(
                                       decision.action == GameAction.challenge 
-                                        ? '质疑对手叫牌' 
+                                        ? decision.playerBid != null
+                                          ? '质疑玩家叫牌：${decision.playerBid!.quantity}个${decision.playerBid!.value}'
+                                          : '质疑对手叫牌'
                                         : decision.aiBid != null
                                           ? decision.playerBid == null
                                             ? '开局叫牌：${decision.aiBid!.quantity}个${decision.aiBid!.value}'
-                                            : '叫牌：${decision.aiBid!.quantity}个${decision.aiBid!.value}'
+                                            : '回应玩家${decision.playerBid!.quantity}个${decision.playerBid!.value}，叫牌：${decision.aiBid!.quantity}个${decision.aiBid!.value}'
                                           : '继续叫牌',
                                       style: const TextStyle(
                                         fontSize: 14,
@@ -742,6 +769,121 @@ class _GameScreenState extends State<GameScreen> {
                                   height: 1.3,
                                 ),
                               ),
+                              // 显示Elite AI的决策选项
+                              if (decision.eliteOptions != null && decision.eliteOptions!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'AI考虑的选项:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                ...decision.eliteOptions!.map((option) {
+                                  String optionText = '';
+                                  String strategyText = option['strategy'] ?? '';
+                                  double confidence = option['confidence'] ?? 0.0;
+                                  
+                                  if (option['type'] == 'challenge') {
+                                    optionText = '质疑';
+                                  } else if (option['bid'] != null) {
+                                    Bid bid = option['bid'];
+                                    optionText = '叫牌: ${bid.quantity}个${bid.value}';
+                                  }
+                                  
+                                  // 转换策略名称为中文
+                                  String strategyDisplay = '';
+                                  switch (strategyText) {
+                                    case 'value_bet':
+                                      strategyDisplay = '价值叫牌';
+                                      break;
+                                    case 'semi_bluff':
+                                      strategyDisplay = '半诈唬';
+                                      break;
+                                    case 'bluff':
+                                      strategyDisplay = '诈唬';
+                                      break;
+                                    case 'pure_bluff':
+                                      strategyDisplay = '纯诈唬';
+                                      break;
+                                    case 'reverse_trap':
+                                      strategyDisplay = '反向陷阱';
+                                      break;
+                                    case 'pressure_play':
+                                      strategyDisplay = '压力打法';
+                                      break;
+                                    default:
+                                      strategyDisplay = strategyText;
+                                  }
+                                  
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          option['type'] == 'challenge' 
+                                            ? Icons.gavel 
+                                            : Icons.casino,
+                                          size: 14,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            '$optionText',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _getProbabilityColor(confidence),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            '${(confidence * 100).toStringAsFixed(0)}%',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          strategyDisplay,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade700,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                        if (option['reasoning'] != null) ...[
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'EV:${(option['expectedValue'] ?? 0.0).toStringAsFixed(1)}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.blue.shade700,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
                             ],
                           ),
                         );
@@ -863,100 +1005,61 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
   
-  // 显示AI醉倒对话框
+  // 显示AI醉倒对话框 - 使用新的胜利动画
   void _showAIDrunkDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange.shade700, Colors.red.shade900],
-            ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '🥴',
-                style: TextStyle(fontSize: 60),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '${widget.aiPersonality.name}醉倒了！',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'AI已经喝了${_drinkingState!.getAIDrinks(widget.aiPersonality.id)}杯酒',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                '要帮AI醒酒继续游戏吗？',
-                style: TextStyle(
-                  color: Colors.yellow,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              // 帮AI看广告醒酒
-              ElevatedButton.icon(
-                onPressed: () {
-                  AdHelper.showRewardedAdAfterDialogClose(
-                    context: context,
-                    onRewarded: (rewardAmount) {
-                      // 获得奖励时更新状态
-                      setState(() {
-                        _drinkingState!.watchAdToSoberAI(widget.aiPersonality.id);
-                        _drinkingState!.save();
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('✨ ${widget.aiPersonality.name}醒酒了，继续对战！'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    },
-                  );
-                },
-                icon: const Icon(Icons.play_circle_outline),
-                label: const Text('看广告帮AI醒酒'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                ),
-              ),
-              const SizedBox(height: 10),
-              
-              // 不帮AI，直接胜利
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _showVictoryDialog();
-                },
-                icon: const Icon(Icons.emoji_events),
-                label: const Text('直接获胜'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.greenAccent,
-                ),
-              ),
-            ],
-          ),
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: true,
+        pageBuilder: (context, animation, secondaryAnimation) => VictoryDrunkAnimation(
+          defeatedAI: widget.aiPersonality,
+          drinkingState: _drinkingState!,
+          onComplete: () {
+            Navigator.of(context).pop();
+            _showVictoryDialog();
+          },
+          onRematch: () {
+            // 看广告让AI醒酒
+            AdHelper.showRewardedAdAfterDialogClose(
+              context: context,
+              onRewarded: (rewardAmount) {
+                setState(() {
+                  _drinkingState!.watchAdToSoberAI(widget.aiPersonality.id);
+                  _drinkingState!.save();
+                });
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('✨ ${widget.aiPersonality.name}醒酒了，继续对战！'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                _startNewRound();
+              },
+              onFailed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('广告加载失败')),
+                );
+              },
+            );
+          },
+          onShare: () async {
+            // 获取亲密度时间（这里使用随机值，实际应该从动画组件传递）
+            final intimacyMinutes = 5 + math.Random().nextInt(16);
+            
+            await ShareImageService.shareVictoryWithImage(
+              context: context,
+              defeatedAI: widget.aiPersonality,
+              drinkingState: _drinkingState!,
+              intimacyMinutes: intimacyMinutes,
+            );
+          },
         ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
       ),
     );
   }
