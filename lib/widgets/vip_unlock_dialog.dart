@@ -8,7 +8,7 @@ import '../config/character_assets.dart';
 class VIPUnlockDialog extends StatefulWidget {
   final AIPersonality character;
   
-  const VIPUnlockDialog({Key? key, required this.character}) : super(key: key);
+  const VIPUnlockDialog({super.key, required this.character});
   
   @override
   State<VIPUnlockDialog> createState() => _VIPUnlockDialogState();
@@ -92,37 +92,20 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
             Text(
               widget.character.description,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 15),
             
-            // 难度标签
-            if (widget.character.difficulty != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getDifficultyColor(int.tryParse(widget.character.difficulty!) ?? 1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  _getDifficultyText(int.tryParse(widget.character.difficulty!) ?? 1),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            const SizedBox(height: 20),
+const SizedBox(height: 20),
             
             // 解锁说明
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Column(
@@ -161,8 +144,9 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
                     Navigator.of(context).pop(false);
                     await Future.delayed(const Duration(milliseconds: 100));
                     
-                    AdHelper.showRewardedAdWithLoading(
-                      context: context,
+                    if (context.mounted) {
+                      AdHelper.showRewardedAdWithLoading(
+                        context: context,
                       onRewarded: (reward) async {
                         await _vipService.temporaryUnlock(widget.character.id);
                         if (context.mounted) {
@@ -174,8 +158,9 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
                           );
                         }
                       },
-                      loadingText: '正在加载广告...',
-                    );
+                        loadingText: '正在加载广告...',
+                      );
+                    }
                   },
                 ),
                 
@@ -215,7 +200,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
               child: Text(
                 '稍后再说',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                 ),
               ),
@@ -241,11 +226,11 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: enabled ? color.withOpacity(0.5) : Colors.grey.withOpacity(0.3),
+            color: enabled ? color.withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.3),
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(12),
-          color: enabled ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+          color: enabled ? color.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
         ),
         child: Row(
           children: [
@@ -288,29 +273,4 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
     );
   }
   
-  Color _getDifficultyColor(int difficulty) {
-    switch (difficulty) {
-      case 1:
-        return Colors.green;
-      case 2:
-        return Colors.orange;
-      case 3:
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-  
-  String _getDifficultyText(int difficulty) {
-    switch (difficulty) {
-      case 1:
-        return '简单';
-      case 2:
-        return '中等';
-      case 3:
-        return '困难';
-      default:
-        return '未知';
-    }
-  }
 }

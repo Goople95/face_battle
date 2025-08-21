@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/logger_utils.dart';
 import '../services/admob_service.dart';
 
 /// 广告辅助类 - 提供统一的广告展示流程
@@ -15,30 +16,30 @@ class AdHelper {
     VoidCallback? onCompleted,
     String loadingText = '正在加载广告...',
   }) async {
-    print('📺 AdHelper.showRewardedAdWithLoading 被调用');
+    LoggerUtils.debug('📺 AdHelper.showRewardedAdWithLoading 被调用');
     if (!context.mounted) {
-      print('❌ Context not mounted');
+      LoggerUtils.debug('❌ Context not mounted');
       return;
     }
     
     bool isLoadingDialogOpen = true;
-    print('📺 准备显示加载对话框');
+    LoggerUtils.debug('📺 准备显示加载对话框');
     
     // 显示加载对话框
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        print('📺 加载对话框 builder 被调用');
+        LoggerUtils.debug('📺 加载对话框 builder 被调用');
         // 在builder内部调用AdMob服务，确保使用正确的context
         AdMobService().showRewardedAd(
           onRewarded: (rewardAmount) {
-            print('📺 AdHelper收到奖励回调: $rewardAmount');
+            LoggerUtils.debug('📺 AdHelper收到奖励回调: $rewardAmount');
             // 调用奖励回调
             onRewarded(rewardAmount);
           },
           onAdClosed: () {
-            print('📺 AdHelper收到广告关闭回调');
+            LoggerUtils.debug('📺 AdHelper收到广告关闭回调');
             // 广告关闭后关闭加载对话框
             if (isLoadingDialogOpen && dialogContext.mounted) {
               isLoadingDialogOpen = false;
@@ -48,7 +49,7 @@ class AdHelper {
             onCompleted?.call();
           },
           onAdFailed: () {
-            print('📺 AdHelper收到广告失败回调');
+            LoggerUtils.debug('📺 AdHelper收到广告失败回调');
             // 广告失败时关闭加载对话框
             if (isLoadingDialogOpen && dialogContext.mounted) {
               isLoadingDialogOpen = false;

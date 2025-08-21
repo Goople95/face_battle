@@ -1,6 +1,7 @@
 /// 策略工厂 - 创建合适的策略执行器
 /// 
 /// 根据策略类型创建对应的执行器实例
+library;
 
 import '../../../models/game_state.dart';
 import '../../../models/ai_personality.dart';
@@ -71,7 +72,7 @@ class StrategyFactory {
 
 /// 陷阱策略执行器 - 示弱诱敌
 class TrapStrategyExecutor extends StrategyExecutor {
-  TrapStrategyExecutor(AIPersonality personality) : super(personality);
+  TrapStrategyExecutor(super.personality);
   
   @override
   Map<String, dynamic> execute(
@@ -150,7 +151,7 @@ class TrapStrategyExecutor extends StrategyExecutor {
 
 /// 压力策略执行器 - 持续施压
 class PressureStrategyExecutor extends StrategyExecutor {
-  PressureStrategyExecutor(AIPersonality personality) : super(personality);
+  PressureStrategyExecutor(super.personality);
   
   @override
   Map<String, dynamic> execute(
@@ -233,7 +234,7 @@ class PressureStrategyExecutor extends StrategyExecutor {
 
 /// 试探策略执行器 - 小幅试探
 class ProbeStrategyExecutor extends StrategyExecutor {
-  ProbeStrategyExecutor(AIPersonality personality) : super(personality);
+  ProbeStrategyExecutor(super.personality);
   
   @override
   Map<String, dynamic> execute(

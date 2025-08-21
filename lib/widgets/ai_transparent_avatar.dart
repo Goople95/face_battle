@@ -14,7 +14,7 @@ class AITransparentAvatar extends StatefulWidget {
   final bool showGlow;  // 是否显示发光效果
   
   const AITransparentAvatar({
-    Key? key,
+    super.key,
     required this.characterId,
     this.emotion = 'excited',
     this.size = 120,
@@ -22,7 +22,7 @@ class AITransparentAvatar extends StatefulWidget {
     this.backgroundColor,
     this.backgroundGradient,
     this.showGlow = true,
-  }) : super(key: key);
+  });
   
   @override
   State<AITransparentAvatar> createState() => _AITransparentAvatarState();
@@ -101,7 +101,7 @@ class _AITransparentAvatarState extends State<AITransparentAvatar>
         await precacheImage(AssetImage(framePath), context);
         frames.add(image);
       } catch (e) {
-        print('⚠️ 透明帧不存在: $framePath');
+        // LoggerUtils.warning('⚠️ 透明帧不存在: $framePath');
       }
     }
     
@@ -119,7 +119,7 @@ class _AITransparentAvatarState extends State<AITransparentAvatar>
         frames.add(image);
       } catch (e) {
         // 使用默认占位符
-        print('⚠️ 没有找到透明图片');
+        // LoggerUtils.warning('⚠️ 没有找到透明图片');
       }
     }
     
@@ -217,7 +217,7 @@ class _AITransparentAvatarState extends State<AITransparentAvatar>
               boxShadow: [
                 BoxShadow(
                   color: (widget.backgroundColor ?? Colors.blue)
-                      .withOpacity(0.3 + _glowController.value * 0.3),
+                      .withValues(alpha: 0.3 + _glowController.value * 0.3),
                   blurRadius: 20 + _glowController.value * 10,
                   spreadRadius: 2,
                 ),
@@ -235,6 +235,8 @@ class _AITransparentAvatarState extends State<AITransparentAvatar>
 
 /// 使用示例组件
 class TransparentAvatarExample extends StatelessWidget {
+  const TransparentAvatarExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

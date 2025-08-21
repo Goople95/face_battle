@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'dart:io';
 import '../config/character_assets.dart';
+import '../utils/logger_utils.dart';
 
 /// AI角色视频播放头像组件
 class AIVideoAvatar extends StatefulWidget {
@@ -11,19 +11,19 @@ class AIVideoAvatar extends StatefulWidget {
   final bool showBorder;     // 是否显示边框
 
   const AIVideoAvatar({
-    Key? key,
+    super.key,
     required this.characterId,
     this.emotion = 'excited',  // 默认播放excited
     this.size = 100,
     this.showBorder = true,
-  }) : super(key: key);
+  });
 
   @override
   State<AIVideoAvatar> createState() => _AIVideoAvatarState();
 }
 
 class _AIVideoAvatarState extends State<AIVideoAvatar> {
-  Map<String, VideoPlayerController> _controllerCache = {};  // 视频控制器缓存
+  final Map<String, VideoPlayerController> _controllerCache = {};  // 视频控制器缓存
   VideoPlayerController? _currentController;  // 当前活动的控制器
   String? _currentEmotion;
   bool _isInitializing = false;
@@ -33,8 +33,8 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
   static const int _maxCacheSize = 3;
   
   // 记录使用频率，用于智能缓存管理
-  Map<String, int> _usageCount = {};
-  Map<String, DateTime> _lastUsed = {};
+  final Map<String, int> _usageCount = {};
+  final Map<String, DateTime> _lastUsed = {};
   
   // 使用CharacterAssets中的统一映射，不再需要本地映射表
 
@@ -70,7 +70,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       if (_controllerCache.length >= _maxCacheSize) break;
       
       try {
-        print('🎬 [AIVideoAvatar] 预加载: $emotion');
+        LoggerUtils.debug('[AIVideoAvatar] 预加载: $emotion');
         final controller = VideoPlayerController.asset(videoPath);
         await controller.initialize();
         await controller.setLooping(true);
@@ -85,7 +85,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
           controller.dispose();
         }
       } catch (e) {
-        print('⚠️ [AIVideoAvatar] 预加载失败: $emotion');
+        LoggerUtils.error(' [AIVideoAvatar] 预加载失败: $emotion');
       }
     }
   }
@@ -107,11 +107,11 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
     
     // 如果是相同的表情，不重新加载
     if (_currentEmotion == emotion) {
-      print('🎬 [AIVideoAvatar] 相同表情，跳过: $emotion');
+      LoggerUtils.debug(' [AIVideoAvatar] 相同表情，跳过: $emotion');
       return;
     }
     
-    print('🎬 [AIVideoAvatar] 开始加载视频 - characterId: ${widget.characterId}, emotion: $emotion');
+    LoggerUtils.debug(' [AIVideoAvatar] 开始加载视频 - characterId: ${widget.characterId}, emotion: $emotion');
     
     setState(() {
       _isInitializing = true;
@@ -122,14 +122,14 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
     String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
     String normalizedEmotion = CharacterAssets.emotionMapping[emotion.toLowerCase()] ?? 'happy';
     String cacheKey = '${normalizedId}_$normalizedEmotion';
-    print('🎬 [AIVideoAvatar] 视频路径: $videoPath, 缓存键: $cacheKey');
+    LoggerUtils.debug(' [AIVideoAvatar] 视频路径: $videoPath, 缓存键: $cacheKey');
     
     try {
       VideoPlayerController? controller;
       
       // 检查缓存中是否已有该视频
       if (_controllerCache.containsKey(cacheKey)) {
-        print('🎬 [AIVideoAvatar] 从缓存加载: $cacheKey');
+        LoggerUtils.debug(' [AIVideoAvatar] 从缓存加载: $cacheKey');
         controller = _controllerCache[cacheKey];
         
         // 更新使用统计
@@ -143,7 +143,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
         }
       } else {
         // 创建新的控制器
-        print('🎬 [AIVideoAvatar] 创建新控制器: $cacheKey');
+        LoggerUtils.debug(' [AIVideoAvatar] 创建新控制器: $cacheKey');
         controller = VideoPlayerController.asset(videoPath);
         
         await controller.initialize();
@@ -187,7 +187,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
           }
           
           if (keyToRemove != null) {
-            print('🎬 [AIVideoAvatar] 清理缓存: $keyToRemove (使用次数: $lowestUsage)');
+            LoggerUtils.debug(' [AIVideoAvatar] 清理缓存: $keyToRemove (使用次数: $lowestUsage)');
             // 完整的清理流程
             final oldController = _controllerCache[keyToRemove];
             if (oldController != null) {
@@ -210,10 +210,10 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
         _lastUsed[cacheKey] = DateTime.now();
       }
       
-      print('🎬 [AIVideoAvatar] 视频加载成功: $videoPath');
-      print('🎬 [AIVideoAvatar] 视频尺寸: ${controller?.value.size}');
-      print('🎬 [AIVideoAvatar] 初始化后播放状态: ${controller?.value.isPlaying}');
-      print('🎬 [AIVideoAvatar] 缓存状态: ${_controllerCache.length}/$_maxCacheSize');
+      LoggerUtils.debug(' [AIVideoAvatar] 视频加载成功: $videoPath');
+      LoggerUtils.debug(' [AIVideoAvatar] 视频尺寸: ${controller?.value.size}');
+      LoggerUtils.debug(' [AIVideoAvatar] 初始化后播放状态: ${controller?.value.isPlaying}');
+      LoggerUtils.debug(' [AIVideoAvatar] 缓存状态: ${_controllerCache.length}/$_maxCacheSize');
       
       // 暂停之前的控制器（但不释放）
       if (_currentController != null && _currentController != controller) {
@@ -231,11 +231,11 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
         // 确保视频开始播放
         if (_currentController != null && !_currentController!.value.isPlaying) {
           _currentController!.play();
-          print('🎬 [AIVideoAvatar] 手动开始播放视频');
+          LoggerUtils.debug(' [AIVideoAvatar] 手动开始播放视频');
         }
       }
     } catch (e) {
-      print('❌ [AIVideoAvatar] 无法加载视频 $videoPath: $e');
+      LoggerUtils.error('[AIVideoAvatar] 无法加载视频 $videoPath: $e');
       // 如果视频不存在，显示静态图片
       if (mounted) {
         setState(() {
@@ -295,25 +295,24 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
 
   @override
   Widget build(BuildContext context) {
-    print('🎬 [AIVideoAvatar] Build - hasVideo: $_hasVideo, initialized: ${_currentController?.value.isInitialized}, emotion: $_currentEmotion');
+    LoggerUtils.debug(' [AIVideoAvatar] Build - hasVideo: $_hasVideo, initialized: ${_currentController?.value.isInitialized}, emotion: $_currentEmotion');
     
     Widget content;
     
     if (_hasVideo && _currentController != null && _currentController!.value.isInitialized) {
       // 显示视频
-      print('🎬 [AIVideoAvatar] 显示视频 - size: ${widget.size}, videoSize: ${_currentController!.value.size}');
-      print('🎬 [AIVideoAvatar] 视频正在播放: ${_currentController!.value.isPlaying}');
-      // 使用FittedBox让视频填充整个圆形区域
+      LoggerUtils.debug(' [AIVideoAvatar] 显示视频 - size: ${widget.size}, videoSize: ${_currentController!.value.size}');
+      LoggerUtils.debug(' [AIVideoAvatar] 视频正在播放: ${_currentController!.value.isPlaying}');
+      // 使用AspectRatio避免JNI缓冲区问题
+      final videoAspectRatio = _currentController!.value.aspectRatio;
       content = ClipOval(
         child: Container(
           width: widget.size,
           height: widget.size,
           color: Colors.grey[900], // 深灰色背景，便于调试
-          child: FittedBox(
-            fit: BoxFit.cover,  // 使用cover让人脸填满圆形区域
-            child: SizedBox(
-              width: _currentController!.value.size.width,
-              height: _currentController!.value.size.height,
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: videoAspectRatio,
               child: VideoPlayer(_currentController!),
             ),
           ),
@@ -321,7 +320,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       );
     } else if (_isInitializing) {
       // 加载中显示进度指示器
-      print('🎬 [AIVideoAvatar] 显示加载指示器');
+      LoggerUtils.debug(' [AIVideoAvatar] 显示加载指示器');
       content = Container(
         width: widget.size,
         height: widget.size,
@@ -338,7 +337,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       );
     } else {
       // 显示静态图片作为后备
-      print('🎬 [AIVideoAvatar] 显示静态图片后备');
+      LoggerUtils.debug(' [AIVideoAvatar] 显示静态图片后备');
       content = _buildFallbackImage();
     }
     
@@ -348,12 +347,12 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: Offset(0, 4),
             ),

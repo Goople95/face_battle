@@ -1,6 +1,7 @@
 /// Elite AI的对手建模系统
 /// 
 /// 使用贝叶斯推理和行为模式分析来追踪对手
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';

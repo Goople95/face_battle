@@ -1,43 +1,43 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:provider/provider.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
 import '../models/player_profile.dart';
 import '../models/drinking_state.dart';
 import '../services/ai_service.dart';
-import '../services/gemini_service.dart';
 import '../services/auth_service.dart';
 import '../utils/ad_helper.dart';
-import '../config/api_config.dart';
+import '../utils/responsive_utils.dart';
 import '../config/character_assets.dart';
 import '../utils/logger_utils.dart';
-import '../widgets/animated_ai_face.dart';
 import '../widgets/simple_ai_avatar.dart';
 import '../widgets/simple_video_avatar.dart';  // 使用简化版
 import '../widgets/drunk_overlay.dart';
 import '../widgets/sober_dialog.dart';
 import '../widgets/victory_drunk_animation.dart';
+import '../widgets/animated_intimacy_display.dart';
 import '../services/share_image_service.dart';
+import '../services/intimacy_service.dart';
+import '../services/dialogue_service.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
   
   const GameScreen({
-    Key? key,
+    super.key,
     required this.aiPersonality,
-  }) : super(key: key);
+  });
   
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late AIService _aiService;
-  late GeminiService _geminiService;
   PlayerProfile? _playerProfile;
   DrinkingState? _drinkingState;
-  bool _useRealAI = ApiConfig.useRealAI;
   
   GameRound? _currentRound;
   bool _showDice = false;
@@ -51,13 +51,20 @@ class _GameScreenState extends State<GameScreen> {
   // AI Expression and Dialogue
   String _aiExpression = 'excited';  // 默认表情改为 excited
   String _aiDialogue = '';
-  String _currentEmotion = '兴奋'; // 用于显示当前表情文字
-  String _currentVideoFile = 'excited.mp4'; // 用于显示当前视频文件名
   List<String> _emotionQueue = []; // 情绪播放队列
   int _currentEmotionIndex = 0; // 当前播放的情绪索引
   
+  // 亲密度提示
+  bool _showIntimacyTip = false;
+  
   // 精细表情控制
   final GlobalKey<SimpleAIAvatarState> _avatarKey = GlobalKey<SimpleAIAvatarState>();
+  
+  // 酒杯飞行动画
+  late AnimationController _drinkAnimationController;
+  Animation<Offset>? _drinkAnimation;
+  bool _showFlyingDrink = false;
+  bool _isPlayerLoser = false; // 记录是玩家还是AI输了
   String _currentAIEmotion = 'excited';  // 当前AI表情，默认excited
   
   // Probability calculation for our bid
@@ -69,7 +76,7 @@ class _GameScreenState extends State<GameScreen> {
       _selectedValue, 
       onesAreCalled: _currentRound!.onesAreCalled || _selectedValue == 1,
     );
-    int totalDice = 10; // 5 + 5
+    // int totalDice = 10; // 5 + 5 - not used
     int unknownDice = 5; // AI's dice
     int needed = _selectedQuantity - ourCount;
     
@@ -126,19 +133,19 @@ class _GameScreenState extends State<GameScreen> {
       '叫牌值': bid.value,
       '叫牌量': bid.quantity,
       '玩家骰子': _currentRound!.playerDice.values.toString(),
-      'AI骰子数': aiDiceCount,
+      '${widget.aiPersonality.name}骰子数': aiDiceCount,
       '玩家有': ourCount,
-      'AI需要': aiNeeded,
+      '${widget.aiPersonality.name}需要': aiNeeded,
       '1是否被叫': _currentRound!.onesAreCalled,
     });
     
     // 如果AI需要的数量超过5个骰子，叫牌不可能成立
     if (aiNeeded > aiDiceCount) {
       GameLogger.logGameState('质疑必定成功', details: {
-        '原因': 'AI需要${aiNeeded}个，超过5个骰子',
+        '原因': '${widget.aiPersonality.name}需要$aiNeeded个，超过5个骰子',
         '叫牌量': bid.quantity,
         '我们有': ourCount,
-        'AI需要': aiNeeded,
+        '${widget.aiPersonality.name}需要': aiNeeded,
       });
       return 1.0; // 100% chance challenge succeeds (bid is impossible)
     }
@@ -146,7 +153,7 @@ class _GameScreenState extends State<GameScreen> {
     // 如果AI需要的数量小于等于0，叫牌已经成立（我们已经有足够了）
     if (aiNeeded <= 0) {
       GameLogger.logGameState('质疑必定失败', details: {
-        '原因': '玩家已有${ourCount}个，叫牌已成立',
+        '原因': '玩家已有$ourCount个，叫牌已成立',
         '叫牌量': bid.quantity,
         '玩家有': ourCount,
       });
@@ -173,7 +180,7 @@ class _GameScreenState extends State<GameScreen> {
     
     GameLogger.logGameState('质疑概率结果', details: {
       '单骰概率': singleDieProbability.toStringAsFixed(3),
-      'AI有足够的概率': aiHasProbability.toStringAsFixed(3),
+      '${widget.aiPersonality.name}有足够的概率': aiHasProbability.toStringAsFixed(3),
       '质疑成功率': (1.0 - aiHasProbability).toStringAsFixed(3),
     });
     
@@ -199,17 +206,19 @@ class _GameScreenState extends State<GameScreen> {
     // 确保初始表情变量同步
     _applyAIEmotion(_aiExpression, 0.5, false);
     // Don't start game automatically
+    
+    // 初始化酒杯飞行动画控制器
+    _drinkAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),  // 放慢动画速度
+      vsync: this,
+    );
   }
   
   Future<void> _loadPlayerProfile() async {
     _playerProfile = await PlayerProfile.load();
-    _drinkingState = await DrinkingState.load();
+    _drinkingState = await DrinkingState.loadStatic();
     // 初始化AI服务，传入玩家画像
     _aiService = AIService(personality: widget.aiPersonality);
-    _geminiService = GeminiService(
-      personality: widget.aiPersonality,
-      playerProfile: _playerProfile,
-    );
     setState(() {}); // Update UI after loading
   }
   
@@ -257,9 +266,9 @@ class _GameScreenState extends State<GameScreen> {
     
     // Roll dice - 5 dice each
     DiceRoll playerDice = rollDice();
-    int playerRerollCount = 0;
+    // int playerRerollCount = 0; // counting rerolls for stats
     while (needReroll(playerDice)) {
-      playerRerollCount++;
+      // playerRerollCount++;
       GameLogger.logGameState('玩家骰子自动重摇', details: {
         '原骰子': playerDice.values.toString(),
         '原因': '5个骰子都不相同',
@@ -268,10 +277,10 @@ class _GameScreenState extends State<GameScreen> {
     }
     
     DiceRoll aiDice = rollDice();
-    int aiRerollCount = 0;
+    // int aiRerollCount = 0; // counting rerolls for stats
     while (needReroll(aiDice)) {
-      aiRerollCount++;
-      GameLogger.logGameState('AI骰子自动重摇', details: {
+      // aiRerollCount++;
+      GameLogger.logGameState('${widget.aiPersonality.name}骰子自动重摇', details: {
         '原骰子': aiDice.values.toString(),
         '原因': '5个骰子都不相同',
       });
@@ -281,7 +290,7 @@ class _GameScreenState extends State<GameScreen> {
     // 骰子重摇完成，无需通知用户
     
     // 先确定表情
-    final newExpression = random.nextBool() ? 'thinking' : 'confident';
+    // final newExpression = random.nextBool() ? 'thinking' : 'confident'; // for later use
     final isPlayerFirst = random.nextBool();
     
     setState(() {
@@ -345,12 +354,14 @@ class _GameScreenState extends State<GameScreen> {
     _aiTurn();
   }
   
-  void _playerChallenge() {
+  Future<void> _playerChallenge() async {
     if (_currentRound == null || 
         !_currentRound!.isPlayerTurn || 
-        _currentRound!.currentBid == null) return;
+        _currentRound!.currentBid == null) {
+      return;
+    }
     
-    _resolveChallenge(true);
+    await _resolveChallenge(true);
   }
   
   Future<void> _aiTurn() async {
@@ -366,60 +377,22 @@ class _GameScreenState extends State<GameScreen> {
     String aiDialogue = '';
     bool wasBluffing = false;
     
-    if (_useRealAI && ApiConfig.geminiApiKey != 'YOUR_API_KEY_HERE') {
-      GameLogger.logAIAction('使用Gemini AI决策', data: {'personality': widget.aiPersonality.name});
-      try {
-        // 一次API调用完成决策和叫牌
-        final (dec, bid, emotions, dialogue, bluffing, playerBluffProb) = await _geminiService.makeCompleteDecision(_currentRound!);
-        decision = dec;
-        aiBid = bid;
-        aiEmotions = emotions; // 现在是数组
-        aiDialogue = dialogue;
-        wasBluffing = bluffing;
-        
-        // 如果有玩家虚张概率，记录到GameRound
-        if (playerBluffProb != null && _currentRound!.currentBid != null) {
-          _currentRound!.playerBluffProbabilities.add(playerBluffProb);
-        }
-        AILogger.apiCallSuccess('GameScreen', '合并决策', result: decision.action.toString());
-      } catch (e) {
-        AILogger.apiCallError('GameScreen', '合并决策', e);
-        // 降级到本地算法
-        decision = _aiService.decideAction(_currentRound!, null);
-        if (decision.action == GameAction.bid) {
-          final result = _aiService.generateBidWithAnalysis(_currentRound!);
-          aiBid = result.$1;
-          wasBluffing = result.$2;
-        }
-        // 使用本地AI生成表情
-        final (dialogue, expression) = _aiService.generateDialogue(
-          _currentRound!, 
-          decision.action,
-          aiBid,
-        );
-        aiEmotions = [expression]; // 转换为数组
-        aiDialogue = dialogue;
-      }
-    } else {
-      GameLogger.logAIAction('使用本地算法', data: {'personality': widget.aiPersonality.name});
-      if (ApiConfig.geminiApiKey == 'YOUR_API_KEY_HERE') {
-        GameLogger.logGameState('API密钥未配置');
-      }
-      decision = _aiService.decideAction(_currentRound!, null);
-      if (decision.action == GameAction.bid) {
-        final result = _aiService.generateBidWithAnalysis(_currentRound!);
-        aiBid = result.$1;
-        wasBluffing = result.$2;
-      }
-      // 使用本地AI生成表情
-      final (dialogue, expression) = _aiService.generateDialogue(
-        _currentRound!, 
-        decision.action,
-        aiBid,
-      );
-      aiEmotions = [expression]; // 转换为数组
-      aiDialogue = dialogue;
+    // 使用本地AI算法
+    GameLogger.logAIAction('使用本地算法', data: {'personality': widget.aiPersonality.name});
+    decision = _aiService.decideAction(_currentRound!, null);
+    if (decision.action == GameAction.bid) {
+      final result = _aiService.generateBidWithAnalysis(_currentRound!);
+      aiBid = result.$1;
+      wasBluffing = result.$2;
     }
+    // 使用本地AI生成表情
+    final (dialogue, expression) = _aiService.generateDialogue(
+      _currentRound!, 
+      decision.action,
+      aiBid,
+    );
+    aiEmotions = [expression]; // 转换为数组
+    aiDialogue = dialogue;
     
     // 如果是首次叫牌，需要根据实际叫牌重新计算概率
     if (decision.action == GameAction.bid && _currentRound!.currentBid == null && aiBid != null) {
@@ -459,7 +432,7 @@ class _GameScreenState extends State<GameScreen> {
       // Wait a bit to show the dialogue
       await Future.delayed(const Duration(seconds: 1));
       
-      _resolveChallenge(false);
+      await _resolveChallenge(false);
     } else {
       // AI makes a bid - 叫牌已经在上面的合并调用中生成
       if (aiBid == null) {
@@ -495,12 +468,12 @@ class _GameScreenState extends State<GameScreen> {
       _currentRound!.aiDecisions.add(decision);
       
       // Calculate bid probability for AI's own bid
-      double bidProb = _aiService.calculateBidProbability(
-        aiBid,
-        _currentRound!.aiDice,
-        10,
-        onesAreCalled: _currentRound!.onesAreCalled || aiBid.value == 1,
-      );
+      // double bidProb = _aiService.calculateBidProbability(
+      //   aiBid,
+      //   _currentRound!.aiDice,
+      //   10,
+      //   onesAreCalled: _currentRound!.onesAreCalled || aiBid.value == 1,
+      // ); // probability calculated but not used yet
       
       // Decision already contains bid info from makeCompleteDecision
       
@@ -535,7 +508,7 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
   
-  void _resolveChallenge(bool playerChallenged) {
+  Future<void> _resolveChallenge(bool playerChallenged) async {
     if (_currentRound == null || _currentRound!.currentBid == null) return;
     
     final isBidTrue = _currentRound!.isBidTrue(_currentRound!.currentBid!);
@@ -571,12 +544,23 @@ class _GameScreenState extends State<GameScreen> {
       );
       _playerProfile!.save(); // 保存到本地
       
+      // 不在这里更新亲密度，只在NPC喝醉时更新
+      
+      // 先执行酒杯飞行动画
+      await _playDrinkFlyAnimation(!playerWon);
+      
       // 更新饮酒状态
       if (_drinkingState != null) {
         // 在setState中更新饮酒状态，确保界面立即刷新
         setState(() {
           if (playerWon) {
             _drinkingState!.playerWin(widget.aiPersonality.id); // 玩家赢，AI喝酒
+            
+            // 显示NPC输了的对话
+            final dialogueService = DialogueService();
+            _aiDialogue = dialogueService.getLoseDialogue(widget.aiPersonality.id);
+            _aiExpression = 'thinking';  // 设置思考的表情
+            _currentAIEmotion = 'thinking';
             
             // 如果AI喝醉了，显示胜利提示
             if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
@@ -587,12 +571,27 @@ class _GameScreenState extends State<GameScreen> {
           } else {
             _drinkingState!.aiWin(widget.aiPersonality.id); // AI赢，玩家喝酒
             
+            // 显示NPC赢了的对话
+            final dialogueService = DialogueService();
+            _aiDialogue = dialogueService.getWinDialogue(widget.aiPersonality.id);
+            _aiExpression = 'happy';  // 设置开心的表情
+            _currentAIEmotion = 'happy';
+            
             // 如果玩家喝醉了，显示提示
             if (_drinkingState!.isDrunk) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showDrunkAnimation();
               });
             }
+          }
+        });
+        
+        // 5秒后清除对话
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              _aiDialogue = '';
+            });
           }
         });
         // 直接保存，不需要在这里更新醒酒状态
@@ -609,16 +608,16 @@ class _GameScreenState extends State<GameScreen> {
   void _showReviewDialog() {
     if (_currentRound == null) return;
     
-    final currentBid = _currentRound!.currentBid!;
-    final actualCount = _currentRound!.playerDice.countValue(
-                          currentBid.value, 
-                          onesAreCalled: _currentRound!.onesAreCalled
-                        ) + 
-                        _currentRound!.aiDice.countValue(
-                          currentBid.value,
-                          onesAreCalled: _currentRound!.onesAreCalled
-                        );
-    final bidSuccess = actualCount >= currentBid.quantity;
+    // final currentBid = _currentRound!.currentBid!; // for future use in review dialog
+    // final actualCount = _currentRound!.playerDice.countValue( // calculated but will be computed again during challenge
+    //                       currentBid.value, 
+    //                       onesAreCalled: _currentRound!.onesAreCalled
+    //                     ) + 
+    //                     _currentRound!.aiDice.countValue(
+    //                       currentBid.value,
+    //                       onesAreCalled: _currentRound!.onesAreCalled
+    //                     );
+    // final bidSuccess = actualCount >= currentBid.quantity; // calculated but used in logic below
     
     showDialog(
       context: context,
@@ -653,9 +652,9 @@ class _GameScreenState extends State<GameScreen> {
                       size: 28,
                     ),
                     const SizedBox(width: 10),
-                    const Text(
-                      'AI思考复盘',
-                      style: TextStyle(
+                    Text(
+                      '${widget.aiPersonality.name}思考复盘',
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -674,7 +673,7 @@ class _GameScreenState extends State<GameScreen> {
                     children: [
                       // AI Decisions
                       Text(
-                        'AI决策过程',
+                        '${widget.aiPersonality.name}决策过程',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -699,7 +698,7 @@ class _GameScreenState extends State<GameScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 2,
                                 offset: const Offset(0, 1),
                               ),
@@ -772,9 +771,9 @@ class _GameScreenState extends State<GameScreen> {
                               // 显示Elite AI的决策选项
                               if (decision.eliteOptions != null && decision.eliteOptions!.isNotEmpty) ...[
                                 const SizedBox(height: 8),
-                                const Text(
-                                  'AI考虑的选项:',
-                                  style: TextStyle(
+                                Text(
+                                  '${widget.aiPersonality.name}考虑的选项:',
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.black54,
                                     fontWeight: FontWeight.bold,
@@ -837,7 +836,7 @@ class _GameScreenState extends State<GameScreen> {
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
-                                            '$optionText',
+                                            optionText,
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: Colors.black87,
@@ -848,8 +847,7 @@ class _GameScreenState extends State<GameScreen> {
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: _getProbabilityColor(confidence),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
+                                                    ),
                                           child: Text(
                                             '${(confidence * 100).toStringAsFixed(0)}%',
                                             style: const TextStyle(
@@ -882,12 +880,12 @@ class _GameScreenState extends State<GameScreen> {
                                       ],
                                     ),
                                   );
-                                }).toList(),
+                                }),
                               ],
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                       
                       const SizedBox(height: 12),
                       
@@ -940,12 +938,6 @@ class _GameScreenState extends State<GameScreen> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text(
-                    '关闭',
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade600,
                     padding: const EdgeInsets.symmetric(
@@ -954,6 +946,12 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Text(
+                    '关闭',
+                    style: TextStyle(
+                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -982,7 +980,7 @@ class _GameScreenState extends State<GameScreen> {
   }
   
   // 根据AI情绪获取边框颜色
-  Color _getEmotionBorderColor() {
+  /* Color _getEmotionBorderColor() { // reserved for future UI enhancements
     switch (_aiExpression) {
       case 'happy':
         return Colors.yellow;
@@ -1003,20 +1001,76 @@ class _GameScreenState extends State<GameScreen> {
       default:
         return Colors.white;
     }
+  } */
+  
+  // 获取情绪标签 - reserved for future UI enhancements
+  /* String _getEmotionLabel() {
+    switch (_aiExpression) {
+      case 'happy':
+        return '😊 开心';
+      case 'confident':
+        return '😎 自信';
+      case 'nervous':
+        return '😰 紧张';
+      case 'angry':
+        return '😠 生气';
+      case 'excited':
+        return '🤩 兴奋';
+      case 'worried':
+        return '😟 担心';
+      case 'thinking':
+        return '🤔 思考';
+      case 'smirk':
+        return '😏 得意';
+      case 'suspicious':
+        return '🧐 怀疑';
+      case 'disappointed':
+        return '😔 失望';
+      case 'surprised':
+        return '😲 惊讶';
+      case 'neutral':
+        return '😐 平静';
+      default:
+        return '😐 观察';
+    }
+  } */
+  
+  // 获取NPC名字的颜色
+  Color _getNPCColor() {
+    // 根据不同的NPC设置不同的颜色
+    switch (widget.aiPersonality.name) {
+      case '亚希':
+        return Colors.pinkAccent;
+      case '芳野':
+        return Colors.purpleAccent;
+      case '卡捷琳娜':
+        return Colors.blueAccent;
+      default:
+        return Colors.orangeAccent;
+    }
   }
   
   // 显示AI醉倒对话框 - 使用新的胜利动画
   void _showAIDrunkDialog() {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: true,
-        pageBuilder: (context, animation, secondaryAnimation) => VictoryDrunkAnimation(
-          defeatedAI: widget.aiPersonality,
-          drinkingState: _drinkingState!,
-          onComplete: () {
-            Navigator.of(context).pop();
-            _showVictoryDialog();
-          },
+    // 停止表情序列播放，清理资源
+    _emotionQueue.clear();
+    
+    // 延迟一下，让视频资源有时间释放
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: true,
+          pageBuilder: (context, animation, secondaryAnimation) => VictoryDrunkAnimation(
+            defeatedAI: widget.aiPersonality,
+            drinkingState: _drinkingState!,
+            onComplete: () {
+              // 亲密度已在VictoryDrunkAnimation中自动处理
+              // 直接返回主页，不显示中间的对话框
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
           onRematch: () {
             // 看广告让AI醒酒
             AdHelper.showRewardedAdAfterDialogClose(
@@ -1042,10 +1096,7 @@ class _GameScreenState extends State<GameScreen> {
               },
             );
           },
-          onShare: () async {
-            // 获取亲密度时间（这里使用随机值，实际应该从动画组件传递）
-            final intimacyMinutes = 5 + math.Random().nextInt(16);
-            
+          onShare: (intimacyMinutes) async {
             await ShareImageService.shareVictoryWithImage(
               context: context,
               defeatedAI: widget.aiPersonality,
@@ -1062,6 +1113,7 @@ class _GameScreenState extends State<GameScreen> {
         },
       ),
     );
+    });
   }
   
   // 显示胜利对话框
@@ -1072,49 +1124,91 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(25),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.green.shade700, Colors.green.shade900],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF4A148C),
+                Color(0xFF880E4F),
+              ],
             ),
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFFE91E63).withValues(alpha: 0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // 暧昧的图标
               const Text(
-                '🏆',
-                style: TextStyle(fontSize: 60),
+                '💕',
+                style: TextStyle(fontSize: 50),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
+              // 主标题
               const Text(
-                '完胜！',
+                '夜已深',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w300,
+                  letterSpacing: 3,
+                ),
+              ),
+              const SizedBox(height: 15),
+              // 暧昧的描述
+              Text(
+                '${widget.aiPersonality.name}醉意朦胧地看着你',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
               const SizedBox(height: 10),
               Text(
-                '你成功灌醉了${widget.aiPersonality.name}！',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
+                '你们之间的关系变得更亲密了',
+                style: TextStyle(
+                  color: Color(0xFFE91E63).withValues(alpha: 0.9),
+                  fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop(); // 返回主页
-                },
-                icon: const Icon(Icons.home),
-                label: const Text('返回主页'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.green,
-                ),
+              const SizedBox(height: 25),
+              // 按钮
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // 继续探索按钮
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(); // 返回主页
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      '回到现实',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1133,7 +1227,7 @@ class _GameScreenState extends State<GameScreen> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.red.shade900.withOpacity(0.9),
+            color: Colors.red.shade900.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -1240,9 +1334,10 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
       
-      // 播放完所有情绪后，循环播放
+      // 播放完所有情绪后，继续循环播放
       while (mounted && _emotionQueue.isNotEmpty) {
-        await Future.delayed(const Duration(seconds: 5)); // 等待5秒后切换到下一个
+        // 增加等待时间，减少切换频率
+        await Future.delayed(const Duration(seconds: 8)); // 从5秒改为8秒
         if (mounted) {
           _currentEmotionIndex = (_currentEmotionIndex + 1) % _emotionQueue.length;
           _applyAIEmotion(_emotionQueue[_currentEmotionIndex], probability, false);
@@ -1257,8 +1352,8 @@ class _GameScreenState extends State<GameScreen> {
     
     // 即使 avatarKey 还没有准备好，我们也要更新文字显示
     
-    // 表情中文映射
-    Map<String, String> emotionChinese = {
+    // 表情中文映射 - reserved for future use
+    /* Map<String, String> emotionChinese = {
       'confident': '自信',
       'nervous': '紧张',
       'excited': '兴奋',
@@ -1295,10 +1390,10 @@ class _GameScreenState extends State<GameScreen> {
       '失望': '失望',
       '得意': '得意',
       '沉思': '沉思',
-    };
+    }; */
     
-    // 视频文件映射（与 ai_video_avatar.dart 保持一致）
-    Map<String, String> emotionFileMapping = {
+    // 视频文件映射（与 ai_video_avatar.dart 保持一致）- reserved for future use
+    /* Map<String, String> emotionFileMapping = {
       'thinking': 'thinking.mp4',
       'happy': 'happy.mp4',
       'confident': 'confident.mp4',
@@ -1336,14 +1431,14 @@ class _GameScreenState extends State<GameScreen> {
       '失望': 'disappointed.mp4',
       '得意': 'happy.mp4',
       '沉思': 'thinking.mp4',
-    };
+    }; */
     
-    // 更新当前表情文字和视频文件名（用于调试显示）
-    setState(() {
-      _currentEmotion = emotionChinese[emotion] ?? emotion;
-      _currentVideoFile = emotionFileMapping[emotion] ?? 'excited.mp4';
-      _currentAIEmotion = emotion;  // 更新视频表情
-    });
+    // 只有表情真正改变时才更新，避免不必要的重新渲染
+    if (_currentAIEmotion != emotion) {
+      setState(() {
+        _currentAIEmotion = emotion;  // 更新视频表情
+      });
+    }
     
     // 根据情绪和概率计算精细参数
     double valence = 0.0;
@@ -1501,8 +1596,8 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
   
-  // Helper method to get dice icon (fallback for text-only contexts)
-  String _getDiceIcon(int value) {
+  // Helper method to get dice icon (fallback for text-only contexts) - reserved for future use
+  /* String _getDiceIcon(int value) {
     switch (value) {
       case 1:
         return '⚀';
@@ -1519,7 +1614,7 @@ class _GameScreenState extends State<GameScreen> {
       default:
         return '?';
     }
-  }
+  } */
   
   @override
   Widget build(BuildContext context) {
@@ -1540,7 +1635,7 @@ class _GameScreenState extends State<GameScreen> {
               children: [
                 // Top Bar - empty for now, will be used for other controls if needed
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -1550,185 +1645,237 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
                 
-                // AI Face and Info with Dialogue
+                // AI Face and Info with Dialogue - 大面积视频展示
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  child: Row(
-                    children: [
-                      // Left side: Back button and AI mode switcher
-                      Column(
-                        children: [
-                          // 返回主页按钮
-                          IconButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); // 直接返回主页
-                            },
-                            icon: const Icon(
-                              Icons.home,
-                              color: Colors.blueAccent,
-                              size: 28,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  // NPC大面积视频展示
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // 计算1:1视频的高度（与宽度相同）
+                      final videoSize = constraints.maxWidth - 30; // 减去padding
+                      
+                      return Container(
+                        height: videoSize,  // 使用1:1的高度
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
                             ),
-                            tooltip: '返回主页',
-                          ),
-                          const SizedBox(height: 8),
-                          // AI模式切换（不显示文字标签）
-                          GestureDetector(
-                            onTap: () {
-                              if (ApiConfig.geminiApiKey == 'YOUR_API_KEY_HERE' && !_useRealAI) {
-                                _showSnackBar('请先配置Gemini API密钥');
-                                GameLogger.logGameState('无法切换: API密钥未配置');
-                                return;
-                              }
-                              String oldMode = _useRealAI ? 'Gemini AI' : '本地算法';
-                              setState(() {
-                                _useRealAI = !_useRealAI;
-                              });
-                              String newMode = _useRealAI ? 'Gemini AI' : '本地算法';
-                              _showSnackBar('切换到$newMode');
-                              AILogger.logModeSwitch(oldMode, newMode);
-                              GameLogger.logGameState('AI配置', details: {'mode': newMode, 'personality': widget.aiPersonality.name});
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _useRealAI ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _useRealAI ? Colors.green : Colors.orange,
-                                  width: 1,
+                          ],
+                        ),
+                        child: ClipRRect(
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // 视频背景 - 1:1显示
+                              Positioned.fill(
+                                child: SimpleVideoAvatar(
+                                  characterId: widget.aiPersonality.id,
+                                  emotion: _currentAIEmotion,
+                                  size: videoSize,  // 使用正方形尺寸
+                                  showBorder: false,
                                 ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _useRealAI ? Icons.cloud : Icons.computer,
-                                    color: _useRealAI ? Colors.green : Colors.orange,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _useRealAI ? 'Gemini' : '本地',
-                                    style: TextStyle(
-                                      color: _useRealAI ? Colors.green : Colors.orange,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                          // 左上角 - 返回主页按钮（粉色主题）
+                          Positioned(
+                            top: 10,
+                            left: 10,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.pink.shade400.withValues(alpha: 0.85),
+                                    Colors.pink.shade400.withValues(alpha: 0.65),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(25),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.pink.withValues(alpha: 0.4),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 10),
-                      // 表情视频
-                      Container(
-                        width: 120,  // 与内部AIVideoAvatar尺寸一致
-                        height: 120,  // 与内部AIVideoAvatar尺寸一致
-                        decoration: BoxDecoration(
-                          // 移除白色背景，让视频能够显示
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _getEmotionBorderColor(),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(2, 2),
-                            ),
-                          ],
-                        ),
-                        child: SimpleVideoAvatar(
-                          characterId: widget.aiPersonality.id,
-                          emotion: _currentAIEmotion,
-                          size: 120,  // 增大尺寸以便看清视频
-                          showBorder: false,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      // AI Dialogue Bubble
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.aiPersonality.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                icon: const Icon(
+                                  Icons.home,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                tooltip: '返回主页',
                               ),
                             ),
-                            if (_aiDialogue.isNotEmpty)
-                              Container(
-                                margin: const EdgeInsets.only(top: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
+                          ),
+                          // 右上角 - 亲密度显示（小巧精致）
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: AnimatedIntimacyDisplay(
+                              npcId: widget.aiPersonality.id,
+                              showDetails: false,
+                              onTap: () {
+                                setState(() {
+                                  _showIntimacyTip = !_showIntimacyTip;
+                                  if (_showIntimacyTip) {
+                                    // 显示NPC对话
+                                    _aiDialogue = "只要你把我灌醉就可以提高亲密度哦～";
+                                    // 3秒后自动隐藏
+                                    Future.delayed(const Duration(seconds: 3), () {
+                                      if (mounted) {
+                                        setState(() {
+                                          _showIntimacyTip = false;
+                                          _aiDialogue = '';
+                                        });
+                                      }
+                                    });
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          // 亲密度进度提示
+                          if (_showIntimacyTip)
+                            Positioned(
+                              top: 60,
+                              right: 10,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
-                                  borderRadius: const BorderRadius.only(
-                                    topRight: Radius.circular(15),
-                                    bottomLeft: Radius.circular(15),
-                                    bottomRight: Radius.circular(15),
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  border: Border.all(
+                                    color: Colors.pink.shade400,
+                                    width: 1,
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.favorite,
+                                          color: Colors.pink.shade400,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '亲密度进度',
+                                          style: TextStyle(
+                                            color: Colors.pink.shade400,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    FutureBuilder<String>(
+                                      future: _getIntimacyProgress(),
+                                      builder: (context, snapshot) {
+                                        return Text(
+                                          snapshot.data ?? '加载中...',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text(
+                                      '💕 每次赢她都会增加亲密度',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                child: Text(
-                                  _aiDialogue,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade800,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
                               ),
-                          ],
-                        ),
+                            ),
+                          // 底部对话文字 - 透明背景
+                          if (_aiDialogue.isNotEmpty)
+                            Positioned(
+                              bottom: 20,
+                              left: 20,
+                              right: 20,
+                              child: Text(
+                                _aiDialogue,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      offset: const Offset(1, 1),
+                                      blurRadius: 4,
+                                      color: Colors.black.withValues(alpha: 0.8),
+                                    ),
+                                    Shadow(
+                                      offset: const Offset(-1, -1),
+                                      blurRadius: 4,
+                                      color: Colors.black.withValues(alpha: 0.8),
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
+                    ),
+                  );
+                    },
                   ),
                 ),
               
                 // Game Board
                 Container(
                   height: MediaQuery.of(context).size.height * 0.28,
-                  margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+                  margin: const EdgeInsets.symmetric(horizontal: 15),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.green.shade900.withOpacity(0.5),
-                        Colors.green.shade800.withOpacity(0.3),
+                        Colors.green.shade900.withValues(alpha: 0.5),
+                        Colors.green.shade800.withValues(alpha: 0.3),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.green.shade400.withOpacity(0.3),
+                      color: Colors.green.shade400.withValues(alpha: 0.3),
                       width: 2,
                     ),
                   ),
-                  child: !_gameStarted 
-                    ? _buildStartScreen()
-                    : Column(
+                  child: Stack(
+                    children: [
+                      // 主要内容
+                      Positioned.fill(
+                        child: !_gameStarted 
+                          ? _buildStartScreen()
+                          : Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // AI Dice (hidden or revealed)
                       _currentRound?.isRoundOver == true
-                        ? _buildResultDiceRow('AI骰子', _currentRound?.aiDice, _currentRound?.currentBid)
-                        : _buildDiceRow('AI骰子', _currentRound?.aiDice, !_showDice),
+                        ? _buildResultDiceRow('${widget.aiPersonality.name}的骰子', _currentRound?.aiDice, _currentRound?.currentBid)
+                        : _buildDiceRow('${widget.aiPersonality.name}的骰子', _currentRound?.aiDice, !_showDice),
                       
                       // Center Area - Show result or current bid
                       _currentRound?.isRoundOver == true
@@ -1736,10 +1883,10 @@ class _GameScreenState extends State<GameScreen> {
                         : Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.amber.withOpacity(0.5),
+                            color: Colors.amber.withValues(alpha: 0.5),
                             width: 1.5,
                           ),
                         ),
@@ -1754,8 +1901,8 @@ class _GameScreenState extends State<GameScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: _currentRound?.onesAreCalled == true
-                                      ? Colors.grey.shade800.withOpacity(0.5)
-                                      : Colors.yellow.shade900.withOpacity(0.5),
+                                      ? Colors.grey.shade800.withValues(alpha: 0.5)
+                                      : Colors.yellow.shade900.withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: _currentRound?.onesAreCalled == true
@@ -1800,13 +1947,35 @@ class _GameScreenState extends State<GameScreen> {
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      _currentRound!.isPlayerTurn ? 'AI: ' : '你: ',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.amber.shade200,
-                                      ),
-                                    ),
+                                    _currentRound!.isPlayerTurn 
+                                      ? RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: widget.aiPersonality.name,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: _getNPCColor(),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: ': ',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.amber.shade200,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : Text(
+                                          '你: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.amber.shade200,
+                                          ),
+                                        ),
                                     Text(
                                       '${_currentRound!.currentBid!.quantity}个${_currentRound!.currentBid!.value}',
                                       style: const TextStyle(
@@ -1818,7 +1987,7 @@ class _GameScreenState extends State<GameScreen> {
                                   ],
                                 )
                               : Text(
-                                  _currentRound?.isPlayerTurn == true ? '请叫牌' : 'AI思考中...',
+                                  _currentRound?.isPlayerTurn == true ? '请叫牌' : '${widget.aiPersonality.name}思考中...',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     color: Colors.white70,
@@ -1832,6 +2001,53 @@ class _GameScreenState extends State<GameScreen> {
                       _currentRound?.isRoundOver == true
                         ? _buildResultDiceRow('你的骰子', _currentRound?.playerDice, _currentRound?.currentBid)
                         : _buildDiceRow('你的骰子', _currentRound?.playerDice, false),
+                    ],
+                  ),
+                      ),
+                      
+                      // 飞行的酒杯 - 在牌桌内部
+                      if (_showFlyingDrink && _drinkAnimation != null)
+                        AnimatedBuilder(
+                          animation: _drinkAnimation!,
+                          builder: (context, child) {
+                            final boxHeight = MediaQuery.of(context).size.height * 0.28;
+                            final boxWidth = MediaQuery.of(context).size.width - 30;
+                            return Positioned(
+                              left: _drinkAnimation!.value.dx * boxWidth - 25,  // 调整位置使酒杯居中
+                              top: _drinkAnimation!.value.dy * boxHeight - 25,
+                              child: Transform.scale(
+                                scale: 1.0 - (_drinkAnimationController.value * 0.3), // 从正常大小变小
+                                child: Container(
+                                  width: 50,  // 调小酒杯尺寸
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.amber.shade400,
+                                        Colors.orange.shade700,
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.amber.withValues(alpha: 0.5),
+                                        blurRadius: 15,
+                                        spreadRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.local_bar,
+                                    size: 28,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -1897,7 +2113,7 @@ class _GameScreenState extends State<GameScreen> {
     }
     
     // Check if this is AI or Player
-    bool isAI = label.contains('AI');
+    bool isAI = label.contains(widget.aiPersonality.name);
     
     return Column(
       children: [
@@ -1910,15 +2126,38 @@ class _GameScreenState extends State<GameScreen> {
               _buildCompactDrinks(isAI, true),
               const SizedBox(width: 8),
             ],
-            // Label text
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            // Label text - with colored NPC name
+            isAI
+              ? RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: widget.aiPersonality.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _getNPCColor(),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '的骰子',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
             // Right side drinks (last 3)
             if (_drinkingState != null) ...[
               const SizedBox(width: 8),
@@ -1962,7 +2201,7 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -2006,7 +2245,7 @@ class _GameScreenState extends State<GameScreen> {
     if (dice == null || currentBid == null) return Container();
     
     // Check if this is AI or Player
-    bool isAI = label.contains('AI');
+    bool isAI = label.contains(widget.aiPersonality.name);
     
     return Column(
       children: [
@@ -2019,15 +2258,38 @@ class _GameScreenState extends State<GameScreen> {
               _buildCompactDrinks(isAI, true),
               const SizedBox(width: 8),
             ],
-            // Label text
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.9),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            // Label text - with colored NPC name
+            isAI
+              ? RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: widget.aiPersonality.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _getNPCColor(),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: '的骰子',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
             // Right side drinks (last 3)
             if (_drinkingState != null) ...[
               const SizedBox(width: 8),
@@ -2090,8 +2352,8 @@ class _GameScreenState extends State<GameScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: winner == 'Player' 
-            ? [Colors.green.shade700.withOpacity(0.8), Colors.green.shade600.withOpacity(0.6)]
-            : [Colors.red.shade700.withOpacity(0.8), Colors.red.shade600.withOpacity(0.6)],
+            ? [Colors.green.shade700.withValues(alpha: 0.8), Colors.green.shade600.withValues(alpha: 0.6)]
+            : [Colors.red.shade700.withValues(alpha: 0.8), Colors.red.shade600.withValues(alpha: 0.6)],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -2107,10 +2369,10 @@ class _GameScreenState extends State<GameScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                _playerChallenged ? '玩家开牌' : 'AI开牌',
+                _playerChallenged ? '玩家开牌' : '${widget.aiPersonality.name}开牌',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 8),
@@ -2118,7 +2380,7 @@ class _GameScreenState extends State<GameScreen> {
                 '→',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(width: 8),
@@ -2128,14 +2390,37 @@ class _GameScreenState extends State<GameScreen> {
                 size: 18,
               ),
               const SizedBox(width: 4),
-              Text(
-                winner == 'Player' ? '你赢了！' : 'AI赢了！',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              winner == 'Player' 
+                ? const Text(
+                    '你赢了！',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  )
+                : RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: widget.aiPersonality.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _getNPCColor(),
+                          ),
+                        ),
+                        const TextSpan(
+                          text: '赢了！',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
             ],
           ),
           const SizedBox(height: 6),
@@ -2177,119 +2462,12 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
   
-  // Build start screen
+  // Build start screen - 简化版，只有开始按钮
   Widget _buildStartScreen() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // VS Display
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Player
-              Column(
-                children: [
-                  _buildPlayerAvatar(),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getPlayerName(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 30),
-              const Text(
-                'VS',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 30),
-              // AI
-              Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.red, width: 2),
-                      image: DecorationImage(
-                        image: AssetImage(CharacterAssets.getFullAvatarPath(widget.aiPersonality.avatarPath)),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.aiPersonality.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // VS Record Display
-          if (_playerProfile != null && 
-              _playerProfile!.vsAIRecords[widget.aiPersonality.id] != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins'] ?? 0}',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade400,
-                    ),
-                  ),
-                  const Text(
-                    ' 胜 ',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white54,
-                    ),
-                  ),
-                  Text(
-                    '${_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['losses'] ?? 0}',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red.shade400,
-                    ),
-                  ),
-                  const Text(
-                    ' 负',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 15),
-          ],
           // Start Button
           ElevatedButton.icon(
             onPressed: _startGame,
@@ -2333,13 +2511,12 @@ class _GameScreenState extends State<GameScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.indigo.shade900.withOpacity(0.3),
-            Colors.purple.shade900.withOpacity(0.3),
+            Colors.indigo.shade900.withValues(alpha: 0.3),
+            Colors.purple.shade900.withValues(alpha: 0.3),
           ],
         ),
-        borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -2367,7 +2544,7 @@ class _GameScreenState extends State<GameScreen> {
                 '${_currentRound!.bidHistory.length}轮',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -2403,14 +2580,13 @@ class _GameScreenState extends State<GameScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isPlayerBid 
-                        ? [Colors.blue.shade800.withOpacity(0.3), Colors.blue.shade900.withOpacity(0.2)]
-                        : [Colors.red.shade800.withOpacity(0.3), Colors.red.shade900.withOpacity(0.2)],
+                        ? [Colors.blue.shade800.withValues(alpha: 0.3), Colors.blue.shade900.withValues(alpha: 0.2)]
+                        : [Colors.red.shade800.withValues(alpha: 0.3), Colors.red.shade900.withValues(alpha: 0.2)],
                       begin: isPlayerBid ? Alignment.centerRight : Alignment.centerLeft,
                       end: isPlayerBid ? Alignment.centerLeft : Alignment.centerRight,
                     ),
-                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isPlayerBid ? Colors.blue.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                      color: isPlayerBid ? Colors.blue.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -2420,15 +2596,14 @@ class _GameScreenState extends State<GameScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isPlayerBid ? Colors.blue.withOpacity(0.5) : Colors.red.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
+                          color: isPlayerBid ? Colors.blue.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                         ),
                         child: Text(
-                          isPlayerBid ? '玩家' : 'AI',
-                          style: const TextStyle(
+                          isPlayerBid ? '玩家' : widget.aiPersonality.name,
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: isPlayerBid ? Colors.white : _getNPCColor(),
                           ),
                         ),
                       ),
@@ -2452,13 +2627,12 @@ class _GameScreenState extends State<GameScreen> {
                               height: 24,
                               decoration: BoxDecoration(
                                 color: bid.value == 1 
-                                  ? Colors.amber.withOpacity(0.3)
-                                  : Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
+                                  ? Colors.amber.withValues(alpha: 0.3)
+                                  : Colors.white.withValues(alpha: 0.1),
                                 border: Border.all(
                                   color: bid.value == 1 
                                     ? Colors.amber
-                                    : Colors.white.withOpacity(0.3),
+                                    : Colors.white.withValues(alpha: 0.3),
                                   width: 1,
                                 ),
                               ),
@@ -2478,8 +2652,7 @@ class _GameScreenState extends State<GameScreen> {
                                 margin: const EdgeInsets.only(left: 4),
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: Colors.amber.withValues(alpha: 0.2),
                                 ),
                                 child: const Text(
                                   '万能',
@@ -2497,13 +2670,12 @@ class _GameScreenState extends State<GameScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: tag == '虚张' 
-                                    ? Colors.orange.withOpacity(0.3)
-                                    : Colors.purple.withOpacity(0.3), // 激进
-                                  borderRadius: BorderRadius.circular(10),
+                                    ? Colors.orange.withValues(alpha: 0.3)
+                                    : Colors.purple.withValues(alpha: 0.3), // 激进
                                   border: Border.all(
                                     color: tag == '虚张'
-                                      ? Colors.orange.withOpacity(0.5)
-                                      : Colors.purple.withOpacity(0.5), // 激进
+                                      ? Colors.orange.withValues(alpha: 0.5)
+                                      : Colors.purple.withValues(alpha: 0.5), // 激进
                                     width: 1,
                                   ),
                                 ),
@@ -2517,7 +2689,7 @@ class _GameScreenState extends State<GameScreen> {
                                       : Colors.purple.shade200, // 激进
                                   ),
                                 ),
-                              )).toList(),
+                              )),
                             ],
                           ],
                         ),
@@ -2528,7 +2700,7 @@ class _GameScreenState extends State<GameScreen> {
                         '#${index + 1}',
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -2564,13 +2736,12 @@ class _GameScreenState extends State<GameScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.purple.shade900.withOpacity(0.3),
-            Colors.blue.shade900.withOpacity(0.3),
+            Colors.purple.shade900.withValues(alpha: 0.3),
+            Colors.blue.shade900.withValues(alpha: 0.3),
           ],
         ),
-        borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -2598,7 +2769,7 @@ class _GameScreenState extends State<GameScreen> {
                 '第${_currentRound!.bidHistory.length}轮',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -2620,7 +2791,7 @@ class _GameScreenState extends State<GameScreen> {
                 List<String> behaviorTags = [];
                 if (index < _currentRound!.bidBehaviors.length) {
                   final behavior = _currentRound!.bidBehaviors[index];
-                  print('🏷️ 显示标签 index=$index, isPlayerBid=$isPlayerBid, behavior: 虚张=${behavior.isBluffing}, 激进=${behavior.isAggressive}');
+                  LoggerUtils.debug('显示标签 index=$index, isPlayerBid=$isPlayerBid, behavior: 虚张=${behavior.isBluffing}, 激进=${behavior.isAggressive}');
                   // 游戏进行中只显示玩家的行为标签，AI的行为保密
                   if (isPlayerBid) {
                     if (behavior.isBluffing) {
@@ -2638,14 +2809,13 @@ class _GameScreenState extends State<GameScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isPlayerBid 
-                        ? [Colors.blue.shade800.withOpacity(0.3), Colors.blue.shade900.withOpacity(0.2)]
-                        : [Colors.red.shade800.withOpacity(0.3), Colors.red.shade900.withOpacity(0.2)],
+                        ? [Colors.blue.shade800.withValues(alpha: 0.3), Colors.blue.shade900.withValues(alpha: 0.2)]
+                        : [Colors.red.shade800.withValues(alpha: 0.3), Colors.red.shade900.withValues(alpha: 0.2)],
                       begin: isPlayerBid ? Alignment.centerRight : Alignment.centerLeft,
                       end: isPlayerBid ? Alignment.centerLeft : Alignment.centerRight,
                     ),
-                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isPlayerBid ? Colors.blue.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                      color: isPlayerBid ? Colors.blue.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -2655,15 +2825,14 @@ class _GameScreenState extends State<GameScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isPlayerBid ? Colors.blue.withOpacity(0.5) : Colors.red.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
+                          color: isPlayerBid ? Colors.blue.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                         ),
                         child: Text(
-                          isPlayerBid ? '玩家' : 'AI',
-                          style: const TextStyle(
+                          isPlayerBid ? '玩家' : widget.aiPersonality.name,
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: isPlayerBid ? Colors.white : _getNPCColor(),
                           ),
                         ),
                       ),
@@ -2687,13 +2856,12 @@ class _GameScreenState extends State<GameScreen> {
                               height: 24,
                               decoration: BoxDecoration(
                                 color: bid.value == 1 
-                                  ? Colors.amber.withOpacity(0.3)
-                                  : Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
+                                  ? Colors.amber.withValues(alpha: 0.3)
+                                  : Colors.white.withValues(alpha: 0.1),
                                 border: Border.all(
                                   color: bid.value == 1 
                                     ? Colors.amber
-                                    : Colors.white.withOpacity(0.3),
+                                    : Colors.white.withValues(alpha: 0.3),
                                   width: 1,
                                 ),
                               ),
@@ -2713,8 +2881,7 @@ class _GameScreenState extends State<GameScreen> {
                                 margin: const EdgeInsets.only(left: 4),
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: Colors.amber.withValues(alpha: 0.2),
                                 ),
                                 child: const Text(
                                   '万能',
@@ -2732,13 +2899,12 @@ class _GameScreenState extends State<GameScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: tag == '虚张' 
-                                    ? Colors.orange.withOpacity(0.3)
-                                    : Colors.purple.withOpacity(0.3), // 激进
-                                  borderRadius: BorderRadius.circular(10),
+                                    ? Colors.orange.withValues(alpha: 0.3)
+                                    : Colors.purple.withValues(alpha: 0.3), // 激进
                                   border: Border.all(
                                     color: tag == '虚张'
-                                      ? Colors.orange.withOpacity(0.5)
-                                      : Colors.purple.withOpacity(0.5), // 激进
+                                      ? Colors.orange.withValues(alpha: 0.5)
+                                      : Colors.purple.withValues(alpha: 0.5), // 激进
                                     width: 1,
                                   ),
                                 ),
@@ -2752,7 +2918,7 @@ class _GameScreenState extends State<GameScreen> {
                                       : Colors.purple.shade200, // 激进
                                   ),
                                 ),
-                              )).toList(),
+                              )),
                             ],
                           ],
                         ),
@@ -2763,7 +2929,7 @@ class _GameScreenState extends State<GameScreen> {
                         '#${index + 1}',
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                     ],
@@ -2779,10 +2945,10 @@ class _GameScreenState extends State<GameScreen> {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.yellow.withOpacity(0.1),
+                color: Colors.yellow.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Colors.yellow.withOpacity(0.3),
+                  color: Colors.yellow.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -2819,13 +2985,12 @@ class _GameScreenState extends State<GameScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.shade900.withOpacity(0.3),
-            Colors.purple.shade900.withOpacity(0.3),
+            Colors.blue.shade900.withValues(alpha: 0.3),
+            Colors.purple.shade900.withValues(alpha: 0.3),
           ],
         ),
-        borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: Colors.blue.shade400.withOpacity(0.3),
+          color: Colors.blue.shade400.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -2852,7 +3017,7 @@ class _GameScreenState extends State<GameScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.green, width: 1),
                 ),
@@ -2902,13 +3067,13 @@ class _GameScreenState extends State<GameScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.orange.withOpacity(0.2),
-                    Colors.red.withOpacity(0.2),
+                    Colors.orange.withValues(alpha: 0.2),
+                    Colors.red.withValues(alpha: 0.2),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Colors.orange.withOpacity(0.5),
+                  color: Colors.orange.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),
@@ -2954,8 +3119,8 @@ class _GameScreenState extends State<GameScreen> {
                       decoration: BoxDecoration(
                         color: (_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins']! > 
                                 _playerProfile!.vsAIRecords[widget.aiPersonality.id]!['losses']!)
-                          ? Colors.green.withOpacity(0.3)
-                          : Colors.red.withOpacity(0.3),
+                          ? Colors.green.withValues(alpha: 0.3)
+                          : Colors.red.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -2979,7 +3144,7 @@ class _GameScreenState extends State<GameScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -3018,7 +3183,7 @@ class _GameScreenState extends State<GameScreen> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.blue, width: 2),
-        color: Colors.blue.withOpacity(0.2),
+        color: Colors.blue.withValues(alpha: 0.2),
       ),
       child: ClipOval(
         child: user?.photoURL != null
@@ -3056,22 +3221,29 @@ class _GameScreenState extends State<GameScreen> {
     return '玩家';
   }
   
-  // Build compact drinks display (3 drinks on left or right side)
+  // Build compact drinks display (half drinks on left or right side)
   Widget _buildCompactDrinks(bool isAI, bool leftSide) {
     if (_drinkingState == null) return const SizedBox.shrink();
     
     int drinks = isAI ? _drinkingState!.getAIDrinks(widget.aiPersonality.id) : _drinkingState!.drinksConsumed;
+    int capacity = isAI ? widget.aiPersonality.drinkCapacity : 6; // 玩家固定6杯
+    
+    // 计算每边显示的杯子数量（尽量对称）
+    int leftCount = (capacity + 1) ~/ 2;  // 左边数量（向上取整）
+    int rightCount = capacity - leftCount; // 右边数量
+    int displayCount = leftSide ? leftCount : rightCount;
+    int startIndex = leftSide ? 0 : leftCount;
     
     return Row(
-      children: List.generate(3, (index) {
-        int drinkIndex = leftSide ? index : (index + 3);
+      children: List.generate(displayCount, (index) {
+        int drinkIndex = startIndex + index;
         bool isFilled = drinkIndex < drinks;
         return Icon(
           Icons.local_bar,
           size: 14,
           color: isFilled 
             ? (isAI ? Colors.red.shade300 : Colors.amber.shade300)
-            : Colors.grey.withOpacity(0.2),
+            : Colors.grey.withValues(alpha: 0.2),
         );
       }),
     );
@@ -3102,57 +3274,26 @@ class _GameScreenState extends State<GameScreen> {
   // Build result buttons
   Widget _buildResultButtons() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Review button
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _showReviewDialog();
-                },
-                icon: const Icon(Icons.analytics),
-                label: const Text(
-                  '复盘',
-                  style: TextStyle(fontSize: 16),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-            ),
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: _startNewRound,
+          icon: const Icon(Icons.play_arrow),
+          label: const Text(
+            '继续',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          // Continue button
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: ElevatedButton.icon(
-                onPressed: _startNewRound,
-                icon: const Icon(Icons.play_arrow),
-                label: const Text(
-                  '继续',
-                  style: TextStyle(fontSize: 16),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green.shade700,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
             ),
+            elevation: 5,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -3164,13 +3305,13 @@ class _GameScreenState extends State<GameScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.black.withOpacity(0.7),
-            Colors.black.withOpacity(0.5),
+            Colors.black.withValues(alpha: 0.7),
+            Colors.black.withValues(alpha: 0.5),
           ],
         ),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -3360,17 +3501,17 @@ class _GameScreenState extends State<GameScreen> {
           label,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isWild ? Colors.amber : Colors.white.withOpacity(0.3),
+              color: isWild ? Colors.amber : Colors.white.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -3379,7 +3520,7 @@ class _GameScreenState extends State<GameScreen> {
               IconButton(
                 icon: Icon(
                   Icons.remove_circle_outline,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: 22,
                 ),
                 onPressed: onDecrease,
@@ -3395,8 +3536,8 @@ class _GameScreenState extends State<GameScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
                   color: isWild 
-                    ? Colors.amber.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.05),
+                    ? Colors.amber.withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -3411,7 +3552,7 @@ class _GameScreenState extends State<GameScreen> {
               IconButton(
                 icon: Icon(
                   Icons.add_circle_outline,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: 22,
                 ),
                 onPressed: onIncrease,
@@ -3428,7 +3569,7 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
   
-  Widget _buildProbabilityIndicator(double probability) {
+  /* Widget _buildProbabilityIndicator(double probability) { // reserved for future UI enhancements
     IconData icon;
     Color color;
     String tooltip;
@@ -3463,10 +3604,113 @@ class _GameScreenState extends State<GameScreen> {
         size: 28,
       ),
     );
+  } */
+  
+  Future<String> _getIntimacyProgress() async {
+    final intimacyService = IntimacyService();
+    final intimacy = intimacyService.getIntimacy(widget.aiPersonality.id);
+    
+    // 获取当前等级的阈值
+    final currentLevelThreshold = intimacy.intimacyLevel == 1 
+        ? 0 
+        : [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500][intimacy.intimacyLevel - 1];
+    final nextLevelThreshold = [100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 999999][intimacy.intimacyLevel - 1];
+    
+    // 计算当前等级内的进度
+    final currentLevelPoints = intimacy.intimacyPoints - currentLevelThreshold;
+    final pointsNeeded = nextLevelThreshold - currentLevelThreshold;
+    
+    if (intimacy.intimacyLevel >= 10) {
+      return '已达最高级 (${intimacy.intimacyPoints} pts)';
+    }
+    
+    return '进度：$currentLevelPoints / $pointsNeeded';
+  }
+
+  // 播放酒杯飞行动画
+  Future<void> _playDrinkFlyAnimation(bool isPlayerLoser) async {
+    setState(() {
+      _isPlayerLoser = isPlayerLoser;
+      _showFlyingDrink = true;
+    });
+    
+    // 计算第一个空杯子的位置
+    Offset targetPosition;
+    if (_drinkingState != null) {
+      if (isPlayerLoser) {
+        // 玩家输了，计算玩家第一个空杯的位置
+        int playerDrinks = _drinkingState!.drinksConsumed;
+        int playerCapacity = 6;  // 玩家固定6杯
+        
+        // 杯子分左右两边显示，左边3个，右边3个
+        int leftCount = (playerCapacity + 1) ~/ 2;  // 左边数量（3个）
+        int nextDrinkIndex = playerDrinks;  // 下一个要填的杯子索引
+        
+        if (nextDrinkIndex < leftCount) {
+          // 在左边，从左往右填充
+          double baseX = 0.3;  // 左侧起始位置
+          double xOffset = baseX + (nextDrinkIndex * 0.03);  
+          targetPosition = Offset(xOffset, 0.82);  // 玩家骰子行位置
+        } else {
+          // 在右边，从左往右填充
+          int rightIndex = nextDrinkIndex - leftCount;
+          double baseX = 0.62;  // 右侧起始位置
+          double xOffset = baseX + (rightIndex * 0.03);
+          targetPosition = Offset(xOffset, 0.82);
+        }
+      } else {
+        // AI输了，计算AI第一个空杯的位置
+        int aiDrinks = _drinkingState!.getAIDrinks(widget.aiPersonality.id);
+        int aiCapacity = widget.aiPersonality.drinkCapacity;
+        
+        // 杯子分左右两边显示
+        int leftCount = (aiCapacity + 1) ~/ 2;  // 左边数量
+        int nextDrinkIndex = aiDrinks;  // 下一个要填的杯子索引
+        
+        if (nextDrinkIndex < leftCount) {
+          // 在左边，从左往右填充
+          double baseX = 0.3;  // 左侧起始位置
+          double xOffset = baseX + (nextDrinkIndex * 0.03);
+          targetPosition = Offset(xOffset, 0.18);  // AI骰子行位置
+        } else {
+          // 在右边，从左往右填充
+          int rightIndex = nextDrinkIndex - leftCount;
+          double baseX = 0.62;  // 右侧起始位置
+          double xOffset = baseX + (rightIndex * 0.03);
+          targetPosition = Offset(xOffset, 0.18);
+        }
+      }
+    } else {
+      // 默认位置
+      targetPosition = isPlayerLoser 
+        ? const Offset(0.2, 0.85)
+        : const Offset(0.8, 0.15);
+    }
+    
+    // 创建动画曲线 - 牌桌内部的相对位置
+    _drinkAnimation = Tween<Offset>(
+      begin: const Offset(0.5, 0.5), // 牌桌中央
+      end: targetPosition,
+    ).animate(CurvedAnimation(
+      parent: _drinkAnimationController,
+      curve: Curves.easeOutQuart,  // 更平滑的动画曲线
+    ));
+    
+    // 播放动画
+    await _drinkAnimationController.forward();
+    
+    // 动画结束后隐藏飞行酒杯
+    setState(() {
+      _showFlyingDrink = false;
+    });
+    
+    // 重置动画控制器
+    _drinkAnimationController.reset();
   }
   
   @override
   void dispose() {
+    _drinkAnimationController.dispose();
     super.dispose();
   }
 }

@@ -1,4 +1,6 @@
 /// Dice game state models
+
+import '../utils/logger_utils.dart';
 class DiceRoll {
   final List<int> values;
   
@@ -43,11 +45,19 @@ class Bid {
       return quantity > other.quantity;
     }
     
+    // Special rule: if previous bid was NOT 1s and we're bidding 1s
+    // we can bid the same quantity (because 1 is the highest value)
+    if (other.value != 1 && value == 1 && quantity == other.quantity) {
+      return true;
+    }
+    
     // Normal rules when not switching from 1s
     if (quantity == other.quantity) {
-      // Same quantity: 2 < 3 < 4 < 5 < 6 < 1
-      if (value == 1 && other.value != 1) return true;
-      if (value != 1 && other.value == 1) return false;
+      // Same quantity: order is 2 < 3 < 4 < 5 < 6 < 1
+      // 1 is the highest value
+      if (value == 1 && other.value != 1) return true;  // 1 beats everything
+      if (value != 1 && other.value == 1) return false; // nothing beats 1
+      // For non-1 values, higher number wins
       return value > other.value;
     }
     
@@ -122,7 +132,7 @@ class GameRound {
     bool isBluffing = false;
     bool isAggressive = false;
     
-    print('🔍 analyzeBidBehavior: bid=${bid.quantity}个${bid.value}, isPlayerBid=$isPlayerBid');
+    LoggerUtils.debug('analyzeBidBehavior: bid=${bid.quantity}个${bid.value}, isPlayerBid=$isPlayerBid');
     
     // 分析虚张（玩家和AI都分析）
     DiceRoll relevantDice = isPlayerBid ? playerDice : aiDice;
@@ -136,21 +146,21 @@ class GameRound {
       final prevBid = bidHistory.last;
       int quantityChange = bid.quantity - prevBid.quantity;
       
-      print('  📊 prevBid=${prevBid.quantity}个${prevBid.value}, quantityChange=$quantityChange');
+      LoggerUtils.debug('prevBid=${prevBid.quantity}个${prevBid.value}, quantityChange=$quantityChange');
       
       if (bid.value != prevBid.value) {
         // Changed value
         if (bid.value > prevBid.value) {
-          print('  📈 换高点数: ${prevBid.value} -> ${bid.value}');
+          LoggerUtils.debug('换高点数: ${prevBid.value} -> ${bid.value}');
           if (quantityChange > 0) {
             isAggressive = true; // Higher value, more quantity
-            print('  ✅ 激进：数量还增加');
+            LoggerUtils.debug('激进：数量还增加');
           }
         } else if (bid.value < prevBid.value) {
-          print('  📉 换低点数: ${prevBid.value} -> ${bid.value}, 增加${quantityChange}个');
+          LoggerUtils.debug('换低点数: ${prevBid.value} -> ${bid.value}, 增加$quantityChange个');
           if (quantityChange >= 2) {
             isAggressive = true; // Lower value, 2+ more quantity
-            print('  ✅ 激进：增加≥2个');
+            LoggerUtils.debug('激进：增加≥2个');
           }
         }
       } else {
@@ -166,7 +176,7 @@ class GameRound {
       isAggressive: isAggressive,
     );
     
-    print('  🎯 结果: 虚张=$isBluffing, 激进=$isAggressive');
+    LoggerUtils.debug('结果: 虚张=$isBluffing, 激进=$isAggressive');
     
     return behavior;
   }

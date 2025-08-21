@@ -4,14 +4,14 @@
 /// - 频繁诈唬
 /// - 大幅提高叫牌
 /// - 给对手施压
+library;
 
 import '../models/ai_models.dart';
 import '../../../models/game_state.dart';
-import '../../../models/ai_personality.dart';
 import 'strategy_executor.dart';
 
 class AggressiveStrategyExecutor extends StrategyExecutor {
-  AggressiveStrategyExecutor(AIPersonality personality) : super(personality);
+  AggressiveStrategyExecutor(super.personality);
   
   @override
   Map<String, dynamic> execute(

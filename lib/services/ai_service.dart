@@ -5,6 +5,7 @@ import '../models/player_profile.dart';
 import '../utils/logger_utils.dart';
 import 'elite_ai_engine.dart';
 import 'master_ai_engine.dart';
+import 'dialogue_service.dart';
 
 /// 精简版AI服务 - 作为Gemini API的降级备用
 class AIService {
@@ -72,11 +73,28 @@ class AIService {
       return Bid(quantity: 2, value: random.nextInt(6) + 1);
     }
     
-    // 简单增加数量
-    return Bid(
-      quantity: round.currentBid!.quantity + 1,
-      value: round.currentBid!.value,
-    );
+    // 如果当前叫的是1（最大值），必须增加数量
+    if (round.currentBid!.value == 1) {
+      return Bid(
+        quantity: round.currentBid!.quantity + 1,
+        value: random.nextInt(6) + 1,  // 可以选择任意点数
+      );
+    }
+    
+    // 如果不是1，可以尝试叫1（相同数量）或增加数量
+    if (random.nextBool() && round.currentBid!.value != 1) {
+      // 50%概率尝试叫1
+      return Bid(
+        quantity: round.currentBid!.quantity,
+        value: 1,
+      );
+    } else {
+      // 否则简单增加数量
+      return Bid(
+        quantity: round.currentBid!.quantity + 1,
+        value: round.currentBid!.value,
+      );
+    }
   }
   
   /// 生成AI叫牌
@@ -106,10 +124,21 @@ class AIService {
       if (round.currentBid == null) {
         safeBid = Bid(quantity: math.max(2, maxCount), value: bestValue);
       } else {
-        safeBid = Bid(
-          quantity: round.currentBid!.quantity + 1,
+        // 生成一个安全的叫牌，确保遵循游戏规则
+        Bid testBid = Bid(
+          quantity: round.currentBid!.quantity,
           value: bestValue,
         );
+        
+        // 如果同数量的叫牌不合法，则增加数量
+        if (!testBid.isHigherThan(round.currentBid!)) {
+          safeBid = Bid(
+            quantity: round.currentBid!.quantity + 1,
+            value: bestValue,
+          );
+        } else {
+          safeBid = testBid;
+        }
       }
       
       return (safeBid, false);
@@ -420,7 +449,7 @@ class AIService {
         return '来真的吧！';
       default:
         if (newBid != null) {
-          return '我叫${newBid}';
+          return '我叫$newBid';
         }
         return '继续';
     }
@@ -432,12 +461,24 @@ class AIService {
   
   /// 获取嘲讽语句
   String getTaunt(GameRound round) {
-    if (personality.taunts.isEmpty) return '';
+    // 使用DialogueService获取对话
+    final dialogueService = DialogueService();
     
     if (round.bidHistory.length > 4 && random.nextDouble() < 0.3) {
-      return personality.taunts[random.nextInt(personality.taunts.length)];
+      // 根据当前状态决定使用嘲讽还是鼓励
+      final isWinning = _isCurrentlyWinning(round);
+      return isWinning 
+        ? dialogueService.getTaunt(personality.id)
+        : dialogueService.getEncouragement(personality.id);
     }
     
     return '';
+  }
+  
+  /// 判断AI是否当前处于优势
+  bool _isCurrentlyWinning(GameRound round) {
+    // 简单判断：如果当前轮到玩家，说明上一个出价是AI的
+    // 因为游戏是轮流进行的
+    return round.isPlayerTurn;
   }
 }

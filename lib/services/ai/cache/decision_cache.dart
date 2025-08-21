@@ -1,6 +1,7 @@
 /// AI决策缓存
 /// 
 /// 缓存相似游戏状态的决策，提高性能
+library;
 
 import 'dart:collection';
 import '../../../models/game_state.dart';

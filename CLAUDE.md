@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Face Battle (表情博弈) is a Flutter-based Liar's Dice game where players compete against AI opponents with dynamic facial expressions and personalities. The game implements sophisticated AI behavior through both local algorithms and cloud-based Gemini AI integration.
+Dice Girls is a Flutter-based Liar's Dice game where players compete against AI opponents with dynamic facial expressions and personalities. The game implements sophisticated AI behavior through both local algorithms and cloud-based Gemini AI integration.
 
 ## Development Commands
 

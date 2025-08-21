@@ -1,16 +1,16 @@
 /// 分享服务
 /// 
 /// 处理游戏截图和社交媒体分享
+library;
 
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
+import '../utils/logger_utils.dart';
 
 class ShareService {
   
@@ -44,7 +44,7 @@ class ShareService {
       );
       
     } catch (e) {
-      print('分享失败: $e');
+      LoggerUtils.error('分享失败: $e');
       // 如果图片分享失败，至少分享文字
       _shareTextOnly(
         defeatedAI: defeatedAI,
@@ -112,7 +112,7 @@ class ShareService {
           end: Alignment.bottomCenter,
           colors: [
             Colors.black,
-            Colors.pink.shade900.withOpacity(0.8),
+            Colors.pink.shade900.withValues(alpha: 0.8),
             Colors.black,
           ],
         ),
@@ -130,7 +130,7 @@ class ShareService {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Colors.pink.withOpacity(0.3),
+                    Colors.pink.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -147,7 +147,7 @@ class ShareService {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Colors.purple.withOpacity(0.3),
+                    Colors.purple.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -179,7 +179,7 @@ class ShareService {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.pinkAccent.withOpacity(0.6),
+                          color: Colors.pinkAccent.withValues(alpha: 0.6),
                           blurRadius: 30,
                           spreadRadius: 10,
                         ),
@@ -215,13 +215,13 @@ class ShareService {
                                       Icon(
                                         Icons.person,
                                         size: 60,
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withValues(alpha: 0.7),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
                                         defeatedAI.name,
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: Colors.white.withValues(alpha: 0.8),
                                           fontSize: 14,
                                         ),
                                         textAlign: TextAlign.center,
@@ -275,9 +275,9 @@ class ShareService {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.2),
+                  color: Colors.red.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.red.withOpacity(0.5)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
                 ),
                 child: const Text(
                   '已醉倒',
@@ -298,13 +298,13 @@ class ShareService {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.pink.withOpacity(0.2),
-                      Colors.purple.withOpacity(0.2),
+                      Colors.pink.withValues(alpha: 0.2),
+                      Colors.purple.withValues(alpha: 0.2),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.pinkAccent.withOpacity(0.5),
+                    color: Colors.pinkAccent.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -339,7 +339,7 @@ class ShareService {
                         color: Colors.pinkAccent,
                         shadows: [
                           Shadow(
-                            color: Colors.pinkAccent.withOpacity(0.5),
+                            color: Colors.pinkAccent.withValues(alpha: 0.5),
                             blurRadius: 20,
                           ),
                         ],
@@ -349,7 +349,7 @@ class ShareService {
                     Text(
                       '独处了 $intimacyMinutes 分钟',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -365,14 +365,14 @@ class ShareService {
                 children: [
                   Icon(
                     Icons.local_bar,
-                    color: Colors.amber.withOpacity(0.8),
+                    color: Colors.amber.withValues(alpha: 0.8),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '${drinkingState.getAIDrinks(defeatedAI.id)} 杯醉倒',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 16,
                     ),
                   ),
@@ -386,7 +386,7 @@ class ShareService {
                 margin: const EdgeInsets.only(bottom: 20),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -394,14 +394,14 @@ class ShareService {
                   children: [
                     Icon(
                       Icons.casino,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       size: 18,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       '表情博弈',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 1,
@@ -427,7 +427,7 @@ class ShareService {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 16,
           ),
         ),
@@ -441,19 +441,6 @@ class ShareService {
         ),
       ],
     );
-  }
-  
-  /// 获取难度文本
-  static String _getDifficultyText(AIPersonality ai) {
-    if (ai.isVIP) {
-      return ai.difficulty ?? '高手';
-    }
-    
-    // 根据AI的参数判断难度
-    final avgDifficulty = (ai.bluffRatio + ai.riskAppetite + (1 - ai.mistakeRate)) / 3;
-    if (avgDifficulty > 0.6) return '困难';
-    if (avgDifficulty > 0.4) return '中等';
-    return '简单';
   }
   
   /// 分享到特定平台
@@ -473,7 +460,7 @@ class ShareService {
         await Share.share(text);
       }
     } catch (e) {
-      print('微信分享失败: $e');
+      LoggerUtils.error('微信分享失败: $e');
     }
   }
   
@@ -513,7 +500,7 @@ class ShareService {
       
       return true;
     } catch (e) {
-      print('保存截图失败: $e');
+      LoggerUtils.error('保存截图失败: $e');
       return false;
     }
   }

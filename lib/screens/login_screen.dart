@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -163,9 +163,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -202,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   final user = await authService.signInWithGoogle();
                   if (user != null && mounted) {
                     LoggerUtils.info('Google登录成功: ${user.email}');
-                    Navigator.pushReplacementNamed(context, '/home');
+                    // 不需要手动导航，main.dart中的Consumer会自动处理
                   }
                 },
           borderRadius: BorderRadius.circular(27),
@@ -251,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildFacebookSignInButton(AuthService authService) {
+  /* Widget _buildFacebookSignInButton(AuthService authService) { // reserved for future social login
     return SizedBox(
       width: double.infinity,
       height: 54,
@@ -267,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   final user = await authService.signInWithFacebook();
                   if (user != null && mounted) {
                     LoggerUtils.info('Facebook登录成功: ${user.email}');
-                    Navigator.pushReplacementNamed(context, '/home');
+                    // 不需要手动导航，main.dart中的Consumer会自动处理
                   }
                 },
           borderRadius: BorderRadius.circular(27),
@@ -303,5 +303,5 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         ),
       ),
     );
-  }
+  } */
 }

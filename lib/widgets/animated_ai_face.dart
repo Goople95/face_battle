@@ -13,11 +13,11 @@ class AnimatedAIFace extends StatefulWidget {
   final Map<String, double>? emotionalState;
   
   const AnimatedAIFace({
-    Key? key,
+    super.key,
     required this.emotion,
     this.size = 100,
     this.emotionalState,
-  }) : super(key: key);
+  });
   
   @override
   State<AnimatedAIFace> createState() => _AnimatedAIFaceState();
@@ -32,7 +32,7 @@ class _AnimatedAIFaceState extends State<AnimatedAIFace> {
   SMIInput<bool>? _talkTrigger;       // 说话触发
   
   // 如果没有Rive文件，使用CustomPainter作为备选
-  bool _useCustomPainter = true;
+  final bool _useCustomPainter = true;
   
   @override
   void initState() {
@@ -56,7 +56,7 @@ class _AnimatedAIFaceState extends State<AnimatedAIFace> {
   Widget build(BuildContext context) {
     if (_useCustomPainter) {
       // 使用CustomPainter绘制简单但有效的表情
-      return Container(
+      return SizedBox(
         width: widget.size,
         height: widget.size,
         child: CustomPaint(
@@ -69,7 +69,7 @@ class _AnimatedAIFaceState extends State<AnimatedAIFace> {
       );
     } else {
       // 使用Rive动画（需要创建.riv文件）
-      return Container(
+      return SizedBox(
         width: widget.size,
         height: widget.size,
         child: RiveAnimation.asset(
@@ -327,7 +327,7 @@ class EmotionalFacePainter extends CustomPainter {
       case 'happy':
         // 红晕
         final blushPaint = Paint()
-          ..color = Colors.pink.shade200.withOpacity(0.5)
+          ..color = Colors.pink.shade200.withValues(alpha: 0.5)
           ..style = PaintingStyle.fill;
         canvas.drawCircle(
           Offset(center.dx - radius * 0.5, center.dy + radius * 0.05),

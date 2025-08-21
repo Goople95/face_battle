@@ -5,6 +5,7 @@
 /// - 估计对手的虚张概率
 /// - 预测对手的质疑倾向
 /// - 识别对手的情绪状态
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';

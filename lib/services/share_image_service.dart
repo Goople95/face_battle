@@ -1,9 +1,9 @@
 /// 分享图片服务 - 简化版
 /// 
 /// 生成分享图片并分享到社交媒体
+library;
 
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
+import '../utils/logger_utils.dart';
 
 class ShareImageService {
   
@@ -60,7 +61,7 @@ class ShareImageService {
       ByteData? avatarData;
       try {
         avatarData = await rootBundle.load(avatarPath);
-        print('头像加载成功: $avatarPath');
+        LoggerUtils.debug('头像加载成功: $avatarPath');
         
         // 预缓存图片以确保渲染时可用
         if (context.mounted) {
@@ -70,7 +71,7 @@ class ShareImageService {
           );
         }
       } catch (e) {
-        print('无法加载头像: $avatarPath, 错误: $e');
+        LoggerUtils.warning('无法加载头像: $avatarPath, 错误: $e');
       }
       
       // 关闭第一个加载对话框
@@ -165,7 +166,7 @@ class ShareImageService {
           await Share.shareXFiles(
             [XFile(imagePath)],
             text: shareText,
-            subject: '表情博弈 - 完美胜利！',
+            subject: 'Dice Girls - 完美胜利！',
           );
           
           return;
@@ -187,7 +188,7 @@ class ShareImageService {
       );
       
     } catch (e) {
-      print('分享失败: $e');
+      LoggerUtils.error('分享失败: $e');
       
       // 确保关闭加载对话框
       if (context.mounted && Navigator.canPop(context)) {
@@ -215,10 +216,10 @@ class ShareImageService {
     final drinks = drinkingState.getAIDrinks(defeatedAI.id);
     
     List<String> templates = [
-      '🎉 我在表情博弈中把${defeatedAI.name}灌醉了！喝了整整$drinks杯，独处了$intimacyMinutes分钟～ #表情博弈 #完美胜利',
-      '🏆 战绩播报：${defeatedAI.name}已倒！$drinks杯下肚，亲密度+$intimacyMinutes！谁敢来挑战？ #表情博弈',
-      '😎 轻松拿下${defeatedAI.name}！$drinks杯酒就不行了，我们还聊了$intimacyMinutes分钟的小秘密～ #表情博弈',
-      '🍺 今晚的MVP是我！${defeatedAI.name}醉倒在第$drinks杯，接下来的$intimacyMinutes分钟...你懂的😏 #表情博弈',
+      '🎉 我在Dice Girls中把${defeatedAI.name}灌醉了！喝了整整$drinks杯，独处了$intimacyMinutes分钟～ #DiceGirls #完美胜利',
+      '🏆 战绩播报：${defeatedAI.name}已倒！$drinks杯下肚，亲密度+$intimacyMinutes！谁敢来挑战？ #DiceGirls',
+      '😎 轻松拿下${defeatedAI.name}！$drinks杯酒就不行了，我们还聊了$intimacyMinutes分钟的小秘密～ #DiceGirls',
+      '🍺 今晚的MVP是我！${defeatedAI.name}醉倒在第$drinks杯，接下来的$intimacyMinutes分钟...你懂的😏 #DiceGirls',
     ];
     
     final randomIndex = DateTime.now().millisecond % templates.length;
@@ -243,8 +244,8 @@ class ShareImageService {
             end: Alignment.bottomCenter,
             colors: [
               Colors.black,
-              Colors.pink.shade900.withOpacity(0.9),
-              Colors.purple.shade900.withOpacity(0.9),
+              Colors.pink.shade900.withValues(alpha: 0.9),
+              Colors.purple.shade900.withValues(alpha: 0.9),
               Colors.black,
             ],
           ),
@@ -281,7 +282,7 @@ class ShareImageService {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.pinkAccent.withOpacity(0.5),
+                    color: Colors.pinkAccent.withValues(alpha: 0.5),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),
@@ -365,13 +366,13 @@ class ShareImageService {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
+                color: Colors.red.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.red.withOpacity(0.5)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
               ),
-              child: const Text(
-                '🥴 已醉倒',
-                style: TextStyle(
+              child: Text(
+                '${defeatedAI.name} 已醉倒',
+                style: const TextStyle(
                   color: Colors.redAccent,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -386,10 +387,10 @@ class ShareImageService {
               margin: const EdgeInsets.symmetric(horizontal: 50),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.pinkAccent.withOpacity(0.5),
+                  color: Colors.pinkAccent.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -422,7 +423,7 @@ class ShareImageService {
                           color: Colors.pinkAccent,
                           shadows: [
                             Shadow(
-                              color: Colors.pinkAccent.withOpacity(0.5),
+                              color: Colors.pinkAccent.withValues(alpha: 0.5),
                               blurRadius: 10,
                             ),
                           ],
@@ -434,7 +435,7 @@ class ShareImageService {
                   Text(
                     '独处了 $intimacyMinutes 分钟',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -449,10 +450,10 @@ class ShareImageService {
               margin: const EdgeInsets.only(bottom: 20),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -469,19 +470,19 @@ class ShareImageService {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '表情博弈',
+                        'Dice Girls',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
                         ),
                       ),
                       Text(
-                        'AI表情大话骰',
+                        '100+等你来挑战',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -490,7 +491,7 @@ class ShareImageService {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
+                      color: Colors.amber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

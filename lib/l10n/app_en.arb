@@ -1,0 +1,466 @@
+{
+  "@@locale": "en",
+  
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "appTitle": "Dice Girls",
+  
+  "@gameNameChinese": {
+    "description": "Game name in Chinese characters"
+  },
+  "gameNameChinese": "Liar's Dice",
+  
+  "@loginTitle": {
+    "description": "Login screen title"
+  },
+  "loginTitle": "Welcome",
+  
+  "@loginWithGoogle": {
+    "description": "Google login button text"
+  },
+  "loginWithGoogle": "Sign in with Google",
+  
+  "@loginWithFacebook": {
+    "description": "Facebook login button text"
+  },
+  "loginWithFacebook": "Sign in with Facebook",
+  
+  "@skipLogin": {
+    "description": "Skip login button text"
+  },
+  "skipLogin": "Skip",
+  
+  "@or": {
+    "description": "Or separator"
+  },
+  "or": "OR",
+  
+  "@selectOpponent": {
+    "description": "Select opponent title"
+  },
+  "selectOpponent": "Select Opponent",
+  
+  "@vipOpponents": {
+    "description": "VIP opponents section title"
+  },
+  "vipOpponents": "VIP Opponents",
+  
+  "@gameInstructions": {
+    "description": "Game instructions title"
+  },
+  "gameInstructions": "How to Play",
+  
+  "@instructionsContent": {
+    "description": "Game instructions content"
+  },
+  "instructionsContent": "Each player rolls 5 dice secretly. Take turns bidding on the total number of dice. Challenge if you think they're lying!",
+  
+  "@playerStats": {
+    "description": "Player statistics title"
+  },
+  "playerStats": "Player Stats",
+  
+  "@wins": {
+    "description": "Wins label"
+  },
+  "wins": "Wins",
+  
+  "@losses": {
+    "description": "Losses label"
+  },
+  "losses": "Losses",
+  
+  "@winRate": {
+    "description": "Win rate label"
+  },
+  "winRate": "Win Rate",
+  
+  "@level": {
+    "description": "Level label"
+  },
+  "level": "Level",
+  
+  "@intimacyLevel": {
+    "description": "Intimacy level label"
+  },
+  "intimacyLevel": "Intimacy Lv.{level}",
+  "@intimacyLevel_placeholder": {
+    "level": 1
+  },
+  
+  "@drinkCapacity": {
+    "description": "Drink capacity label"
+  },
+  "drinkCapacity": "{current}/{max} drinks",
+  "@drinkCapacity_placeholder": {
+    "current": 0,
+    "max": 6
+  },
+  
+  "@soberTimeRemaining": {
+    "description": "Sober time remaining"
+  },
+  "soberTimeRemaining": "Sober in {time}",
+  "@soberTimeRemaining_placeholder": {
+    "time": "10:00"
+  },
+  
+  "@aboutMinutes": {
+    "description": "Approximately X minutes"
+  },
+  "aboutMinutes": "About {minutes} min",
+  "@aboutMinutes_placeholder": {
+    "minutes": 10
+  },
+  
+  "@startGame": {
+    "description": "Start game button"
+  },
+  "startGame": "Start Game",
+  
+  "@continueGame": {
+    "description": "Continue game button"
+  },
+  "continueGame": "Continue",
+  
+  "@newGame": {
+    "description": "New game button"
+  },
+  "newGame": "New Game",
+  
+  "@exitGame": {
+    "description": "Exit game button"
+  },
+  "exitGame": "Exit Game",
+  
+  "@settings": {
+    "description": "Settings menu title"
+  },
+  "settings": "Settings",
+  
+  "@language": {
+    "description": "Language setting"
+  },
+  "language": "Language",
+  
+  "@soundEffects": {
+    "description": "Sound effects setting"
+  },
+  "soundEffects": "Sound Effects",
+  
+  "@music": {
+    "description": "Music setting"
+  },
+  "music": "Music",
+  
+  "@on": {
+    "description": "On/enabled state"
+  },
+  "on": "On",
+  
+  "@off": {
+    "description": "Off/disabled state"
+  },
+  "off": "Off",
+  
+  "@logout": {
+    "description": "Logout button"
+  },
+  "logout": "Logout",
+  
+  "@confirmLogout": {
+    "description": "Logout confirmation message"
+  },
+  "confirmLogout": "Are you sure you want to logout?",
+  
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "cancel": "Cancel",
+  
+  "@confirm": {
+    "description": "Confirm button"
+  },
+  "confirm": "Confirm",
+  
+  "@loading": {
+    "description": "Loading text"
+  },
+  "loading": "Loading...",
+  
+  "@error": {
+    "description": "Error message prefix"
+  },
+  "error": "Error",
+  
+  "@networkError": {
+    "description": "Network error message"
+  },
+  "networkError": "Network connection failed",
+  
+  "@unknownError": {
+    "description": "Unknown error message"
+  },
+  "unknownError": "An unknown error occurred",
+  
+  "@yourTurn": {
+    "description": "Your turn indicator"
+  },
+  "yourTurn": "Your Turn",
+  
+  "@opponentTurn": {
+    "description": "Opponent's turn indicator"
+  },
+  "opponentTurn": "{name}'s Turn",
+  "@opponentTurn_placeholder": {
+    "name": "AI"
+  },
+  
+  "@bid": {
+    "description": "Bid button"
+  },
+  "bid": "Bid",
+  
+  "@challenge": {
+    "description": "Challenge button"
+  },
+  "challenge": "Challenge",
+  
+  "@currentBid": {
+    "description": "Current bid display"
+  },
+  "currentBid": "Current Bid: {quantity} × {dice}",
+  "@currentBid_placeholder": {
+    "quantity": 3,
+    "dice": 4
+  },
+  
+  "@selectBid": {
+    "description": "Select bid prompt"
+  },
+  "selectBid": "Select Your Bid",
+  
+  "@quantity": {
+    "description": "Quantity label"
+  },
+  "quantity": "Quantity",
+  
+  "@diceValue": {
+    "description": "Dice value label"
+  },
+  "diceValue": "Dice Value",
+  
+  "@youWin": {
+    "description": "You win message"
+  },
+  "youWin": "You Win!",
+  
+  "@youLose": {
+    "description": "You lose message"
+  },
+  "youLose": "You Lose!",
+  
+  "@drink": {
+    "description": "Drink action"
+  },
+  "drink": "Drink!",
+  
+  "@cheers": {
+    "description": "Cheers message"
+  },
+  "cheers": "Cheers!",
+  
+  "@drunkWarning": {
+    "description": "Drunk warning message"
+  },
+  "drunkWarning": "You're too drunk to continue!",
+  
+  "@soberUp": {
+    "description": "Sober up message"
+  },
+  "soberUp": "Wait to sober up or watch an ad",
+  
+  "@watchAd": {
+    "description": "Watch ad button"
+  },
+  "watchAd": "Watch Ad",
+  
+  "@waitTime": {
+    "description": "Wait time message"
+  },
+  "waitTime": "Wait {minutes} minutes",
+  "@waitTime_placeholder": {
+    "minutes": 10
+  },
+  
+  "@unlockVIP": {
+    "description": "Unlock VIP button"
+  },
+  "unlockVIP": "Unlock VIP",
+  
+  "@vipBenefits": {
+    "description": "VIP benefits title"
+  },
+  "vipBenefits": "VIP Benefits",
+  
+  "@noAds": {
+    "description": "No ads benefit"
+  },
+  "noAds": "No Ads",
+  
+  "@exclusiveContent": {
+    "description": "Exclusive content benefit"
+  },
+  "exclusiveContent": "Exclusive Characters",
+  
+  "@bonusRewards": {
+    "description": "Bonus rewards benefit"
+  },
+  "bonusRewards": "Bonus Rewards",
+  
+  "@price": {
+    "description": "Price label"
+  },
+  "price": "Price: {amount}",
+  "@price_placeholder": {
+    "amount": "$4.99"
+  },
+  
+  "@purchase": {
+    "description": "Purchase button"
+  },
+  "purchase": "Purchase",
+  
+  "@restorePurchases": {
+    "description": "Restore purchases button"
+  },
+  "restorePurchases": "Restore Purchases",
+  
+  "@share": {
+    "description": "Share button"
+  },
+  "share": "Share",
+  
+  "@shareMessage": {
+    "description": "Share message template"
+  },
+  "shareMessage": "I just won in Dice Girls! Can you beat me?",
+  
+  "@rateApp": {
+    "description": "Rate app button"
+  },
+  "rateApp": "Rate App",
+  
+  "@feedback": {
+    "description": "Feedback button"
+  },
+  "feedback": "Feedback",
+  
+  "@version": {
+    "description": "Version label"
+  },
+  "version": "Version {version}",
+  "@version_placeholder": {
+    "version": "1.0.0"
+  },
+  
+  "@allDiceValues": {
+    "description": "All dice values indicator"
+  },
+  "allDiceValues": "All dice",
+  
+  "@onesLoseWildcard": {
+    "description": "Ones lose wildcard status message"
+  },
+  "onesLoseWildcard": "1s are no longer wildcards!",
+  
+  "@wildcardActive": {
+    "description": "Wildcard active message"
+  },
+  "wildcardActive": "1s count as any number",
+  
+  "@tutorialTitle": {
+    "description": "Tutorial title"
+  },
+  "tutorialTitle": "Tutorial",
+  
+  "@skipTutorial": {
+    "description": "Skip tutorial button"
+  },
+  "skipTutorial": "Skip",
+  
+  "@next": {
+    "description": "Next button"
+  },
+  "next": "Next",
+  
+  "@previous": {
+    "description": "Previous button"
+  },
+  "previous": "Previous",
+  
+  "@done": {
+    "description": "Done button"
+  },
+  "done": "Done",
+  
+  "@connectionLost": {
+    "description": "Connection lost message"
+  },
+  "connectionLost": "Connection lost",
+  
+  "@reconnecting": {
+    "description": "Reconnecting message"
+  },
+  "reconnecting": "Reconnecting...",
+  
+  "@loginSuccess": {
+    "description": "Login success message"
+  },
+  "loginSuccess": "Login successful",
+  
+  "@loginFailed": {
+    "description": "Login failed message"
+  },
+  "loginFailed": "Login failed",
+  
+  "@guestMode": {
+    "description": "Guest mode label"
+  },
+  "guestMode": "Guest Mode",
+  
+  "@createAccount": {
+    "description": "Create account button"
+  },
+  "createAccount": "Create Account",
+  
+  "@forgotPassword": {
+    "description": "Forgot password link"
+  },
+  "forgotPassword": "Forgot Password?",
+  
+  "@rememberMe": {
+    "description": "Remember me checkbox"
+  },
+  "rememberMe": "Remember Me",
+  
+  "@termsOfService": {
+    "description": "Terms of service link"
+  },
+  "termsOfService": "Terms of Service",
+  
+  "@privacyPolicy": {
+    "description": "Privacy policy link"
+  },
+  "privacyPolicy": "Privacy Policy",
+  
+  "@agreeToTerms": {
+    "description": "Agree to terms message"
+  },
+  "agreeToTerms": "By continuing, you agree to our {terms} and {privacy}",
+  "@agreeToTerms_placeholder": {
+    "terms": "Terms",
+    "privacy": "Privacy Policy"
+  }
+}

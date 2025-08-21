@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 import 'game_screen.dart';
 import '../models/ai_personality.dart';
@@ -8,12 +10,17 @@ import '../models/drinking_state.dart';
 import '../widgets/sober_dialog.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
+import '../services/language_service.dart';
 import '../utils/ad_helper.dart';
+import '../utils/responsive_utils.dart';
 import '../services/vip_unlock_service.dart';
 import '../config/character_assets.dart';
+import '../services/intimacy_service.dart';
+import '../models/intimacy_data.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
   
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -63,11 +70,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   Future<void> _loadData() async {
     final profile = await PlayerProfile.load();
-    final drinking = await DrinkingState.load();
+    final drinking = await DrinkingState.loadStatic();
     
     // 更新醒酒状态（DrinkingState.load() 内部已经调用了 updateSoberStatus）
     // drinking.updateSoberStatus();  // 不需要重复调用
     // await drinking.save();  // 如果没有实际变化，不需要保存
+    
+    // 初始化亲密度服务
+    if (mounted) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      if (authService.uid != null) {
+        IntimacyService().setUserId(authService.uid!);
+      }
+    }
     
     setState(() {
       _playerProfile = profile;
@@ -79,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_drinkingState != null) {
       // 每10秒重新加载一次数据，确保获取最新状态
       if (DateTime.now().second % 10 == 0) {
-        final latestState = await DrinkingState.load();
+        final latestState = await DrinkingState.loadStatic();
         _drinkingState = latestState;
         _drinkingState!.updateSoberStatus();
         await _drinkingState!.save();
@@ -94,22 +109,56 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
   
-  // 格式化醒酒倒计时
+  // 格式化醒酒倒计时（显示总的醒酒时间）
   String _getFormattedSoberTime(String aiId) {
-    final seconds = _drinkingState!.getAINextSoberSeconds(aiId);
-    if (seconds == 0) return '';
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    return '${minutes}:${remainingSeconds.toString().padLeft(2, '0')}';
+    // 获取AI当前的酒杯数
+    final aiDrinks = _drinkingState!.getAIDrinks(aiId);
+    if (aiDrinks == 0) return '';
+    
+    // 获取下一杯的倒计时秒数
+    final nextSoberSeconds = _drinkingState!.getAINextSoberSeconds(aiId);
+    
+    // 如果没有倒计时信息（比如刚加载游戏），显示估算的总时间
+    if (nextSoberSeconds == 0) {
+      // 显示预估的总醒酒时间
+      final totalMinutes = aiDrinks * 10;
+      return '约${totalMinutes}分钟';
+    }
+    
+    // 计算实际剩余的总时间（秒）
+    // = (剩余杯数-1) * 600秒 + 当前杯的剩余秒数
+    final totalSeconds = (aiDrinks - 1) * 600 + nextSoberSeconds;
+    
+    // 转换为分钟和秒
+    final minutes = totalSeconds ~/ 60;
+    final remainingSeconds = totalSeconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
   }
   
-  // 格式化玩家醒酒倒计时
+  // 格式化玩家醒酒倒计时（显示总的醒酒时间）
   String _getFormattedPlayerSoberTime() {
-    final seconds = _drinkingState!.getPlayerNextSoberSeconds();
-    if (seconds == 0) return '';
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    return '${minutes}:${remainingSeconds.toString().padLeft(2, '0')}';
+    // 获取玩家当前的酒杯数
+    final playerDrinks = _drinkingState!.drinksConsumed;
+    if (playerDrinks == 0) return '';
+    
+    // 获取下一杯的倒计时秒数
+    final nextSoberSeconds = _drinkingState!.getPlayerNextSoberSeconds();
+    
+    // 如果没有倒计时信息（比如刚加载游戏），显示估算的总时间
+    if (nextSoberSeconds == 0) {
+      // 显示预估的总醒酒时间
+      final totalMinutes = playerDrinks * 10;
+      return '约${totalMinutes}分钟';
+    }
+    
+    // 计算实际剩余的总时间（秒）
+    // = (剩余杯数-1) * 600秒 + 当前杯的剩余秒数
+    final totalSeconds = (playerDrinks - 1) * 600 + nextSoberSeconds;
+    
+    // 转换为分钟和秒
+    final minutes = totalSeconds ~/ 60;
+    final remainingSeconds = totalSeconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
   }
   
   @override
@@ -118,14 +167,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final userService = Provider.of<UserService>(context);
     
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF1A0000),  // 深黑红色
+        title: Text(
+          AppLocalizations.of(context)!.appTitle,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () => _showSettingsDialog(context, authService, userService),
+          ),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.blue.shade900,
-              Colors.purple.shade900,
+              Color(0xFF000000),  // 纯黑色
+              Color(0xFF3D0000),  // 暗红色
             ],
           ),
         ),
@@ -134,254 +201,65 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                // 用户信息栏
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // 用户信息
-                      Row(
-                        children: [
-                          // 头像
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundImage: authService.photoURL != null
-                                ? NetworkImage(authService.photoURL!)
-                                : null,
-                            backgroundColor: Colors.white24,
-                            child: authService.photoURL == null
-                                ? Icon(
-                                    authService.isAnonymous
-                                        ? Icons.person_outline
-                                        : Icons.person,
-                                    color: Colors.white,
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          // 名字
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                userService.displayName,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              if (userService.playerProfile != null)
-                                Text(
-                                  '胜率: ${(userService.winRate * 100).toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      // 登出按钮
-                      IconButton(
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                        onPressed: () async {
-                          // 显示确认对话框
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('确认登出'),
-                              content: Text(authService.isAnonymous
-                                  ? '登出后游客数据将丢失，确定要登出吗？'
-                                  : '确定要登出吗？'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: const Text('取消'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('确定'),
-                                ),
-                              ],
-                            ),
-                          );
-                          
-                          if (confirm == true) {
-                            await authService.signOut();
-                            userService.clear();
-                            if (context.mounted) {
-                              Navigator.pushReplacementNamed(context, '/login');
-                            }
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                // Title - get from app name
-                const Text(
-                  '骰子吹牛',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 10.0,
-                        color: Colors.black54,
-                        offset: Offset(2.0, 2.0),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 60),
+                SizedBox(height: 40.h),
                 
                 // AI Personality Selection
-                const Text(
-                  '选择对手',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.selectOpponent,
+                  style: const TextStyle(
                     fontSize: 20,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 
-                // Personality Cards - Now with 4 characters in 2x2 grid
+                // Normal Characters - 动态加载
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      // First row
-                      SizedBox(
-                        height: 200,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: _buildPersonalityCard(
-                                context,
-                                AIPersonalities.professor,
-                                Icons.school,
-                                Colors.blue,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildPersonalityCard(
-                                context,
-                                AIPersonalities.gambler,
-                                Icons.casino,
-                                Colors.red,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Second row
-                      SizedBox(
-                        height: 200,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: _buildPersonalityCard(
-                                context,
-                                AIPersonalities.provocateur,
-                                Icons.psychology,
-                                Colors.purple,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildPersonalityCard(
-                                context,
-                                AIPersonalities.youngwoman,
-                                Icons.favorite,
-                                Colors.pink,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.horizontalPadding),
+                  child: _buildNormalCharacterGrid(),
                 ),
                 
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 
                 // VIP Characters Section
-                const Text(
-                  'VIP对手',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.vipOpponents,
+                  style: const TextStyle(
                     fontSize: 20,
                     color: Colors.amber,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10.h),
                 
-                // VIP Character Cards
+                // VIP Character Cards - 动态加载
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    height: 200,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      children: [
-                        _buildVIPPersonalityCard(
-                          context,
-                          AIPersonalities.aki,
-                          Icons.favorite,
-                          Colors.pink,
-                        ),
-                        const SizedBox(width: 12),
-                        _buildVIPPersonalityCard(
-                          context,
-                          AIPersonalities.katerina,
-                          Icons.diamond,
-                          Colors.deepPurple,
-                        ),
-                        const SizedBox(width: 12),
-                        _buildVIPPersonalityCard(
-                          context,
-                          AIPersonalities.lena,
-                          Icons.calculate,
-                          Colors.indigo,
-                        ),
-                      ],
-                    ),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.horizontalPadding),
+                  child: _buildVIPCharacterGrid(),
                 ),
                 
-                const SizedBox(height: 40),
+                SizedBox(height: 40.h),
                 
                 // Instructions
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 40),
-                  padding: const EdgeInsets.all(20),
+                  margin: EdgeInsets.symmetric(horizontal: 40.w),
+                  padding: EdgeInsets.all(20.w),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
-                    children: const [
+                    children: [
                       Text(
-                        '游戏说明',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.gameInstructions,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: 10),
+                      const Text(
                         '• 双方各掷5颗骰子，轮流报数\n'
                         '• 1点是万能牌，可当任何点数\n'
                         '• 报数必须递增或换更高点数\n'
@@ -395,14 +273,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 
-                const SizedBox(height: 40),
+                SizedBox(height: 40.h),
                 
                 // Player Profile Analysis
                 if (_playerProfile != null && _playerProfile!.totalGames > 0) ...[
                   _buildPlayerAnalysis(),
                 ],
                 
-                const SizedBox(height: 40),
+                SizedBox(height: 40.h),
               ],
             ),
           ),
@@ -413,13 +291,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   Widget _buildPlayerAnalysis() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
+        color: Colors.black.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -446,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.3),
+                  color: Colors.green.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.green, width: 1),
                 ),
@@ -468,10 +346,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.2),
+                color: Colors.orange.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.orange.withOpacity(0.5),
+                  color: Colors.orange.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),
@@ -505,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 size: 16,
                                 color: index < _drinkingState!.drinksConsumed
                                   ? Colors.red.shade300
-                                  : Colors.grey.withOpacity(0.3),
+                                  : Colors.grey.withValues(alpha: 0.3),
                               );
                             }),
                             // 显示醒酒倒计时
@@ -594,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -672,10 +550,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: aiColor.withOpacity(0.3),
+                  color: aiColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -686,7 +564,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: aiColor.withOpacity(0.2),
+                      color: aiColor.withValues(alpha: 0.2),
                       border: Border.all(color: aiColor, width: 2),
                     ),
                     child: Center(
@@ -700,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Text(
                           '$wins胜 $losses负',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -727,8 +605,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: winRate >= 50 
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.red.withOpacity(0.2),
+                        ? Colors.green.withValues(alpha: 0.2)
+                        : Colors.red.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: winRate >= 50 ? Colors.green : Colors.red,
@@ -747,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ],
               ),
             );
-          }).toList(),
+          }),
           
           const SizedBox(height: 16),
           
@@ -758,13 +636,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.purple.withOpacity(0.3),
-                  Colors.blue.withOpacity(0.3),
+                  Color(0xFF3D0000).withValues(alpha: 0.3),  // 暗红色半透明
+                  Color(0xFF8B0000).withValues(alpha: 0.3),  // 深红色半透明
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.purple.withOpacity(0.5),
+                color: Color(0xFF8B0000).withValues(alpha: 0.5),  // 深红色边框
                 width: 1,
               ),
             ),
@@ -784,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   _playerProfile!.getStyleDescription(),
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     height: 1.4,
                   ),
                 ),
@@ -812,13 +690,173 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
       ],
     );
   }
   
+  Widget _buildLanguageChip(String label, String code, BuildContext context) {
+    final languageService = Provider.of<LanguageService>(context);
+    bool isSelected = languageService.getLanguageCode() == code;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) async {
+        if (selected) {
+          // 使用LanguageService切换语言
+          await languageService.changeLanguage(code);
+          // 显示提示
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('语言已切换为 $label'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+            // 关闭对话框
+            Navigator.of(context).pop();
+          }
+        }
+      },
+      selectedColor: Colors.blue,
+      backgroundColor: Colors.white.withValues(alpha: 0.2),
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.white70,
+        fontSize: 14,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    );
+  }
+  
+  // 动态构建普通角色网格
+  Widget _buildNormalCharacterGrid() {
+    final normalCharacters = AIPersonalities.normalCharacters;
+    
+    if (normalCharacters.isEmpty) {
+      return const Center(
+        child: Text(
+          '加载中...',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+    
+    // 每行2个角色
+    return SizedBox(
+      height: ResponsiveUtils.cardHeight,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (int i = 0; i < normalCharacters.length; i++) ...[
+            if (i > 0) SizedBox(width: 12.w),
+            Expanded(
+              child: _buildPersonalityCard(
+                context,
+                normalCharacters[i],
+                _getIconForCharacter(normalCharacters[i]),
+                _getColorForCharacter(normalCharacters[i]),
+              ),
+            ),
+          ],
+          // 如果角色数量是奇数，添加空位
+          if (normalCharacters.length % 2 == 1) ...[
+            SizedBox(width: 12.w),
+            Expanded(child: Container()),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  // 动态构建VIP角色网格
+  Widget _buildVIPCharacterGrid() {
+    final vipCharacters = AIPersonalities.vipCharacters;
+    
+    if (vipCharacters.isEmpty) {
+      return const Center(
+        child: Text(
+          '暂无VIP角色',
+          style: TextStyle(color: Colors.amber),
+        ),
+      );
+    }
+    
+    // 将VIP角色按每行2个分组
+    List<Widget> rows = [];
+    for (int i = 0; i < vipCharacters.length; i += 2) {
+      rows.add(
+        SizedBox(
+          height: ResponsiveUtils.cardHeight,
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildVIPPersonalityCard(
+                  context,
+                  vipCharacters[i],
+                  _getIconForCharacter(vipCharacters[i]),
+                  _getColorForCharacter(vipCharacters[i]),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              if (i + 1 < vipCharacters.length)
+                Expanded(
+                  child: _buildVIPPersonalityCard(
+                    context,
+                    vipCharacters[i + 1],
+                    _getIconForCharacter(vipCharacters[i + 1]),
+                    _getColorForCharacter(vipCharacters[i + 1]),
+                  ),
+                )
+              else
+                Expanded(child: Container()), // 空位
+            ],
+          ),
+        ),
+      );
+      if (i + 2 < vipCharacters.length) {
+        rows.add(const SizedBox(height: 12));
+      }
+    }
+    
+    return Column(children: rows);
+  }
+  
+  // 为角色获取图标
+  IconData _getIconForCharacter(AIPersonality character) {
+    // 根据角色特性返回合适的图标
+    switch (character.id) {
+      case '0001': // Lena
+        return Icons.calculate;
+      case '0002': // Katerina
+        return Icons.diamond;
+      case '1001': // Aki
+        return Icons.favorite;
+      case '1002': // Isabella
+        return Icons.sunny;
+      default:
+        return Icons.person;
+    }
+  }
+  
+  // 为角色获取颜色
+  Color _getColorForCharacter(AIPersonality character) {
+    // 根据角色特性返回合适的颜色
+    switch (character.id) {
+      case '0001': // Lena
+        return Colors.purple;
+      case '0002': // Katerina
+        return Colors.pink;
+      case '1001': // Aki
+        return Colors.pinkAccent;
+      case '1002': // Isabella
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildPersonalityCard(
     BuildContext context,
     AIPersonality personality,
@@ -853,13 +891,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              color.withOpacity(0.8),
-              color.withOpacity(0.4),
+              color.withValues(alpha: 0.8),
+              color.withValues(alpha: 0.4),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -921,18 +959,84 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     color: Colors.white,
                   ),
                 ),
+                // 显示亲密度
+                const SizedBox(height: 2),
+                Builder(
+                  builder: (context) {
+                    final intimacy = IntimacyService().getIntimacy(personality.id);
+                    return Column(
+                      children: [
+                        // 等级和数值
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.favorite,
+                              size: 12,
+                              color: Colors.pink.shade400,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              'Lv.${intimacy.intimacyLevel}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.pink.shade400,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${intimacy.intimacyPoints}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        // 进度条
+                        Container(
+                          width: 120,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 120 * intimacy.levelProgress,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.pink.shade300,
+                                      Colors.pink.shade500,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
                 // 显示AI酒杯数量和倒计时 (始终显示)
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ...List.generate(6, (index) {
+                    ...List.generate(personality.drinkCapacity, (index) {
                       return Icon(
                         Icons.local_bar,
                         size: 12,
                         color: index < aiDrinks
                           ? Colors.red.shade300
-                          : Colors.grey.withOpacity(0.3),
+                          : Colors.grey.withValues(alpha: 0.3),
                       );
                     }),
                     // 显示醒酒倒计时
@@ -972,10 +1076,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -994,7 +1098,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           '胜',
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -1010,7 +1114,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           '负',
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -1034,15 +1138,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     shape: BoxShape.circle,
                     color: (_playerProfile!.vsAIRecords[personality.id]!['wins']! > 
                             _playerProfile!.vsAIRecords[personality.id]!['losses']!)
-                      ? Colors.green.withOpacity(0.9)
-                      : Colors.red.withOpacity(0.9),
+                      ? Colors.green.withValues(alpha: 0.9)
+                      : Colors.red.withValues(alpha: 0.9),
                     border: Border.all(
                       color: Colors.white,
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -1085,6 +1189,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         
         return GestureDetector(
           onTap: () async {
+            // 在点击时重新检查醉酒状态
+            bool currentlyUnavailable = _drinkingState != null && 
+                                      _drinkingState!.isAIUnavailable(personality.id);
+            
             if (isLocked) {
               // 显示VIP解锁对话框
               await VIPUnlockService.showVIPUnlockDialog(
@@ -1098,11 +1206,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               // 延迟一下让界面刷新
               await Future.delayed(const Duration(milliseconds: 500));
               
-              // 再次检查解锁状态
+              // 再次检查解锁状态和醉酒状态
               bool nowUnlocked = await VIPUnlockService().isUnlocked(personality.id);
+              bool stillUnavailable = _drinkingState != null && 
+                                    _drinkingState!.isAIUnavailable(personality.id);
               
               // 如果现在已解锁且AI不醉，直接进入游戏
-              if (nowUnlocked && !isUnavailable) {
+              if (nowUnlocked && !stillUnavailable && mounted) {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1111,8 +1221,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 );
                 await _loadData();
                 _startTimer();
+              } else if (nowUnlocked && stillUnavailable && mounted) {
+                // 解锁了但是AI醉了
+                _showAISoberDialog(personality);
               }
-            } else if (isUnavailable) {
+            } else if (currentlyUnavailable) {
               // AI醉了，显示醒酒对话框
               _showAISoberDialog(personality);
             } else {
@@ -1136,8 +1249,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 colors: isLocked
                   ? [Colors.grey.shade700, Colors.grey.shade800]
                   : [
-                      color.withOpacity(0.8),
-                      color.withOpacity(0.4),
+                      color.withValues(alpha: 0.8),
+                      color.withValues(alpha: 0.4),
                     ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -1147,7 +1260,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isLocked ? Colors.black26 : Colors.amber.withOpacity(0.3),
+                  color: isLocked ? Colors.black26 : Colors.amber.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -1183,7 +1296,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     right: 8,
                     child: Icon(
                       Icons.lock,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       size: 20,
                     ),
                   )
@@ -1203,7 +1316,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${minutes}分钟',
+                              '$minutes分钟',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -1281,30 +1394,98 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         overflow: TextOverflow.ellipsis,
                       ),
                       
-                      // 难度标签
-                      if (personality.difficulty != null)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: _getDifficultyColor(personality.difficulty!).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _getDifficultyColor(personality.difficulty!),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            _getDifficultyText(personality.difficulty!),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: isLocked 
-                                ? Colors.grey.shade400 
-                                : _getDifficultyColor(personality.difficulty!),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      // 显示亲密度（锁定和未锁定都显示）
+                      const SizedBox(height: 2),
+                      Builder(
+                        builder: (context) {
+                          final intimacy = IntimacyService().getIntimacy(personality.id);
+                          return Column(
+                            children: [
+                              // 等级和数值
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.favorite,
+                                    size: 10,
+                                    color: isLocked 
+                                      ? Colors.grey.shade400
+                                      : Colors.pink.shade400,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    'Lv.${intimacy.intimacyLevel}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: isLocked 
+                                        ? Colors.grey.shade400
+                                        : Colors.pink.shade400,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '${intimacy.intimacyPoints}',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: isLocked 
+                                        ? Colors.grey.shade500
+                                        : Colors.white.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              // 进度条
+                              Container(
+                                width: 100,
+                                height: 2.5,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(1.5),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 100 * intimacy.levelProgress,
+                                      height: 2.5,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: isLocked
+                                            ? [Colors.grey.shade500, Colors.grey.shade600]
+                                            : [Colors.pink.shade300, Colors.pink.shade500],
+                                        ),
+                                        borderRadius: BorderRadius.circular(1.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      
+                      // 酒杯状态（显示在描述之前）
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ...List.generate(personality.drinkCapacity, (index) {
+                            return Icon(
+                              Icons.local_bar,
+                              size: 10,
+                              color: isLocked
+                                ? (index < aiDrinks 
+                                    ? Colors.grey.shade500 
+                                    : Colors.grey.withValues(alpha: 0.2))
+                                : (index < aiDrinks
+                                    ? Colors.red.shade300
+                                    : Colors.grey.withValues(alpha: 0.3)),
+                            );
+                          }),
+                        ],
+                      ),
                       
                       // 描述
                       const SizedBox(height: 4),
@@ -1323,25 +1504,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                      
-                      // 酒杯状态（只有解锁后才显示）
-                      if (!isLocked && aiDrinks > 0) ...[  
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ...List.generate(6, (index) {
-                              return Icon(
-                                Icons.local_bar,
-                                size: 10,
-                                color: index < aiDrinks
-                                  ? Colors.red.shade300
-                                  : Colors.grey.withOpacity(0.3),
-                              );
-                            }),
-                          ],
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -1351,36 +1513,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         );
       },
     );
-  }
-  
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return Colors.green;
-      case 'medium':
-        return Colors.orange;
-      case 'hard':
-        return Colors.red;
-      case 'expert':
-        return Colors.purple;
-      default:
-        return Colors.blue;
-    }
-  }
-  
-  String _getDifficultyText(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return '简单';
-      case 'medium':
-        return '中等';
-      case 'hard':
-        return '困难';
-      case 'expert':
-        return '专家';
-      default:
-        return difficulty;
-    }
   }
   
   // 显示AI醒酒对话框
@@ -1425,31 +1557,63 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Text(
                 '${personality.name}醉了！',
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              Text(
-                '已喝${_drinkingState!.getAIDrinks(personality.id)}杯酒',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white70,
+              const SizedBox(height: 10),
+              // 醒酒倒计时
+              if (_drinkingState != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.timer,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _getFormattedSoberTime(personality.id),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
+              ],
+              const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
                 child: const Text(
-                  '该AI已经微醺，无法陪你游戏\n需要帮TA醒酒才能继续',
+                  '她喝醉了，无法陪你游戏\n需要你帮她醒酒',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 16,
+                    height: 1.5,
                   ),
                 ),
               ),
@@ -1479,11 +1643,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         },
                       );
                     },
-                    icon: const Icon(Icons.play_circle_outline, size: 20),
-                    label: const Text('看广告'),
+                    icon: const Icon(Icons.play_circle_outline, size: 22, color: Colors.white),
+                    label: const Text(
+                      '看广告',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
                   ),
                   // 取消
@@ -1491,11 +1663,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    icon: const Icon(Icons.close, size: 20),
-                    label: const Text('取消'),
+                    icon: const Icon(Icons.close, size: 22, color: Colors.white),
+                    label: const Text(
+                      '取消',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      backgroundColor: Colors.grey.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
                   ),
                 ],
@@ -1506,4 +1686,227 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
   }
+  
+  // 显示设置对话框
+  void _showSettingsDialog(BuildContext context, AuthService authService, UserService userService) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF1A0000),  // 深黑红色
+                Color(0xFF3D0000),  // 暗红色
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 标题
+              Text(
+                AppLocalizations.of(context)!.settings,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // 用户头像
+              CircleAvatar(
+                radius: 40,
+                backgroundImage: authService.photoURL != null
+                    ? NetworkImage(authService.photoURL!)
+                    : null,
+                backgroundColor: Colors.white24,
+                child: authService.photoURL == null
+                    ? Icon(
+                        authService.isAnonymous
+                            ? Icons.person_outline
+                            : Icons.person,
+                        size: 40,
+                        color: Colors.white,
+                      )
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              
+              // 用户名
+              Text(
+                userService.displayName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // 用户ID
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.fingerprint,
+                      size: 16,
+                      color: Colors.white70,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'ID: ${authService.uid?.substring(0, 8) ?? "未登录"}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // 统计信息
+              if (userService.playerProfile != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildStatItem(
+                            '胜率',
+                            '${(userService.winRate * 100).toStringAsFixed(1)}%',
+                            Colors.green,
+                          ),
+                          _buildStatItem(
+                            '场次',
+                            '${userService.playerProfile!.totalGames}',
+                            Colors.blue,
+                          ),
+                          _buildStatItem(
+                            '胜场',
+                            '${userService.playerProfile!.totalWins}',
+                            Colors.amber,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+              ],
+              
+              // 语言选择
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.language,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppLocalizations.of(context)!.language,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // 语言选项
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildLanguageChip('简体中文', 'zh_CN', context),
+                        _buildLanguageChip('English', 'en', context),
+                        _buildLanguageChip('中文繁體', 'zh_TW', context),
+                        _buildLanguageChip('Español', 'es', context),
+                        _buildLanguageChip('Português', 'pt', context),
+                        _buildLanguageChip('Bahasa', 'id', context),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // 登出按钮
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    // 先关闭对话框
+                    Navigator.of(context).pop();
+                    
+                    // 执行登出
+                    await authService.signOut();
+                    
+                    // 导航到登录页
+                    if (context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    }
+                  },
+                  icon: const Icon(Icons.logout),
+                  label: Text(AppLocalizations.of(context)!.logout),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 10),
+              
+              // 关闭按钮
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  '关闭',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
 }

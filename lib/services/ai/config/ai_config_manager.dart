@@ -1,6 +1,7 @@
 /// AI配置管理器
 /// 
 /// 集中管理所有AI相关配置
+library;
 
 import '../../../models/ai_personality.dart';
 
@@ -26,9 +27,6 @@ class AIConfigManager {
   /// 决策阈值配置
   final DecisionThresholds thresholds = DecisionThresholds();
   
-  /// 难度配置
-  DifficultyLevel difficulty = DifficultyLevel.medium;
-  
   // ============= 运行时配置 =============
   
   /// 当前使用的性格
@@ -39,72 +37,12 @@ class AIConfigManager {
   
   // ============= 方法 =============
   
-  /// 根据难度调整AI参数
-  void applyDifficulty(DifficultyLevel level) {
-    difficulty = level;
-    
-    switch (level) {
-      case DifficultyLevel.easy:
-        thresholds.challengeThreshold = 0.7;  // 更容易质疑
-        thresholds.bluffThreshold = 0.6;      // 更少诈唬
-        thresholds.riskThreshold = 0.3;       // 更保守
-        break;
-        
-      case DifficultyLevel.medium:
-        thresholds.challengeThreshold = 0.5;
-        thresholds.bluffThreshold = 0.4;
-        thresholds.riskThreshold = 0.5;
-        break;
-        
-      case DifficultyLevel.hard:
-        thresholds.challengeThreshold = 0.3;  // 更难质疑
-        thresholds.bluffThreshold = 0.2;      // 更多诈唬
-        thresholds.riskThreshold = 0.7;       // 更激进
-        break;
-        
-      case DifficultyLevel.expert:
-        thresholds.challengeThreshold = 0.2;
-        thresholds.bluffThreshold = 0.15;
-        thresholds.riskThreshold = 0.8;
-        break;
-    }
-  }
-  
-  /// 获取调整后的性格参数
-  AIPersonality getAdjustedPersonality(AIPersonality base) {
-    if (difficulty == DifficultyLevel.medium) {
-      return base;
-    }
-    
-    // 根据难度调整性格参数
-    double adjustment = difficulty == DifficultyLevel.easy ? 0.8 :
-                       difficulty == DifficultyLevel.hard ? 1.2 : 1.5;
-    
-    return AIPersonality(
-      id: base.id,
-      name: base.name,
-      description: base.description,
-      avatarPath: base.avatarPath,
-      bluffRatio: (base.bluffRatio * adjustment).clamp(0.0, 1.0),
-      challengeThreshold: (base.challengeThreshold / adjustment).clamp(0.0, 1.0),
-      riskAppetite: (base.riskAppetite * adjustment).clamp(0.0, 1.0),
-      mistakeRate: (base.mistakeRate * adjustment).clamp(0.0, 1.0),
-      tellExposure: base.tellExposure,
-      reverseActingProb: base.reverseActingProb,
-      bidPreferenceThreshold: base.bidPreferenceThreshold,
-      taunts: base.taunts,
-      isVIP: base.isVIP,
-      country: base.country,
-      difficulty: base.difficulty,
-    );
-  }
   
   /// 重置配置
   void reset() {
     useCloudAI = false;
     enableFallback = true;
     debugMode = false;
-    difficulty = DifficultyLevel.medium;
     thresholds.reset();
     stats.reset();
   }
@@ -115,7 +53,6 @@ class AIConfigManager {
       'useCloudAI': useCloudAI,
       'enableFallback': enableFallback,
       'debugMode': debugMode,
-      'difficulty': difficulty.toString(),
       'thresholds': thresholds.toJson(),
       'stats': stats.toJson(),
     };
@@ -126,23 +63,7 @@ class AIConfigManager {
     useCloudAI = json['useCloudAI'] ?? false;
     enableFallback = json['enableFallback'] ?? true;
     debugMode = json['debugMode'] ?? false;
-    
-    String? diffStr = json['difficulty'];
-    if (diffStr != null) {
-      difficulty = DifficultyLevel.values.firstWhere(
-        (e) => e.toString() == diffStr,
-        orElse: () => DifficultyLevel.medium,
-      );
-    }
   }
-}
-
-/// 难度级别
-enum DifficultyLevel {
-  easy,    // 简单
-  medium,  // 中等
-  hard,    // 困难
-  expert,  // 专家
 }
 
 /// 决策阈值

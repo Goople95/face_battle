@@ -5,6 +5,7 @@
 /// 2. 心理博弈 - 让对手相信你的叫牌
 /// 3. 风险管理 - 知道何时该冒险，何时该保守
 /// 4. 模式识别 - 发现对手的习惯和弱点
+library;
 
 import 'dart:math' as math;
 import '../models/game_state.dart';
@@ -1445,11 +1446,17 @@ class GameMemory {
     int streak = 0;
     for (int i = history.length - 1; i >= 0; i--) {
       if (history[i].success) {
-        if (streak >= 0) streak++;
-        else break;
+        if (streak >= 0) {
+          streak++;
+        } else {
+          break;
+        }
       } else {
-        if (streak <= 0) streak--;
-        else break;
+        if (streak <= 0) {
+          streak--;
+        } else {
+          break;
+        }
       }
     }
     return streak;

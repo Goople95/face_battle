@@ -1,12 +1,13 @@
 /// 统一的AI服务接口
 /// 
 /// 提供统一的AI决策接口，自动选择最佳的AI引擎
+library;
 
 import '../../models/game_state.dart';
 import '../../models/ai_personality.dart';
 import '../../config/api_config.dart';
 import '../../utils/logger_utils.dart';
-import '../gemini_service_v2.dart';
+import '../archived/gemini_service_v2.dart';
 import '../ai_service.dart';
 
 /// AI服务模式

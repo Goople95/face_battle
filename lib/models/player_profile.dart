@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'game_state.dart';
+import '../utils/logger_utils.dart';
 
 /// 玩家画像 - 记录玩家的游戏风格和特征
 class PlayerProfile {
@@ -54,6 +56,56 @@ class PlayerProfile {
   double predictability = 0.5; // 可预测性 (0-1)
   double challengeRate = 0.0; // 质疑率（平均每局质疑次数）
   double challengeTendency = 0.4; // 质疑倾向（用于用户服务）
+  
+  // NPC亲密度数据
+  Map<String, int> npcIntimacy = {}; // NPC ID -> 亲密度值
+  
+  // 获取与特定NPC的亲密度
+  int getIntimacy(String npcId) {
+    return npcIntimacy[npcId] ?? 0;
+  }
+  
+  // 增加亲密度
+  void addIntimacy(String npcId, int amount) {
+    npcIntimacy[npcId] = getIntimacy(npcId) + amount;
+  }
+  
+  // 获取亲密等级（0-5级）
+  int getIntimacyLevel(String npcId) {
+    int intimacy = getIntimacy(npcId);
+    if (intimacy < 10) return 0;  // 初遇
+    if (intimacy < 30) return 1;  // 相识
+    if (intimacy < 60) return 2;  // 友好
+    if (intimacy < 100) return 3; // 好友
+    if (intimacy < 150) return 4; // 知心
+    return 5; // 挚爱
+  }
+  
+  // 获取亲密等级名称
+  String getIntimacyLevelName(String npcId) {
+    switch (getIntimacyLevel(npcId)) {
+      case 0: return '初遇';
+      case 1: return '相识';
+      case 2: return '友好';
+      case 3: return '好友';
+      case 4: return '知心';
+      case 5: return '挚爱';
+      default: return '初遇';
+    }
+  }
+  
+  // 获取亲密等级颜色
+  Color getIntimacyLevelColor(String npcId) {
+    switch (getIntimacyLevel(npcId)) {
+      case 0: return Colors.grey;
+      case 1: return Colors.blue;
+      case 2: return Colors.green;
+      case 3: return Colors.orange;
+      case 4: return Colors.purple;
+      case 5: return Colors.pink;
+      default: return Colors.grey;
+    }
+  }
   
   PlayerProfile({
     String? id,
@@ -316,14 +368,14 @@ class PlayerProfile {
     
     String analysis = '''
 ═══════════════════════════════════════════════════
-📊 玩家深度画像分析（基于${totalGames}局游戏）
+📊 玩家深度画像分析（基于$totalGames局游戏）
 ═══════════════════════════════════════════════════
 
 【基础数据】
 • 总游戏局数：$totalGames
-• 胜率：${totalWins}/${totalGames} = ${(totalWins * 100.0 / totalGames).toStringAsFixed(1)}%
-• 质疑成功率：${successfulChallenges}/${totalChallenges > 0 ? totalChallenges : 1} = ${totalChallenges > 0 ? (successfulChallenges * 100.0 / totalChallenges).toStringAsFixed(1) : '0.0'}%
-• 被抓虚张率：${caughtBluffing}/${totalBluffs > 0 ? totalBluffs : 1} = ${totalBluffs > 0 ? (caughtBluffing * 100.0 / totalBluffs).toStringAsFixed(1) : '0.0'}%
+• 胜率：$totalWins/$totalGames = ${(totalWins * 100.0 / totalGames).toStringAsFixed(1)}%
+• 质疑成功率：$successfulChallenges/${totalChallenges > 0 ? totalChallenges : 1} = ${totalChallenges > 0 ? (successfulChallenges * 100.0 / totalChallenges).toStringAsFixed(1) : '0.0'}%
+• 被抓虚张率：$caughtBluffing/${totalBluffs > 0 ? totalBluffs : 1} = ${totalBluffs > 0 ? (caughtBluffing * 100.0 / totalBluffs).toStringAsFixed(1) : '0.0'}%
 
 【行为特征】
 • 虚张倾向：${(bluffingTendency * 100).toStringAsFixed(0)}% ${_getBluffingAnalysis()}
@@ -375,7 +427,7 @@ ${_getSuggestedStrategy()}
         int actualCount = diceCounts[game.finalBid!.value]! + 
                          (diceCounts[1] ?? 0); // 加上万能1
         if (actualCount >= 3) {
-          analysis = '（玩家有${actualCount}个）';
+          analysis = '（玩家有$actualCount个）';
         } else if (actualCount == 0) {
           analysis = '（纯虚张）';
         }
@@ -437,7 +489,7 @@ ${_getSuggestedStrategy()}
     String meaning = '';
     if (sorted.first.value > totalGames * 0.3) {
       int favValue = sorted.first.key;
-      meaning = '\n• ⚠️ 特别偏好${favValue}点！当其叫${favValue}时很可能真有！';
+      meaning = '\n• ⚠️ 特别偏好$favValue点！当其叫$favValue时很可能真有！';
     }
     
     return '• 常叫点数：\n${prefs.join('\n')}$meaning';
@@ -451,9 +503,9 @@ ${_getSuggestedStrategy()}
     int lateChallenge = patterns['late_challenge'] ?? 0;
     if (earlyChallenge + lateChallenge > 0) {
       if (earlyChallenge > lateChallenge * 2) {
-        analysis.add('• 喜欢早期质疑（前3轮质疑${earlyChallenge}次）');
+        analysis.add('• 喜欢早期质疑（前3轮质疑$earlyChallenge次）');
       } else if (lateChallenge > earlyChallenge * 2) {
-        analysis.add('• 倾向晚期质疑（6轮后质疑${lateChallenge}次）');
+        analysis.add('• 倾向晚期质疑（6轮后质疑$lateChallenge次）');
       }
     }
     
@@ -462,9 +514,9 @@ ${_getSuggestedStrategy()}
     int sticking = patterns['value_sticking'] ?? 0;
     if (switching + sticking > 5) {
       if (switching > sticking * 1.5) {
-        analysis.add('• 频繁换点数（换了${switching}次） - 可能在试探');
+        analysis.add('• 频繁换点数（换了$switching次） - 可能在试探');
       } else if (sticking > switching * 1.5) {
-        analysis.add('• 坚持同点数（坚持${sticking}次） - 可能真有该点');
+        analysis.add('• 坚持同点数（坚持$sticking次） - 可能真有该点');
       }
     }
     
@@ -494,7 +546,7 @@ ${_getSuggestedStrategy()}
     // 虚张与点数的关系
     if (bluffingTendency > 0.6 && preferredValues.isNotEmpty) {
       var favValue = preferredValues.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-      insights.add('• 💡 常在没有${favValue}时也叫${favValue}（虚张陷阱）');
+      insights.add('• 💡 常在没有$favValue时也叫$favValue（虚张陷阱）');
     }
     
     // 激进与胜率的关系
@@ -533,8 +585,8 @@ ${_getSuggestedStrategy()}
     if (preferredValues.isNotEmpty) {
       var favValue = preferredValues.entries.reduce((a, b) => a.value > b.value ? a : b).key;
       if (preferredValues[favValue]! > totalGames * 0.3) {
-        strategies.add('• 🎲 当其叫${favValue}时要格外小心，可能真有');
-        strategies.add('• 💡 可以用${favValue}设陷阱，引其上钩');
+        strategies.add('• 🎲 当其叫$favValue时要格外小心，可能真有');
+        strategies.add('• 💡 可以用$favValue设陷阱，引其上钩');
       }
     }
     
@@ -576,6 +628,7 @@ ${_getSuggestedStrategy()}
     'lastGameTime': lastGameTime?.toIso8601String(),
     'recentGames': recentGames.map((g) => g.toJson()).toList(),
     'vsAIRecords': vsAIRecords,
+    'npcIntimacy': npcIntimacy,
   };
   
   /// 从JSON创建
@@ -632,6 +685,10 @@ ${_getSuggestedStrategy()}
       });
     }
     
+    if (json['npcIntimacy'] != null) {
+      profile.npcIntimacy = Map<String, int>.from(json['npcIntimacy']);
+    }
+    
     return profile;
   }
   
@@ -659,12 +716,13 @@ ${_getSuggestedStrategy()}
         'challengeRate': challengeRate,
         'recentGames': recentGames.map((g) => g.toJson()).toList(),
         'vsAIRecords': vsAIRecords,
+        'npcIntimacy': npcIntimacy,
       };
       String jsonString = jsonEncode(data);
       await prefs.setString('player_profile', jsonString);
-      print('Player profile saved successfully');
+      LoggerUtils.info('Player profile saved successfully');
     } catch (e) {
-      print('Error saving player profile: $e');
+      LoggerUtils.error('Error saving player profile: $e');
     }
   }
   
@@ -715,8 +773,12 @@ ${_getSuggestedStrategy()}
             profile.vsAIRecords[key] = Map<String, int>.from(value);
           });
         }
+        
+        if (json['npcIntimacy'] != null) {
+          profile.npcIntimacy = Map<String, int>.from(json['npcIntimacy']);
+        }
       } catch (e) {
-        print('Error loading player profile: $e');
+        LoggerUtils.error('Error loading player profile: $e');
       }
     }
     

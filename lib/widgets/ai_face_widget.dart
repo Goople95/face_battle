@@ -7,10 +7,10 @@ class AIFaceWidget extends StatefulWidget {
   final String personality;
   
   const AIFaceWidget({
-    Key? key,
+    super.key,
     required this.emotionalState,
     required this.personality,
-  }) : super(key: key);
+  });
   
   @override
   State<AIFaceWidget> createState() => _AIFaceWidgetState();
@@ -120,7 +120,7 @@ class _AIFaceWidgetState extends State<AIFaceWidget>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),

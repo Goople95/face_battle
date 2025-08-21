@@ -1,16 +1,17 @@
 /// Gemini API服务 - 重构简化版
 /// 
 /// 负责与Gemini API交互，获取AI决策
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/game_state.dart';
-import '../models/ai_personality.dart';
-import '../utils/logger_utils.dart';
-import '../config/api_config.dart';
-import 'ai/prompts/gemini_prompts.dart';
-import 'ai/engines/elite_engine.dart';
-import 'ai/engines/master_engine.dart' as master;
+import '../../models/game_state.dart';
+import '../../models/ai_personality.dart';
+import '../../utils/logger_utils.dart';
+import '../../config/api_config.dart';
+import '../ai/prompts/gemini_prompts.dart';
+import '../ai/engines/elite_engine.dart';
+import '../ai/engines/master_engine.dart' as master;
 
 class GeminiService {
   final AIPersonality personality;
@@ -184,7 +185,7 @@ class GeminiService {
       }
     } catch (e) {
       AILogger.logParsing('解析API响应失败', {'error': e.toString()});
-      throw e;
+      rethrow;
     }
   }
   

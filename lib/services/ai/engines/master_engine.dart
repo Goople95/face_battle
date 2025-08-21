@@ -1,6 +1,7 @@
 /// 大师级AI引擎 - 重构简化版
 /// 
 /// 使用组件化架构，代码更清晰、可维护
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';
@@ -195,13 +196,8 @@ class MasterAIEngine {
   
   /// 检查叫牌是否合法
   bool _isValidBid(Bid newBid, Bid currentBid) {
-    if (newBid.value > currentBid.value) {
-      return newBid.quantity >= currentBid.quantity;
-    }
-    if (newBid.value == currentBid.value) {
-      return newBid.quantity > currentBid.quantity;
-    }
-    return newBid.quantity > currentBid.quantity;
+    // 使用Bid类自带的isHigherThan方法，它已经正确实现了1>6>5>4>3>2的规则
+    return newBid.isHigherThan(currentBid);
   }
   
   /// 重置引擎（新游戏开始）

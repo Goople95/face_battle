@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../models/drinking_state.dart';
 
 /// 醉酒效果覆盖层
@@ -8,10 +7,10 @@ class DrunkOverlay extends StatefulWidget {
   final Widget child;
   
   const DrunkOverlay({
-    Key? key,
+    super.key,
     required this.drinkingState,
     required this.child,
-  }) : super(key: key);
+  });
   
   @override
   State<DrunkOverlay> createState() => _DrunkOverlayState();
@@ -107,7 +106,7 @@ class _DrunkOverlayState extends State<DrunkOverlay> with TickerProviderStateMix
                     radius: 1.5,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(drunkLevel * 0.3),
+                      Colors.black.withValues(alpha: drunkLevel * 0.3),
                     ],
                   ),
                 ),
@@ -125,10 +124,10 @@ class DrinkingIndicator extends StatelessWidget {
   final String? currentAiId;
   
   const DrinkingIndicator({
-    Key? key,
+    super.key,
     required this.drinkingState,
     this.currentAiId,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -139,7 +138,7 @@ class DrinkingIndicator extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
+            color: Colors.black.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: _getPlayerBorderColor(),
@@ -178,7 +177,7 @@ class DrinkingIndicator extends StatelessWidget {
                     size: 16,
                     color: index < drinkingState.drinksConsumed
                       ? Colors.amber
-                      : Colors.grey.withOpacity(0.3),
+                      : Colors.grey.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -192,7 +191,7 @@ class DrinkingIndicator extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
+            color: Colors.black.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: _getAIBorderColor(),
@@ -235,7 +234,7 @@ class DrinkingIndicator extends StatelessWidget {
                             ? drinkingState.getAIDrinks(currentAiId!)
                             : 0)
                       ? Colors.red
-                      : Colors.grey.withOpacity(0.3),
+                      : Colors.grey.withValues(alpha: 0.3),
                   ),
                 ),
               ),

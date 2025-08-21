@@ -1,6 +1,7 @@
 /// 策略规划器 - 制定游戏策略
 /// 
 /// 根据游戏阶段、对手状态和AI性格制定策略
+library;
 
 import 'dart:math' as math;
 import '../../../models/ai_personality.dart';

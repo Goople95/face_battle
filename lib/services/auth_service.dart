@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'firestore_service.dart';
+import '../utils/logger_utils.dart';
 
 /// 认证服务 - 管理用户登录状态
 class AuthService extends ChangeNotifier {
@@ -25,6 +26,45 @@ class AuthService extends ChangeNotifier {
       _user = user;
       notifyListeners();
     });
+    
+    // 初始化时尝试自动登录
+    _tryAutoLogin();
+  }
+  
+  /// 尝试自动登录（应用启动时）
+  Future<void> _tryAutoLogin() async {
+    try {
+      // 检查是否有之前的Google登录
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
+      
+      if (googleUser != null) {
+        // 获取认证详情
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        
+        // 创建凭证
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        
+        // 使用凭证登录Firebase
+        final UserCredential userCredential = 
+            await _auth.signInWithCredential(credential);
+        
+        _user = userCredential.user;
+        
+        // 保存用户信息到Firestore
+        if (_user != null) {
+          await FirestoreService().createOrUpdateUserProfile(_user!, 'google');
+          await _saveUserLocally(_user!);
+        }
+        
+        notifyListeners();
+      }
+    } catch (e) {
+      // 自动登录失败，忽略错误，让用户手动登录
+      LoggerUtils.debug('Auto login failed: $e');
+    }
   }
   
   /// Google 登录
@@ -33,9 +73,13 @@ class AuthService extends ChangeNotifier {
       _setLoading(true);
       _clearError();
       
-      // 触发Google登录流程
-      await _googleSignIn.signOut(); // 确保之前的登录清除
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // 先尝试静默登录（cold login）
+      GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
+      
+      // 如果静默登录失败，则显示登录界面
+      if (googleUser == null) {
+        googleUser = await _googleSignIn.signIn();
+      }
       
       if (googleUser == null) {
         // 用户取消了登录

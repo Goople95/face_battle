@@ -5,6 +5,7 @@
 /// 2. 决策链条清晰可追溯
 /// 3. 每层都有明确职责
 /// 4. 学习和适应是核心
+library;
 
 import 'dart:math' as math;
 import '../models/game_state.dart';
@@ -226,7 +227,7 @@ class HardConstraintChecker {
     if (opponentNeeded <= 0) {
       result.hasMandatoryAction = true;
       result.mandatoryAction = 'bid'; // 必须叫牌，不能质疑
-      result.reason = '我们有${ourCount}个，已足够${totalNeeded}个';
+      result.reason = '我们有$ourCount个，已足够$totalNeeded个';
       result.summary = '禁止质疑（已有足够）';
       result.forbiddenActions.add('challenge');
       
@@ -242,7 +243,7 @@ class HardConstraintChecker {
     if (opponentNeeded > 5) {
       result.hasMandatoryAction = true;
       result.mandatoryAction = 'challenge';
-      result.reason = '对手需要${opponentNeeded}个，不可能';
+      result.reason = '对手需要$opponentNeeded个，不可能';
       result.summary = '必须质疑（不可能）';
       
       AILogger.logParsing('硬约束触发', {

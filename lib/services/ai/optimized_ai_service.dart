@@ -1,6 +1,7 @@
 /// 优化后的统一AI服务
 /// 
 /// 整合所有优化：缓存、配置管理、调试工具
+library;
 
 import 'dart:async';
 import '../../models/game_state.dart';
@@ -29,13 +30,11 @@ class OptimizedAIService {
   final Stopwatch _stopwatch = Stopwatch();
   
   OptimizedAIService({required this.personality}) {
-    // 根据难度调整性格
-    var adjustedPersonality = config.getAdjustedPersonality(personality);
+    // 直接使用原始性格，不再调整难度
+    masterEngine = MasterAIEngine(personality: personality);
+    eliteEngine = EliteAIEngine(personality: personality);
     
-    masterEngine = MasterAIEngine(personality: adjustedPersonality);
-    eliteEngine = EliteAIEngine(personality: adjustedPersonality);
-    
-    config.currentPersonality = adjustedPersonality;
+    config.currentPersonality = personality;
   }
   
   /// 获取AI决策（带所有优化）
@@ -63,13 +62,8 @@ class OptimizedAIService {
       // 2. 生成新决策
       Map<String, dynamic> decision;
       
-      if (config.difficulty == DifficultyLevel.expert) {
-        // 专家难度使用Elite引擎
-        decision = await _makeEliteDecision(round);
-      } else {
-        // 其他难度使用Master引擎
-        decision = await _makeMasterDecision(round);
-      }
+      // 使用Master引擎
+      decision = await _makeMasterDecision(round);
       
       // 3. 缓存决策
       cache.put(round, decision);
@@ -82,12 +76,11 @@ class OptimizedAIService {
       // 5. 调试输出
       if (AIDebugger.enabled) {
         AIDebugger.logDecision(
-          engine: config.difficulty == DifficultyLevel.expert ? 'Elite' : 'Master',
+          engine: 'Master',
           round: round,
           decision: decision,
           processingTime: _stopwatch.elapsed,
           extra: {
-            'difficulty': config.difficulty.toString(),
             'cacheSize': cache.size,
             'hitRate': cache.hitRate,
           },
@@ -109,20 +102,6 @@ class OptimizedAIService {
   /// 使用Master引擎决策
   Future<Map<String, dynamic>> _makeMasterDecision(GameRound round) async {
     var decision = masterEngine.makeDecision(round);
-    
-    // 应用难度调整
-    if (config.difficulty == DifficultyLevel.easy) {
-      // 简单模式：降低成功率，增加失误
-      if (decision['confidence'] != null) {
-        decision['confidence'] = (decision['confidence'] * 0.8).clamp(0.0, 1.0);
-      }
-      
-      // 10%概率做出错误决策
-      if (_stopwatch.elapsedMilliseconds % 10 == 0) {
-        decision = _makeRandomDecision(round);
-      }
-    }
-    
     return decision;
   }
   
@@ -244,20 +223,6 @@ class OptimizedAIService {
     };
   }
   
-  /// 设置难度
-  void setDifficulty(DifficultyLevel level) {
-    config.applyDifficulty(level);
-    
-    // 重新创建引擎
-    var adjustedPersonality = config.getAdjustedPersonality(personality);
-    masterEngine = MasterAIEngine(personality: adjustedPersonality);
-    eliteEngine = EliteAIEngine(personality: adjustedPersonality);
-    
-    // 清空缓存
-    cache.clear();
-    
-    AILogger.logParsing('难度设置', {'level': level.toString()});
-  }
   
   /// 启用/禁用调试
   void setDebugMode(bool enabled) {

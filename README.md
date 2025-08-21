@@ -1,7 +1,7 @@
-# Face Battle (表情博弈) 🎲
+# Dice Girls 🎲
 
 <div align="center">
-  <img src="assets/logo.png" alt="Face Battle Logo" width="200" height="200">
+  <img src="assets/logo.png" alt="Dice Girls Logo" width="200" height="200">
   
   **一款结合AI表情识别与骗子骰子玩法的Flutter游戏**
   

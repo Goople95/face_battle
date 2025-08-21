@@ -1,6 +1,7 @@
 /// Gemini API的提示词模板
 /// 
 /// 集中管理所有API调用的提示词
+library;
 
 class GeminiPrompts {
   /// 高级决策提示词模板

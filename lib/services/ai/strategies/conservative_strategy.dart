@@ -4,14 +4,14 @@
 /// - 只在有把握时叫牌
 /// - 积极质疑可疑叫牌
 /// - 避免高风险决策
+library;
 
 import '../models/ai_models.dart';
 import '../../../models/game_state.dart';
-import '../../../models/ai_personality.dart';
 import 'strategy_executor.dart';
 
 class ConservativeStrategyExecutor extends StrategyExecutor {
-  ConservativeStrategyExecutor(AIPersonality personality) : super(personality);
+  ConservativeStrategyExecutor(super.personality);
   
   @override
   Map<String, dynamic> execute(

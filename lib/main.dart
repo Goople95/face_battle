@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/user_service.dart';
 import 'services/admob_service.dart';
+import 'services/npc_config_service.dart';
+import 'services/dialogue_service.dart';
+import 'services/language_service.dart';
 import 'utils/logger_utils.dart';
 
 void main() async {
@@ -31,6 +37,22 @@ void main() async {
     LoggerUtils.error('AdMob初始化失败: $e');
   }
   
+  // Initialize NPC Config
+  try {
+    await NPCConfigService().initialize();
+    LoggerUtils.info('NPC配置加载成功');
+  } catch (e) {
+    LoggerUtils.error('NPC配置加载失败: $e');
+  }
+  
+  // Initialize Dialogue Service
+  try {
+    await DialogueService().initialize();
+    LoggerUtils.info('对话服务初始化成功');
+  } catch (e) {
+    LoggerUtils.error('对话服务初始化失败: $e');
+  }
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -45,28 +67,119 @@ class MyApp extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => UserService()),
-      ],
-      child: MaterialApp(
-        title: '表情博弈',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.dark,
+    return ScreenUtilInit(
+      // 设计稿的宽高，这里使用iPhone 14的尺寸作为设计基准
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthService()),
+            ChangeNotifierProvider(create: (_) => UserService()),
+            ChangeNotifierProvider(create: (_) => LanguageService()..initialize()),
+          ],
+          child: Consumer<LanguageService>(
+            builder: (context, languageService, _) {
+              return MaterialApp(
+                title: 'Dice Girls',
+                theme: ThemeData(
+                  primarySwatch: Colors.blue,
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: Colors.blue,
+                    brightness: Brightness.dark,
+                  ),
+                ),
+                locale: languageService.currentLocale,
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('zh', 'CN'),
+                  Locale('zh', 'TW'),
+                  Locale('es'),
+                  Locale('pt'),
+                ],
+                home: Consumer<AuthService>(
+          builder: (context, auth, _) {
+            // 如果已经登录，直接进入主页
+            if (auth.user != null) {
+              return const HomeScreen();
+            }
+            // 如果正在加载（自动登录中），显示加载界面
+            if (auth.isLoading) {
+              return Scaffold(
+                backgroundColor: const Color(0xFF3D0000), // 暗红色背景
+                body: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF000000),  // 纯黑色
+                        Color(0xFF3D0000),  // 暗红色
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 游戏Logo
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.red.withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.casino,
+                            size: 70,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        // 游戏标题
+                        const Text(
+                          'Dice Girls',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // 加载指示器
+                        const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            // 否则显示登录界面
+            return const LoginScreen();
+          },
+                ),
+                debugShowCheckedModeBanner: false,
+              );
+            },
           ),
-        ),
-        initialRoute: '/login',
-        routes: {
-          '/login': (context) => const LoginScreen(),
-          '/home': (context) => const AuthGuard(child: HomeScreen()),
-        },
-        debugShowCheckedModeBanner: false,
-      ),
+        );
+      },
     );
   }
 }

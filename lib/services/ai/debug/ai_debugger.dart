@@ -1,6 +1,7 @@
 /// AI调试工具
 /// 
 /// 用于调试和分析AI决策过程
+library;
 
 import 'dart:convert';
 import '../../../models/game_state.dart';

@@ -5,6 +5,7 @@
 /// - 胜负统计
 /// - 对手行为统计
 /// - 连胜/连败追踪
+library;
 
 import '../../../models/game_state.dart';
 import '../models/ai_models.dart';

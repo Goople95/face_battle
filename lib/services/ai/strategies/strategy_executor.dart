@@ -1,6 +1,7 @@
 /// 策略执行器基类 - 定义策略执行接口
 /// 
 /// 所有具体策略都需要实现这个接口
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';

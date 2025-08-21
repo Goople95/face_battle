@@ -1,32 +1,33 @@
 /// 胜利醉倒动画组件
 /// 
 /// 当NPC被喝醉时展示的胜利动画和成就感增强界面
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
-import 'package:confetti/confetti.dart';
 import 'dart:math' as math;
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
-import '../services/share_service.dart';
+import '../services/intimacy_service.dart';
+import '../utils/logger_utils.dart';
 
 /// 醉倒胜利动画
 class VictoryDrunkAnimation extends StatefulWidget {
   final AIPersonality defeatedAI;
   final DrinkingState drinkingState;
   final VoidCallback onComplete;
-  final VoidCallback? onShare;
+  final Function(int intimacyMinutes)? onShare;
   final VoidCallback? onRematch;
   
   const VictoryDrunkAnimation({
-    Key? key,
+    super.key,
     required this.defeatedAI,
     required this.drinkingState,
     required this.onComplete,
     this.onShare,
     this.onRematch,
-  }) : super(key: key);
+  });
   
   @override
   State<VictoryDrunkAnimation> createState() => _VictoryDrunkAnimationState();
@@ -43,7 +44,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   late AnimationController _scaleController;
   late AnimationController _slideController;
   late AnimationController _shakeController;
-  late ConfettiController _confettiController;
+  late AnimationController _pulseController;
   
   // 动画
   late Animation<double> _fadeAnimation;
@@ -55,9 +56,15 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   bool _videoInitialized = false;
   bool _showingStats = false;
   bool _showingIntimacy = false;  // 显示亲密度场景
-  int _totalWins = 0;
-  int _consecutiveWins = 0;
+  // final int _totalWins = 0; // reserved for future stats
+  // final int _consecutiveWins = 0; // reserved for future stats
   int _intimacyMinutes = 0;  // 独处时间
+  bool _hasLeveledUp = false;  // 是否升级
+  
+  // 亲密度动画
+  late AnimationController _intimacyCountController;
+  late Animation<int> _intimacyCountAnimation;
+  int _displayedIntimacy = 0;
   
   @override
   void initState() {
@@ -87,8 +94,14 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
       vsync: this,
     );
     
-    _confettiController = ConfettiController(
-      duration: const Duration(seconds: 3),
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    
+    _intimacyCountController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
     );
     
     // 设置动画
@@ -124,8 +137,36 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
       curve: Curves.elasticInOut,
     ));
     
-    // 加载视频
+    // 初始化视频
     _initializeVideo();
+    
+    // 视频播放5秒后显示亲密度界面
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        // 生成20-60之间的随机数
+        _intimacyMinutes = 20 + math.Random().nextInt(41);
+        // 记录NPC醉倒，增加亲密度并检测升级
+        IntimacyService().recordNPCDrunk(widget.defeatedAI.id, _intimacyMinutes).then((leveledUp) {
+          if (leveledUp && mounted) {
+            setState(() {
+              _hasLeveledUp = true;
+            });
+          }
+        });
+        // 淡出当前场景
+        _fadeController.reverse().then((_) {
+          setState(() {
+            _showingIntimacy = true;
+          });
+          // 淡入亲密度场景
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              _fadeController.forward();
+            }
+          });
+        });
+      }
+    });
     
     // 启动动画序列
     _startAnimationSequence();
@@ -133,13 +174,26 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   
   /// 初始化视频
   Future<void> _initializeVideo() async {
+    // 如果已经在初始化，避免重复
+    if (_videoController != null) {
+      LoggerUtils.debug('视频控制器已存在，跳过初始化');
+      return;
+    }
+    
     // 醉倒视频路径
     String videoPath = 'assets/people/${widget.defeatedAI.id}/videos/drunk.mp4';
     
-    try {
-      _videoController = VideoPlayerController.asset(videoPath);
-      await _videoController!.initialize();
-      
+    LoggerUtils.debug('加载醉倒视频: $videoPath');
+    
+    // 创建视频控制器
+    _videoController = VideoPlayerController.asset(videoPath);
+    
+    await _videoController!.initialize();
+    
+    LoggerUtils.debug('视频加载成功: ${_videoController!.value.size}');
+    
+    // 只有在组件仍然挂载时才更新状态
+    if (mounted) {
       setState(() {
         _videoInitialized = true;
       });
@@ -147,18 +201,36 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
       // 播放视频
       _videoController!.setLooping(false);
       _videoController!.play();
+    }
       
       // 视频播放完毕后显示亲密度场景
-      _videoController!.addListener(() {
-        if (_videoController!.value.position >= _videoController!.value.duration) {
+      void videoListener() {
+        if (_videoController!.value.position >= _videoController!.value.duration &&
+            _videoController!.value.duration > Duration.zero) {
           if (!_showingIntimacy && !_showingStats) {
-            // 生成5-20之间的随机数
-            _intimacyMinutes = 5 + math.Random().nextInt(16);
-            setState(() {
-              _showingIntimacy = true;
+            // 移除监听器避免重复触发
+            _videoController!.removeListener(videoListener);
+            
+            // 停止脉冲动画，减少rebuild
+            _pulseController.stop();
+            
+            // 生成20-60之间的随机数
+            _intimacyMinutes = 20 + math.Random().nextInt(41);
+            // 记录NPC醉倒，增加亲密度并检测升级
+            IntimacyService().recordNPCDrunk(widget.defeatedAI.id, _intimacyMinutes).then((leveledUp) {
+              if (leveledUp && mounted) {
+                setState(() {
+                  _hasLeveledUp = true;
+                });
+              }
             });
-            // 淡出效果
+            
+            // 淡出视频场景
             _fadeController.reverse().then((_) {
+              setState(() {
+                _showingIntimacy = true;
+              });
+              // 淡入亲密度场景
               Future.delayed(const Duration(milliseconds: 500), () {
                 if (mounted) {
                   _fadeController.forward();
@@ -167,33 +239,20 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             });
           }
         }
-      });
+      }
+      _videoController!.addListener(videoListener);
       
-    } catch (e) {
-      print('加载醉倒视频失败: $e');
-      // 如果视频加载失败，也显示亲密度场景
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          _intimacyMinutes = 5 + math.Random().nextInt(16);
-          setState(() {
-            _showingIntimacy = true;
-          });
-          _fadeController.reverse().then((_) {
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                _fadeController.forward();
-              }
-            });
-          });
-        }
-      });
-    }
   }
   
   /// 启动动画序列
   void _startAnimationSequence() async {
     // 淡入
     _fadeController.forward();
+    
+    // 启动脉冲动画（只在视频播放时）
+    if (!_showingIntimacy && !_showingStats) {
+      _pulseController.repeat(reverse: true);
+    }
     
     // 延迟启动其他动画
     await Future.delayed(const Duration(milliseconds: 200));
@@ -202,21 +261,23 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     await Future.delayed(const Duration(milliseconds: 300));
     _slideController.forward();
     
-    // 播放彩带动画
-    _confettiController.play();
-    
-    // 震动反馈
-    HapticFeedback.mediumImpact();
+    // 轻柔的震动反馈
+    HapticFeedback.lightImpact();
   }
   
   @override
   void dispose() {
-    _videoController?.dispose();
+    // 先暂停视频，避免在释放时继续播放
+    if (_videoController != null) {
+      _videoController!.pause();
+      _videoController!.dispose();
+    }
     _fadeController.dispose();
     _scaleController.dispose();
     _slideController.dispose();
     _shakeController.dispose();
-    _confettiController.dispose();
+    _pulseController.dispose();
+    _intimacyCountController.dispose();
     super.dispose();
   }
   
@@ -236,7 +297,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.black,
-                        Colors.black.withOpacity(0.95),
+                        Colors.black.withValues(alpha: 0.95),
                         Colors.black,
                       ],
                     )
@@ -245,7 +306,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.black,
-                        Colors.red.shade900.withOpacity(0.5),
+                        Colors.red.shade900.withValues(alpha: 0.5),
                         Colors.black,
                       ],
                     ),
@@ -270,15 +331,15 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                             ScaleTransition(
                               scale: _scaleAnimation,
                               child: const Text(
-                                '🏆 完美胜利！',
+                                '🌙 夜深了...',
                                 style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.amber,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFFF8BBD0),  // 粉色
                                   shadows: [
                                     Shadow(
-                                      blurRadius: 10,
-                                      color: Colors.amber,
+                                      blurRadius: 15,
+                                      color: Color(0x66E91E63),  // 暗粉色阴影
                                     ),
                                   ],
                                 ),
@@ -289,10 +350,11 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                             
                             // 副标题
                             Text(
-                              '${widget.defeatedAI.name} 已经烂醉如泥！',
+                              '${widget.defeatedAI.name} 醉了',
                               style: TextStyle(
                                 fontSize: 20,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Color(0xFFF8BBD0).withValues(alpha: 0.7),
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
                           ],
@@ -311,35 +373,31 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                     ),
                   ),
                   
-                  // 底部按钮（亲密度场景时隐藏）
-                  if (!_showingIntimacy)
+                  // 底部按钮（只在统计场景显示）
+                  if (_showingStats)
                     _buildBottomButtons(),
                 ],
               ),
             ),
           ),
           
-          // 彩带效果（亲密度场景时隐藏）
-          if (!_showingIntimacy)
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirection: math.pi / 2,
-                blastDirectionality: BlastDirectionality.explosive,
-                maxBlastForce: 20,
-                minBlastForce: 10,
-                emissionFrequency: 0.05,
-                numberOfParticles: 50,
-                gravity: 0.1,
-                shouldLoop: false,
-                colors: const [
-                  Colors.amber,
-                  Colors.orange,
-                  Colors.red,
-                  Colors.yellow,
-                  Colors.pink,
-                ],
+          // 浮动的粉色光晕效果（简化版，减少rebuild）
+          if (!_showingIntimacy && !_showingStats && _videoInitialized)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 1.5,
+                      colors: [
+                        Colors.transparent,
+                        Color(0x1AE91E63).withValues(alpha: 0.1),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
@@ -356,85 +414,151 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
           _showingIntimacy = false;
           _showingStats = true;
         });
+        
+        // 启动亲密度增长动画
+        _intimacyCountAnimation = IntTween(
+          begin: 0,
+          end: _intimacyMinutes,
+        ).animate(CurvedAnimation(
+          parent: _intimacyCountController,
+          curve: Curves.easeOutCubic,
+        ));
+        
+        _intimacyCountAnimation.addListener(() {
+          if (mounted) {
+            setState(() {
+              _displayedIntimacy = _intimacyCountAnimation.value;
+            });
+          }
+        });
+        
+        _intimacyCountController.forward();
         _shakeController.repeat(reverse: true);
         HapticFeedback.lightImpact();
       },
       child: Container(
         color: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            // 暗示性的图标
-            Icon(
-              Icons.favorite,
-              size: 60,
-              color: Colors.pinkAccent.withOpacity(0.6),
-            ),
-            
-            const SizedBox(height: 30),
-            
-            // 主文字
-            Text(
-              '你与${widget.defeatedAI.name}独处了',
-              style: TextStyle(
-                fontSize: 22,
-                color: Colors.white.withOpacity(0.8),
-                height: 1.5,
+            // 背景渐变效果（静态版本，减少rebuild）
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 2.0,
+                  colors: [
+                    Colors.transparent,
+                    Color(0xFF4A148C).withValues(alpha: 0.15),
+                    Color(0xFFE91E63).withValues(alpha: 0.08),
+                  ],
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
             
-            const SizedBox(height: 10),
-            
-            // 时间显示
-            Text(
-              '$_intimacyMinutes 分钟',
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: Colors.pinkAccent.withOpacity(0.9),
-                shadows: [
-                  Shadow(
-                    blurRadius: 20,
-                    color: Colors.pinkAccent.withOpacity(0.5),
+            // 主要内容
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 时间流逝提示（更暧昧的表达）
+                  AnimatedBuilder(
+                    animation: _scaleAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Column(
+                          children: [
+                            // 省略号动画
+                            Text(
+                              '• • •',
+                              style: TextStyle(
+                                fontSize: 40,
+                                color: Colors.white.withValues(alpha: 0.3 + 0.3 * _scaleAnimation.value),
+                                letterSpacing: 20,
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 40),
+                            
+                            // 暧昧的文字描述
+                            Text(
+                              '时间悄然流逝',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                letterSpacing: 3,
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 30),
+                            
+                            // 神秘的中心文字
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Color(0xFFE91E63).withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Text(
+                                '${widget.defeatedAI.name}与你...',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 40),
+                            
+                            // 隐晦的亲密度提示
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.favorite_outline,
+                                  size: 20,
+                                  color: Color(0xFFE91E63).withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '关系更近了一步',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Color(0xFFE91E63).withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  const SizedBox(height: 80),
+                  
+                  // 模糊的继续提示
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: 0.3 + 0.2 * _pulseController.value,
+                        child: Text(
+                          '轻触继续',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.5),
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // 亲密度增加
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '亲密度 ',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-                Text(
-                  '+$_intimacyMinutes',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.pinkAccent,
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 60),
-            
-            // 提示文字
-            Text(
-              '( 点击屏幕继续 )',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.4),
-                fontStyle: FontStyle.italic,
               ),
             ),
           ],
@@ -445,148 +569,229 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   
   /// 构建视频视图
   Widget _buildVideoView() {
-    if (!_videoInitialized || _videoController == null) {
-      // 加载中或失败时显示头像和动画
-      return ScaleTransition(
-        scale: _scaleAnimation,
+    if (!_videoInitialized || _videoController == null || !_videoController!.value.isInitialized) {
+      // 加载中显示空容器
+      return Container();
+    }
+    
+    // 播放视频 - 使用AspectRatio确保正确的宽高比
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // 根据视频宽高比计算高度，添加安全检查
+    final videoAspectRatio = _videoController!.value.isInitialized && 
+                              _videoController!.value.aspectRatio > 0
+        ? _videoController!.value.aspectRatio 
+        : 16/9;
+    
+    // 添加错误处理
+    try {
+      return Container(
+        constraints: BoxConstraints(
+          maxWidth: screenWidth,
+          maxHeight: screenHeight * 0.7, // 限制最大高度
+        ),
+        child: AspectRatio(
+          aspectRatio: videoAspectRatio,
+          child: VideoPlayer(_videoController!),
+        ),
+      );
+    } catch (e) {
+      LoggerUtils.error('视频播放出错: $e');
+      // 如果播放出错，返回空容器
+      return Container();
+    }
+  }
+  
+  /// 构建统计视图 - 简化为3行内容
+  Widget _buildStatsView() {
+    // 获取当前亲密度信息
+    final intimacyService = IntimacyService();
+    final currentIntimacy = intimacyService.getIntimacy(widget.defeatedAI.id);
+    
+    // 计算动画中的亲密度值（已经包含了增加的值）
+    final animatedIntimacyPoints = currentIntimacy.intimacyPoints;
+    final currentLevel = currentIntimacy.intimacyLevel;
+    final progress = currentIntimacy.levelProgress;
+    
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+        decoration: BoxDecoration(
+          color: Color(0xFF1a0a14).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(
+            color: Color(0xFFE91E63).withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // AI头像（醉酒状态）
-            Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.red, width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(0.5),
-                    blurRadius: 20,
-                    spreadRadius: 5,
+            // 如果升级了，显示恭喜信息
+            if (_hasLeveledUp) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.amber.withValues(alpha: 0.3),
+                      Colors.orange.withValues(alpha: 0.3),
+                    ],
                   ),
-                ],
-              ),
-              child: ClipOval(
-                child: Stack(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.amber,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 头像
-                    Image.asset(
-                      '${widget.defeatedAI.avatarPath}avatar.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey,
-                          child: const Icon(
-                            Icons.person,
-                            size: 100,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
+                    Icon(
+                      Icons.celebration,
+                      color: Colors.amber,
+                      size: 24,
                     ),
-                    
-                    // 醉酒滤镜
-                    Container(
-                      color: Colors.red.withOpacity(0.3),
-                    ),
-                    
-                    // 醉酒表情
-                    const Center(
-                      child: Text(
-                        '😵‍💫',
-                        style: TextStyle(fontSize: 80),
+                    const SizedBox(width: 10),
+                    Text(
+                      '恭喜！亲密度升级了！',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
                       ),
                     ),
                   ],
                 ),
               ),
+            ],
+            
+            // 第一行：独处时间和亲密度增加
+            Text(
+              '你们独处了${_intimacyMinutes}分钟',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white.withValues(alpha: 0.9),
+                height: 1.5,
+              ),
             ),
-            
-            const SizedBox(height: 20),
-            
-            // 醉酒动画文字
             AnimatedBuilder(
-              animation: _shakeAnimation,
+              animation: _intimacyCountController,
               builder: (context, child) {
-                return Transform.rotate(
-                  angle: _shakeAnimation.value,
-                  child: const Text(
-                    '晕头转向...',
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white70,
-                      fontStyle: FontStyle.italic,
+                return Column(
+                  children: [
+                    Text(
+                      '亲密度增加了 +$_displayedIntimacy',
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Color(0xFFE91E63),
+                        fontWeight: FontWeight.bold,
+                        height: 1.5,
+                      ),
                     ),
-                  ),
+                    // 显示增长进度的小提示
+                    if (_displayedIntimacy < _intimacyMinutes)
+                      Text(
+                        '增长中...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFE91E63).withValues(alpha: 0.6),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
-          ],
-        ),
-      );
-    }
-    
-    // 播放视频
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: AspectRatio(
-        aspectRatio: _videoController!.value.aspectRatio,
-        child: VideoPlayer(_videoController!),
-      ),
-    );
-  }
-  
-  /// 构建统计视图
-  Widget _buildStatsView() {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.amber, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.amber.withOpacity(0.3),
-              blurRadius: 20,
-              spreadRadius: 5,
+            
+            const SizedBox(height: 30),
+            
+            // 第二行：进度条（带动画）
+            AnimatedBuilder(
+              animation: _intimacyCountController,
+              builder: (context, child) {
+                return Column(
+                  children: [
+                    // 进度条标签
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Lv.$currentLevel',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFFE91E63),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          currentLevel < 10 
+                            ? '${_getCurrentLevelProgress(animatedIntimacyPoints, currentLevel)} / ${_getLevelRange(currentLevel)}'
+                            : 'MAX',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // 进度条
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 12,
+                        backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFFE91E63),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 成就标题
-            const Text(
-              '🎉 成就达成！',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.amber,
+            
+            const SizedBox(height: 30),
+            
+            // 第三行：升级提示文案
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // 统计数据
-            _buildStatRow('醉倒对手', '${widget.defeatedAI.name}', Colors.red),
-            _buildStatRow('总计喝酒', '${widget.drinkingState.getAIDrinks(widget.defeatedAI.id)}杯', Colors.orange),
-            _buildStatRow('战斗回合', '多轮激战', Colors.blue),
-            _buildStatRow('获得奖励', '+100 金币', Colors.amber),
-            
-            const SizedBox(height: 20),
-            
-            // 成就徽章
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildAchievementBadge('🍺', '酒神'),
-                _buildAchievementBadge('💪', '不败'),
-                _buildAchievementBadge('🎯', '精准'),
-              ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.star_outline,
+                    size: 18,
+                    color: Colors.amber.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    currentLevel < 5 
+                      ? '升级就可以知道更多她的小秘密'
+                      : '你已经了解她的所有秘密',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.amber.withValues(alpha: 0.8),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -605,7 +810,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             label,
             style: TextStyle(
               fontSize: 18,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           Text(
@@ -637,7 +842,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.amber.withOpacity(0.5),
+                  color: Colors.amber.withValues(alpha: 0.5),
                   blurRadius: 10,
                 ),
               ],
@@ -654,7 +859,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -662,23 +867,49 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     );
   }
   
-  /// 构建底部按钮
+  /// 构建底部按钮 - 简化为炫耀和继续
   Widget _buildBottomButtons() {
+    // 统计场景显示简化的按钮
+    if (_showingStats) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        child: Row(
+          children: [
+            // 炫耀按钮
+            Expanded(
+              child: _buildSimpleButton(
+                label: '炫耀',
+                color: Color(0xFFE91E63),
+                onTap: () {
+                  if (widget.onShare != null) {
+                    widget.onShare!(_intimacyMinutes);
+                  }
+                },
+                icon: Icons.share,
+              ),
+            ),
+            const SizedBox(width: 20),
+            // 继续按钮（返回主页）
+            Expanded(
+              child: _buildSimpleButton(
+                label: '继续',
+                color: Colors.white,
+                textColor: Colors.black87,
+                onTap: widget.onComplete,
+                icon: Icons.home,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // 其他场景的按钮（保持原样）
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // 分享按钮
-          if (widget.onShare != null)
-            _buildActionButton(
-              icon: Icons.share,
-              label: '炫耀',
-              color: Colors.blue,
-              onTap: widget.onShare!,
-            ),
-          
-          // 再战按钮
           if (widget.onRematch != null)
             _buildActionButton(
               icon: Icons.replay,
@@ -686,8 +917,6 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
               color: Colors.green,
               onTap: widget.onRematch!,
             ),
-          
-          // 继续按钮
           _buildActionButton(
             icon: Icons.arrow_forward,
             label: '继续',
@@ -696,6 +925,126 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             isPrimary: true,
           ),
         ],
+      ),
+    );
+  }
+  
+  /// 获取亲密度等级
+  int _getIntimacyLevel(int intimacy) {
+    if (intimacy >= 100) return 5;
+    if (intimacy >= 60) return 4;
+    if (intimacy >= 30) return 3;
+    if (intimacy >= 10) return 2;
+    if (intimacy >= 5) return 1;
+    return 0;
+  }
+  
+  /// 获取下一级所需的亲密度阈值
+  int _getNextLevelThreshold(int currentLevel) {
+    // 根据IntimacyData模型的等级系统
+    final thresholds = [100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 999999];
+    if (currentLevel <= 0) return thresholds[0];
+    if (currentLevel > 10) return thresholds[9];
+    return thresholds[currentLevel - 1];
+  }
+  
+  /// 获取当前等级的进度（相对于当前等级的起点）
+  int _getCurrentLevelProgress(int totalPoints, int level) {
+    if (level == 1) return totalPoints;
+    final prevThreshold = _getPreviousLevelThreshold(level);
+    return totalPoints - prevThreshold;
+  }
+  
+  /// 获取当前等级的范围（从起点到终点的距离）
+  int _getLevelRange(int level) {
+    final prevThreshold = _getPreviousLevelThreshold(level);
+    final nextThreshold = _getNextLevelThreshold(level);
+    return nextThreshold - prevThreshold;
+  }
+  
+  /// 获取上一级的阈值
+  int _getPreviousLevelThreshold(int currentLevel) {
+    final thresholds = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500];
+    if (currentLevel <= 1) return 0;
+    if (currentLevel > 10) return thresholds[9];
+    return thresholds[currentLevel - 1];
+  }
+  
+  /// 计算当前等级的进度
+  double _calculateProgress(int currentIntimacy, int currentLevel) {
+    final nextThreshold = _getNextLevelThreshold(currentLevel);
+    final prevThreshold = currentLevel == 0 ? 0 : _getNextLevelThreshold(currentLevel - 1);
+    
+    if (currentLevel >= 5) return 1.0;
+    
+    final levelRange = nextThreshold - prevThreshold;
+    final currentProgress = currentIntimacy - prevThreshold;
+    
+    return (currentProgress / levelRange).clamp(0.0, 1.0);
+  }
+  
+  /// 获取亲密度等级名称
+  String _getIntimacyLevelName(int level) {
+    switch (level) {
+      case 0: return '陌生人';
+      case 1: return '初识';
+      case 2: return '朋友';
+      case 3: return '好友';
+      case 4: return '密友';
+      case 5: return '知己';
+      default: return '陌生人';
+    }
+  }
+  
+  /// 获取下一级奖励描述
+  String _getNextLevelReward(int currentLevel) {
+    switch (currentLevel) {
+      case 0: return '了解她的基本信息';
+      case 1: return '知道她的兴趣爱好';
+      case 2: return '解锁私人故事';
+      case 3: return '了解她的小秘密';
+      case 4: return '成为她的特别存在';
+      case 5: return '已达最高等级';
+      default: return '继续加深了解';
+    }
+  }
+  
+  /// 构建简单按钮（用于统计界面）
+  Widget _buildSimpleButton({
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required IconData icon,
+    Color? textColor,
+  }) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(25),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(25),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: textColor ?? Colors.white,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: textColor ?? Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -729,7 +1078,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isPrimary
-                        ? [color, color.withOpacity(0.8)]
+                        ? [color, color.withValues(alpha: 0.8)]
                         : [Colors.transparent, Colors.transparent],
                   ),
                   borderRadius: BorderRadius.circular(15),
@@ -740,7 +1089,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                   boxShadow: isPrimary
                       ? [
                           BoxShadow(
-                            color: color.withOpacity(0.3),
+                            color: color.withValues(alpha: 0.3),
                             blurRadius: 10,
                             spreadRadius: 2,
                           ),

@@ -12,13 +12,13 @@ class AISpriteAvatar extends StatefulWidget {
   final bool showBorder;    // 是否显示边框
   
   const AISpriteAvatar({
-    Key? key,
+    super.key,
     required this.characterId,
     this.emotion = 'excited',
     this.size = 100,
     this.fps = 24,  // 默认24帧
     this.showBorder = true,
-  }) : super(key: key);
+  });
   
   @override
   State<AISpriteAvatar> createState() => _AISpriteAvatarState();
@@ -69,7 +69,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
     
     // 检查缓存
     if (_frameCache.containsKey(cacheKey)) {
-      print('🎞️ [AISpriteAvatar] 从缓存加载帧序列: $cacheKey');
+      // LoggerUtils.warning('🎞️ [AISpriteAvatar] 从缓存加载帧序列: $cacheKey');
       setState(() {
         _frames = _frameCache[cacheKey]!;
         _currentEmotion = emotion;
@@ -103,7 +103,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
         frames.add(image);
       } catch (e) {
         // 如果某一帧不存在，可以跳过或使用默认图片
-        print('⚠️ [AISpriteAvatar] 帧文件不存在: $framePath');
+        // LoggerUtils.warning('⚠️ [AISpriteAvatar] 帧文件不存在: $framePath');
       }
     }
     
@@ -123,7 +123,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
     if (_frameCache.length >= _maxCacheSize) {
       String? oldestKey = _frameCache.keys.first;
       _frameCache.remove(oldestKey);
-      print('🎞️ [AISpriteAvatar] 清理缓存: $oldestKey');
+      // LoggerUtils.warning('🎞️ [AISpriteAvatar] 清理缓存: $oldestKey');
     }
     
     // 添加到缓存
@@ -236,12 +236,12 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: Offset(0, 4),
             ),
@@ -262,11 +262,11 @@ class SimpleSpriteAvatar extends StatefulWidget {
   final Duration duration;
   
   const SimpleSpriteAvatar({
-    Key? key,
+    super.key,
     required this.imagePaths,
     this.size = 100,
     this.duration = const Duration(milliseconds: 100),
-  }) : super(key: key);
+  });
   
   @override
   State<SimpleSpriteAvatar> createState() => _SimpleSpriteAvatarState();

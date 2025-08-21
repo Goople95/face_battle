@@ -1,6 +1,7 @@
 /// AI决策系统的核心数据模型
 /// 
 /// 这个文件包含所有AI决策系统使用的数据模型和枚举类型
+library;
 
 import '../../../models/game_state.dart';
 

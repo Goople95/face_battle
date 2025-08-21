@@ -5,6 +5,7 @@
 /// - 评估当前叫牌情况
 /// - 计算风险等级
 /// - 提供局势评估
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';

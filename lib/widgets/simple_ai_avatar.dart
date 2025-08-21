@@ -371,7 +371,7 @@ class _AdvancedFacePainter extends CustomPainter {
     final border = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = r * 0.02
-      ..color = Colors.black.withOpacity(0.1);
+      ..color = Colors.black.withValues(alpha: 0.1);
     canvas.drawCircle(c, r * 0.95, border);
   }
   
@@ -422,7 +422,7 @@ class _AdvancedFacePainter extends CustomPainter {
     canvas.drawCircle(rightEyeCenter + pupilOffset, pupilRadius, pupilPaint);
     
     // 虹膜细节
-    final irisPaint = Paint()..color = Color(0xFF34495E).withOpacity(0.5);
+    final irisPaint = Paint()..color = Color(0xFF34495E).withValues(alpha: 0.5);
     canvas.drawCircle(leftEyeCenter + pupilOffset, pupilRadius * 0.7, irisPaint);
     canvas.drawCircle(rightEyeCenter + pupilOffset, pupilRadius * 0.7, irisPaint);
   }
@@ -511,7 +511,7 @@ class _AdvancedFacePainter extends CustomPainter {
       canvas.drawPath(lowerLipPath, lipPaint);
       
       // 口腔内部
-      final mouthInterior = Paint()..color = Color(0xFF2C3E50).withOpacity(0.3);
+      final mouthInterior = Paint()..color = Color(0xFF2C3E50).withValues(alpha: 0.3);
       canvas.drawOval(
         Rect.fromCenter(
           center: c + Offset(0, mouthY + openAmount/2),
@@ -528,7 +528,7 @@ class _AdvancedFacePainter extends CustomPainter {
     if (arousal > 0.5) {
       final blushIntensity = (arousal - 0.5) * 0.4;
       final blushPaint = Paint()
-        ..color = Colors.pink.withOpacity(blushIntensity)
+        ..color = Colors.pink.withValues(alpha: blushIntensity)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.05);
       
       canvas.drawCircle(c + Offset(-r * 0.4, r * 0.1), r * 0.12, blushPaint);
@@ -562,7 +562,7 @@ class _AdvancedFacePainter extends CustomPainter {
     // 自信光环（高自信时）
     if (confidence > 0.7 && bluff < 0.3) {
       final glowPaint = Paint()
-        ..color = Colors.yellow.withOpacity((confidence - 0.7) * 0.3)
+        ..color = Colors.yellow.withValues(alpha: (confidence - 0.7) * 0.3)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.1);
       
       canvas.drawCircle(c, r * 1.05, glowPaint);

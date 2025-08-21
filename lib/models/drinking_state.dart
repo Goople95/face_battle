@@ -1,42 +1,91 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/npc_config_service.dart';
 
-/// 饮酒状态管理
+/// 饮酒状态管理（支持动态酒量）
 class DrinkingState {
-  static const int maxDrinks = 3; // 临时改为3杯就醉，便于调试
-  static const int soberThreshold = 3; // 3杯以下算清醒，3杯及以上微醺不能游戏
+  static const int playerMaxDrinks = 6; // 玩家固定酒量6杯
+  static const int maxDrinks = playerMaxDrinks; // 兼容旧代码
   
   int drinksConsumed = 0; // 玩家已喝酒杯数
-  Map<String, int> aiDrinks = {
-    'professor': 0,
-    'gambler': 0,
-    'provocateur': 0,
-    'youngwoman': 0,
-  }; // 每个AI的酒杯数
+  Map<String, int> aiDrinks = {}; // 每个AI的酒杯数
   DateTime? lastDrinkTime; // 最后喝酒时间
   DateTime? playerLastDrinkTime; // 玩家最后喝酒时间
-  Map<String, DateTime?> aiLastDrinkTimes = {
-    'professor': null,
-    'gambler': null,
-    'provocateur': null,
-    'youngwoman': null,
-  }; // 每个AI的最后喝酒时间
+  Map<String, DateTime?> aiLastDrinkTimes = {}; // 每个AI的最后喝酒时间
   int soberPotions = 0; // 醒酒药水数量
   int totalLosses = 0; // 总失败次数
   int consecutiveLosses = 0; // 连续失败次数
   
-  DrinkingState();
+  // NPC配置服务
+  final _npcService = NPCConfigService();
   
-  /// 玩家是否醉酒（6杯）
-  bool get isDrunk => drinksConsumed >= maxDrinks;
+  DrinkingState() {
+    // 初始化所有AI的酒杯数
+    for (var npc in _npcService.allCharacters) {
+      aiDrinks[npc.id] = 0;
+      aiLastDrinkTimes[npc.id] = null;
+    }
+    
+    // 兼容旧ID格式
+    _initLegacyIds();
+  }
   
-  /// 玩家是否不能游戏（3杯以上微醺）
-  bool get isUnavailable => drinksConsumed >= soberThreshold;
+  void _initLegacyIds() {
+    // 兼容旧的字符串ID
+    aiDrinks['professor'] ??= 0;
+    aiDrinks['gambler'] ??= 0;
+    aiDrinks['provocateur'] ??= 0;
+    aiDrinks['youngwoman'] ??= 0;
+    aiDrinks['aki'] ??= 0;
+    aiDrinks['katerina'] ??= 0;
+    aiDrinks['lena'] ??= 0;
+  }
   
-  /// 特定AI是否醉酒（失去战斗力）
-  bool isAIDrunk(String aiId) => (aiDrinks[aiId] ?? 0) >= maxDrinks;
+  // 获取AI的实际酒量
+  int _getAICapacity(String aiId) {
+    // 尝试从配置服务获取NPC
+    var npc = _npcService.getNPCById(aiId);
+    if (npc != null) {
+      return npc.drinkCapacity;
+    }
+    
+    // 兼容旧ID格式
+    switch (aiId) {
+      case 'professor':
+        return _npcService.professor.drinkCapacity;
+      case 'gambler':
+        return _npcService.gambler.drinkCapacity;
+      case 'provocateur':
+        return _npcService.provocateur.drinkCapacity;
+      case 'youngwoman':
+        return _npcService.youngwoman.drinkCapacity;
+      case 'aki':
+        return _npcService.aki.drinkCapacity;
+      case 'katerina':
+        return _npcService.katerina.drinkCapacity;
+      case 'lena':
+        return _npcService.lena.drinkCapacity;
+      default:
+        return 4; // 默认酒量
+    }
+  }
   
-  /// 特定AI是否不能游戏（3杯以上微醺）
-  bool isAIUnavailable(String aiId) => (aiDrinks[aiId] ?? 0) >= soberThreshold;
+  /// 玩家是否醉酒（达到最大酒量）
+  bool get isDrunk => drinksConsumed >= playerMaxDrinks;
+  
+  /// 玩家是否不能游戏（达到最大酒量）
+  bool get isUnavailable => drinksConsumed >= playerMaxDrinks;
+  
+  /// 特定AI是否醉酒（达到其最大酒量）
+  bool isAIDrunk(String aiId) {
+    int capacity = _getAICapacity(aiId);
+    return (aiDrinks[aiId] ?? 0) >= capacity;
+  }
+  
+  /// 特定AI是否不能游戏（有任何酒杯就不能游戏，必须完全清醒）
+  bool isAIUnavailable(String aiId) {
+    // 根据规则：一旦喝酒进入醉酒流程，必须完全清醒（0杯）才能继续游戏
+    return (aiDrinks[aiId] ?? 0) > 0;
+  }
   
   /// 获取特定AI的酒杯数
   int getAIDrinks(String aiId) => aiDrinks[aiId] ?? 0;
@@ -73,23 +122,33 @@ class DrinkingState {
     return nextSoberSeconds;
   }
   
-  /// 玩家是否微醺（影响判断）
-  bool get isTipsy => drinksConsumed >= soberThreshold && !isDrunk;
+  /// 玩家是否微醺（喝了一半以上）
+  bool get isTipsy => drinksConsumed >= (playerMaxDrinks / 2) && !isDrunk;
   
   /// 特定AI是否微醺
-  bool isAITipsy(String aiId) => (aiDrinks[aiId] ?? 0) >= soberThreshold && !isAIDrunk(aiId);
+  bool isAITipsy(String aiId) {
+    int capacity = _getAICapacity(aiId);
+    int drinks = aiDrinks[aiId] ?? 0;
+    return drinks >= (capacity / 2) && drinks < capacity;
+  }
   
   /// 玩家是否清醒
-  bool get isSober => drinksConsumed < soberThreshold;
+  bool get isSober => drinksConsumed < (playerMaxDrinks / 2);
   
   /// 特定AI是否清醒
-  bool isAISober(String aiId) => (aiDrinks[aiId] ?? 0) < soberThreshold;
+  bool isAISober(String aiId) {
+    int capacity = _getAICapacity(aiId);
+    return (aiDrinks[aiId] ?? 0) < (capacity / 2);
+  }
   
   /// 玩家醉酒程度百分比
-  double get drunkLevel => (drinksConsumed / maxDrinks).clamp(0.0, 1.0);
+  double get drunkLevel => (drinksConsumed / playerMaxDrinks).clamp(0.0, 1.0);
   
   /// 特定AI醉酒程度百分比
-  double getAIDrunkLevel(String aiId) => ((aiDrinks[aiId] ?? 0) / maxDrinks).clamp(0.0, 1.0);
+  double getAIDrunkLevel(String aiId) {
+    int capacity = _getAICapacity(aiId);
+    return ((aiDrinks[aiId] ?? 0) / capacity).clamp(0.0, 1.0);
+  }
   
   /// 获取玩家状态描述
   String get statusDescription {
@@ -104,12 +163,15 @@ class DrinkingState {
   
   /// 获取特定AI状态描述
   String getAIStatusDescription(String aiId) {
+    int capacity = _getAICapacity(aiId);
     int drinks = aiDrinks[aiId] ?? 0;
-    if (drinks >= maxDrinks) return '烂醉如泥';
-    if (drinks >= 5) return '醉意朦胧';
-    if (drinks >= 4) return '明显醉意';
-    if (drinks >= 3) return '微醺状态';
-    if (drinks >= 2) return '略有酒意';
+    double ratio = drinks / capacity;
+    
+    if (ratio >= 1.0) return '烂醉如泥';
+    if (ratio >= 0.8) return '醉意朦胧';
+    if (ratio >= 0.6) return '明显醉意';
+    if (ratio >= 0.4) return '微醺状态';
+    if (ratio >= 0.2) return '略有酒意';
     if (drinks >= 1) return '小酌一杯';
     return '清醒状态';
   }
@@ -127,23 +189,24 @@ class DrinkingState {
   
   /// 获取特定AI状态表情
   String getAIStatusEmoji(String aiId) {
+    int capacity = _getAICapacity(aiId);
     int drinks = aiDrinks[aiId] ?? 0;
-    if (drinks >= maxDrinks) return '🥴';
-    if (drinks >= 5) return '😵';
-    if (drinks >= 4) return '🤪';
-    if (drinks >= 3) return '🥺';
-    if (drinks >= 2) return '😊';
+    double ratio = drinks / capacity;
+    
+    if (ratio >= 1.0) return '🥴';
+    if (ratio >= 0.8) return '😵';
+    if (ratio >= 0.6) return '🤪';
+    if (ratio >= 0.4) return '🥺';
+    if (ratio >= 0.2) return '😊';
     if (drinks >= 1) return '🍺';
     return '😎';
   }
   
   /// 玩家喝一杯酒（输了游戏）
   void playerDrink() {
-    if (drinksConsumed < maxDrinks) {
+    if (drinksConsumed < playerMaxDrinks) {
       drinksConsumed++;
       lastDrinkTime = DateTime.now();
-      // 只有在之前没有酒的时候才设置新的喝酒时间
-      // 如果已经有酒，保持原有的倒计时
       if (playerLastDrinkTime == null || drinksConsumed == 1) {
         playerLastDrinkTime = DateTime.now();
       }
@@ -154,11 +217,12 @@ class DrinkingState {
   
   /// 特定AI喝一杯酒（输了游戏）
   void aiDrink(String aiId) {
-    if (aiDrinks[aiId] != null && aiDrinks[aiId]! < maxDrinks) {
+    int capacity = _getAICapacity(aiId);
+    aiDrinks[aiId] ??= 0;
+    
+    if (aiDrinks[aiId]! < capacity) {
       aiDrinks[aiId] = aiDrinks[aiId]! + 1;
       lastDrinkTime = DateTime.now();
-      // 只有在之前没有酒的时候才设置新的喝酒时间
-      // 如果已经有酒，保持原有的倒计时
       if (aiLastDrinkTimes[aiId] == null || aiDrinks[aiId] == 1) {
         aiLastDrinkTimes[aiId] = DateTime.now();
       }
@@ -168,14 +232,12 @@ class DrinkingState {
   /// 玩家赢了游戏（对特定AI）
   void playerWin(String aiId) {
     consecutiveLosses = 0;
-    // AI输了要喝酒
     aiDrink(aiId);
   }
   
   /// AI赢了游戏
   void aiWin(String aiId) {
     consecutiveLosses++;
-    // 玩家输了要喝酒
     playerDrink();
   }
   
@@ -183,7 +245,7 @@ class DrinkingState {
   bool useSoberPotion() {
     if (soberPotions > 0) {
       soberPotions--;
-      drinksConsumed = (drinksConsumed - 2).clamp(0, maxDrinks);
+      drinksConsumed = (drinksConsumed - 2).clamp(0, playerMaxDrinks);
       return true;
     }
     return false;
@@ -198,186 +260,113 @@ class DrinkingState {
   
   /// 看广告醒酒特定AI
   void watchAdToSoberAI(String aiId) {
-    if (aiDrinks[aiId] != null) {
-      aiDrinks[aiId] = 0;
-      aiLastDrinkTimes[aiId] = null;
-    }
+    aiDrinks[aiId] = 0;
+    aiLastDrinkTimes[aiId] = null;
   }
   
-  /// 根据时间自动醒酒（每10分钟减少一杯）
-  void updateSoberStatus() {
+  /// 自然醒酒（每10分钟减少1杯）
+  void processSobering() {
     final now = DateTime.now();
     
-    // 更新玩家醒酒状态
+    // 玩家醒酒
     if (playerLastDrinkTime != null && drinksConsumed > 0) {
       final minutesPassed = now.difference(playerLastDrinkTime!).inMinutes;
-      if (minutesPassed >= 10) {
-        int cupsToRecover = minutesPassed ~/ 10;
-        int newDrinks = (drinksConsumed - cupsToRecover).clamp(0, maxDrinks);
-        
-        if (newDrinks != drinksConsumed) {
-          drinksConsumed = newDrinks;
-          
-          // 如果完全醒酒，清除时间记录
-          if (drinksConsumed == 0) {
-            playerLastDrinkTime = null;
-          } else {
-            // 更新时间，保留余数部分的时间
-            int remainingMinutes = minutesPassed % 10;
-            playerLastDrinkTime = now.subtract(Duration(minutes: remainingMinutes));
-          }
+      final soberingAmount = minutesPassed ~/ 10;
+      if (soberingAmount > 0) {
+        drinksConsumed = (drinksConsumed - soberingAmount).clamp(0, playerMaxDrinks);
+        if (drinksConsumed == 0) {
+          playerLastDrinkTime = null;
+        } else {
+          playerLastDrinkTime = now.subtract(Duration(minutes: minutesPassed % 10));
         }
       }
     }
     
-    // 更新每个AI的醒酒状态
-    aiDrinks.forEach((aiId, drinks) {
-      if (drinks > 0 && aiLastDrinkTimes[aiId] != null) {
+    // AI醒酒
+    for (var aiId in aiDrinks.keys) {
+      if (aiLastDrinkTimes[aiId] != null && (aiDrinks[aiId] ?? 0) > 0) {
         final minutesPassed = now.difference(aiLastDrinkTimes[aiId]!).inMinutes;
-        if (minutesPassed >= 10) {
-          int cupsToRecover = minutesPassed ~/ 10;
-          int newDrinks = (drinks - cupsToRecover).clamp(0, maxDrinks);
-          
-          if (newDrinks != drinks) {
-            aiDrinks[aiId] = newDrinks;
-            
-            // 如果完全醒酒，清除时间记录
-            if (newDrinks == 0) {
-              aiLastDrinkTimes[aiId] = null;
-            } else {
-              // 更新时间，保留余数部分的时间
-              int remainingMinutes = minutesPassed % 10;
-              aiLastDrinkTimes[aiId] = now.subtract(Duration(minutes: remainingMinutes));
-            }
+        final soberingAmount = minutesPassed ~/ 10;
+        if (soberingAmount > 0) {
+          int capacity = _getAICapacity(aiId);
+          aiDrinks[aiId] = ((aiDrinks[aiId] ?? 0) - soberingAmount).clamp(0, capacity);
+          if (aiDrinks[aiId] == 0) {
+            aiLastDrinkTimes[aiId] = null;
+          } else {
+            aiLastDrinkTimes[aiId] = now.subtract(Duration(minutes: minutesPassed % 10));
           }
         }
       }
-    });
-  }
-  
-  /// 玩家完全醒酒
-  void fullSober() {
-    drinksConsumed = 0;
-    consecutiveLosses = 0;
-    playerLastDrinkTime = null;
-  }
-  
-  /// 特定AI完全醒酒
-  void aiFullSober(String aiId) {
-    if (aiDrinks[aiId] != null) {
-      aiDrinks[aiId] = 0;
-      aiLastDrinkTimes[aiId] = null;
     }
   }
   
-  /// 重置所有状态（新游戏）
-  void resetAll() {
-    drinksConsumed = 0;
-    playerLastDrinkTime = null;
-    aiDrinks.forEach((key, value) {
-      aiDrinks[key] = 0;
-    });
-    aiLastDrinkTimes.forEach((key, value) {
-      aiLastDrinkTimes[key] = null;
-    });
-    consecutiveLosses = 0;
-  }
-  
-  /// 购买醒酒药水
-  void buyPotion(int count) {
-    soberPotions += count;
-  }
-  
-  /// 保存状态
-  Future<void> save() async {
+  /// 保存状态到SharedPreferences
+  Future<void> saveToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('drinks_consumed', drinksConsumed);
+    await prefs.setInt('playerDrinks', drinksConsumed);
+    await prefs.setInt('totalLosses', totalLosses);
+    await prefs.setInt('consecutiveLosses', consecutiveLosses);
+    await prefs.setInt('soberPotions', soberPotions);
     
-    // 保存每个AI的酒杯数
+    if (playerLastDrinkTime != null) {
+      await prefs.setString('playerLastDrinkTime', playerLastDrinkTime!.toIso8601String());
+    }
+    
+    // 保存每个AI的状态
     for (var entry in aiDrinks.entries) {
       await prefs.setInt('ai_drinks_${entry.key}', entry.value);
-    }
-    
-    await prefs.setInt('sober_potions', soberPotions);
-    await prefs.setInt('total_losses', totalLosses);
-    await prefs.setInt('consecutive_losses', consecutiveLosses);
-    
-    if (lastDrinkTime != null) {
-      await prefs.setString('last_drink_time', lastDrinkTime!.toIso8601String());
-    }
-    
-    // 保存玩家最后喝酒时间
-    if (playerLastDrinkTime != null) {
-      await prefs.setString('player_last_drink_time', playerLastDrinkTime!.toIso8601String());
-    }
-    
-    // 保存每个AI的最后喝酒时间
-    for (var entry in aiLastDrinkTimes.entries) {
-      if (entry.value != null) {
-        await prefs.setString('ai_last_drink_time_${entry.key}', entry.value!.toIso8601String());
+      if (aiLastDrinkTimes[entry.key] != null) {
+        await prefs.setString('ai_last_drink_${entry.key}', 
+            aiLastDrinkTimes[entry.key]!.toIso8601String());
       }
     }
   }
   
-  /// 加载状态
-  static Future<DrinkingState> load() async {
+  /// 从SharedPreferences加载状态
+  Future<void> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final state = DrinkingState();
+    drinksConsumed = prefs.getInt('playerDrinks') ?? 0;
+    totalLosses = prefs.getInt('totalLosses') ?? 0;
+    consecutiveLosses = prefs.getInt('consecutiveLosses') ?? 0;
+    soberPotions = prefs.getInt('soberPotions') ?? 0;
     
-    state.drinksConsumed = prefs.getInt('drinks_consumed') ?? 0;
-    
-    // 加载每个AI的酒杯数
-    // 普通NPC（兼容旧ID）
-    state.aiDrinks['professor'] = prefs.getInt('ai_drinks_professor') ?? 0;
-    state.aiDrinks['gambler'] = prefs.getInt('ai_drinks_gambler') ?? 0;
-    state.aiDrinks['provocateur'] = prefs.getInt('ai_drinks_provocateur') ?? 0;
-    state.aiDrinks['youngwoman'] = prefs.getInt('ai_drinks_youngwoman') ?? 0;
-    
-    // 新ID格式
-    state.aiDrinks['0001'] = prefs.getInt('ai_drinks_0001') ?? state.aiDrinks['professor'] ?? 0;
-    state.aiDrinks['0002'] = prefs.getInt('ai_drinks_0002') ?? state.aiDrinks['gambler'] ?? 0;
-    state.aiDrinks['0003'] = prefs.getInt('ai_drinks_0003') ?? state.aiDrinks['provocateur'] ?? 0;
-    state.aiDrinks['0004'] = prefs.getInt('ai_drinks_0004') ?? state.aiDrinks['youngwoman'] ?? 0;
-    
-    // VIP NPC
-    state.aiDrinks['1001'] = prefs.getInt('ai_drinks_1001') ?? prefs.getInt('ai_drinks_aki') ?? 0;
-    state.aiDrinks['1002'] = prefs.getInt('ai_drinks_1002') ?? prefs.getInt('ai_drinks_katerina') ?? 0;
-    state.aiDrinks['1003'] = prefs.getInt('ai_drinks_1003') ?? prefs.getInt('ai_drinks_lena') ?? 0;
-    
-    
-    state.soberPotions = prefs.getInt('sober_potions') ?? 0;
-    state.totalLosses = prefs.getInt('total_losses') ?? 0;
-    state.consecutiveLosses = prefs.getInt('consecutive_losses') ?? 0;
-    
-    // 加载旧的通用时间（为了兼容性）
-    final lastDrinkStr = prefs.getString('last_drink_time');
-    if (lastDrinkStr != null) {
-      state.lastDrinkTime = DateTime.parse(lastDrinkStr);
+    final playerDrinkTimeStr = prefs.getString('playerLastDrinkTime');
+    if (playerDrinkTimeStr != null) {
+      playerLastDrinkTime = DateTime.tryParse(playerDrinkTimeStr);
     }
     
-    // 加载玩家最后喝酒时间
-    final playerLastDrinkStr = prefs.getString('player_last_drink_time');
-    if (playerLastDrinkStr != null) {
-      state.playerLastDrinkTime = DateTime.parse(playerLastDrinkStr);
-    } else if (lastDrinkStr != null && state.drinksConsumed > 0) {
-      // 兼容旧版本：如果没有单独的玩家时间，使用通用时间
-      state.playerLastDrinkTime = state.lastDrinkTime;
-    }
-    
-    // 加载每个AI的最后喝酒时间
-    for (String aiId in state.aiDrinks.keys) {
-      final aiLastDrinkStr = prefs.getString('ai_last_drink_time_$aiId');
-      if (aiLastDrinkStr != null) {
-        state.aiLastDrinkTimes[aiId] = DateTime.parse(aiLastDrinkStr);
-      } else if (lastDrinkStr != null && state.aiDrinks[aiId]! > 0) {
-        // 兼容旧版本：如果没有单独的AI时间，使用通用时间
-        state.aiLastDrinkTimes[aiId] = state.lastDrinkTime;
+    // 加载每个AI的状态
+    for (var aiId in aiDrinks.keys) {
+      aiDrinks[aiId] = prefs.getInt('ai_drinks_$aiId') ?? 0;
+      final drinkTimeStr = prefs.getString('ai_last_drink_$aiId');
+      if (drinkTimeStr != null) {
+        aiLastDrinkTimes[aiId] = DateTime.tryParse(drinkTimeStr);
       }
     }
     
-    // 根据时间自动更新醒酒状态
-    state.updateSoberStatus();
-    
+    // 处理醒酒
+    processSobering();
+  }
+  
+  /// 兼容旧方法名：加载状态（实例方法）
+  Future<void> load() async {
+    await loadFromPrefs();
+  }
+  
+  /// 兼容旧方法名：保存状态
+  Future<void> save() async {
+    await saveToPrefs();
+  }
+  
+  /// 更新醒酒状态
+  void updateSoberStatus() {
+    processSobering();
+  }
+  
+  /// 静态加载方法（兼容旧代码）
+  static Future<DrinkingState> loadStatic() async {
+    final state = DrinkingState();
+    await state.loadFromPrefs();
     return state;
   }
 }

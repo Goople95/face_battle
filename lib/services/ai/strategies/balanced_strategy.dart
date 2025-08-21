@@ -4,14 +4,14 @@
 /// - 根据数学期望决策
 /// - 平衡风险和收益
 /// - 适应性强
+library;
 
 import '../models/ai_models.dart';
 import '../../../models/game_state.dart';
-import '../../../models/ai_personality.dart';
 import 'strategy_executor.dart';
 
 class BalancedStrategyExecutor extends StrategyExecutor {
-  BalancedStrategyExecutor(AIPersonality personality) : super(personality);
+  BalancedStrategyExecutor(super.personality);
   
   @override
   Map<String, dynamic> execute(

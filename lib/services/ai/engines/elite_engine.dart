@@ -1,6 +1,7 @@
 /// Elite AI引擎 - 重构简化版
 /// 
 /// 保留核心的贝叶斯推理和心理战术
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';

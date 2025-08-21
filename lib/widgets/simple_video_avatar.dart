@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../config/character_assets.dart';
+import '../utils/logger_utils.dart';
 
 /// 简化版的视频头像组件
 /// 一次只播放一个视频，避免资源问题
@@ -11,12 +12,12 @@ class SimpleVideoAvatar extends StatefulWidget {
   final bool showBorder;
 
   const SimpleVideoAvatar({
-    Key? key,
+    super.key,
     required this.characterId,
     this.emotion = 'happy',
     this.size = 120,
     this.showBorder = true,
-  }) : super(key: key);
+  });
 
   @override
   State<SimpleVideoAvatar> createState() => _SimpleVideoAvatarState();
@@ -44,10 +45,19 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
   }
 
   Future<void> _loadVideo() async {
-    // 如果是相同的表情，跳过
-    if (_currentEmotion == widget.emotion && _controller != null) {
+    // 如果是相同的表情且控制器正常，跳过
+    if (_currentEmotion == widget.emotion && 
+        _controller != null && 
+        _controller!.value.isInitialized) {
       return;
     }
+
+    // 移除防抖逻辑，确保视频能够加载
+    // 如果需要防抖，应该在外部调用处控制
+
+    setState(() {
+      _isLoading = true;
+    });
 
     // 先释放旧的控制器
     if (_controller != null) {
@@ -55,10 +65,6 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       await _controller!.dispose();
       _controller = null;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
 
     // 使用统一的CharacterAssets获取视频路径
     String videoPath = CharacterAssets.getVideoPath(widget.characterId, widget.emotion);
@@ -69,6 +75,12 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       
       // 初始化
       await controller.initialize();
+      
+      // 只有初始化成功才继续
+      if (!controller.value.isInitialized) {
+        throw Exception('视频初始化失败');
+      }
+      
       await controller.setLooping(true);
       await controller.play();
       
@@ -84,10 +96,11 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
         controller.dispose();
       }
     } catch (e) {
-      print('❌ 无法加载视频: $e');
+      LoggerUtils.error('无法加载视频 $videoPath: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _controller = null;  // 确保控制器为空，显示静态图片
         });
       }
     }
@@ -95,8 +108,12 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
 
   @override
   void dispose() {
-    _controller?.pause();
-    _controller?.dispose();
+    // 确保先暂停再释放
+    if (_controller != null) {
+      _controller!.pause();
+      _controller!.dispose();
+      _controller = null;
+    }
     super.dispose();
   }
 
@@ -104,28 +121,23 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
     // 使用统一的CharacterAssets获取头像路径
     String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
     
-    return ClipOval(
-      child: Image.asset(
-        imagePath,
-        width: widget.size,
-        height: widget.size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.person,
-              size: widget.size * 0.6,
-              color: Colors.white54,
-            ),
-          );
-        },
-      ),
+    return Image.asset(
+      imagePath,
+      width: widget.size,
+      height: widget.size,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: widget.size,
+          height: widget.size,
+          color: Colors.grey[700],
+          child: Icon(
+            Icons.person,
+            size: widget.size * 0.6,
+            color: Colors.white54,
+          ),
+        );
+      },
     );
   }
 
@@ -137,17 +149,16 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       // 加载中显示静态图片
       content = _buildFallback();
     } else if (_controller != null && _controller!.value.isInitialized) {
-      // 显示视频
-      content = ClipOval(
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          color: Colors.grey[900],
-          child: FittedBox(
-            fit: BoxFit.cover,
+      // 显示视频 - 使用ClipRect裁剪，避免溢出
+      content = Container(
+        width: widget.size,
+        height: widget.size,
+        color: Colors.grey[900],
+        child: ClipRect(
+          child: Center(
             child: SizedBox(
-              width: _controller!.value.size.width,
-              height: _controller!.value.size.height,
+              width: widget.size,
+              height: widget.size,
               child: VideoPlayer(_controller!),
             ),
           ),
@@ -158,18 +169,17 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       content = _buildFallback();
     }
     
-    // 添加边框
+    // 添加边框 - 移除圆形边框
     if (widget.showBorder) {
       return Container(
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: Offset(0, 4),
             ),

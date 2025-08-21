@@ -1,6 +1,7 @@
 /// 叫牌选项计算器 - 优化版
 /// 
 /// 使用统一的概率计算器，避免重复代码
+library;
 
 import 'dart:math' as math;
 import '../../../models/game_state.dart';

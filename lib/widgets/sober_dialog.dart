@@ -9,12 +9,12 @@ class SoberDialog extends StatelessWidget {
   final VoidCallback onCancel;
   
   const SoberDialog({
-    Key? key,
+    super.key,
     required this.drinkingState,
     required this.onWatchAd,
     required this.onUsePotion,
     required this.onCancel,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -71,7 +71,7 @@ class SoberDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Column(
@@ -168,7 +168,7 @@ class SoberDialog extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
             color: color,
@@ -198,7 +198,7 @@ class SoberDialog extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: color.withOpacity(0.8),
+                      color: color.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
                   ),
