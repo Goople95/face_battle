@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,6 +19,7 @@ import '../config/character_assets.dart';
 import '../services/intimacy_service.dart';
 import '../models/intimacy_data.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../utils/local_storage_debug_tool.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,6 +39,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _loadData();
     _startTimer();
+    // 同步语言设置
+    _syncLanguageSettings();
+  }
+  
+  Future<void> _syncLanguageSettings() async {
+    try {
+      final languageService = Provider.of<LanguageService>(context, listen: false);
+      await languageService.syncLanguageFromCloud();
+    } catch (e) {
+      // 忽略错误，不影响应用运行
+    }
   }
   
   @override
@@ -81,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final authService = Provider.of<AuthService>(context, listen: false);
       if (authService.uid != null) {
         IntimacyService().setUserId(authService.uid!);
+        // VIPUnlockService已被CloudDataService替代
       }
     }
     
@@ -169,6 +183,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF1A0000),  // 深黑红色
+        leading: kDebugMode 
+            ? IconButton(
+                icon: const Icon(Icons.bug_report, color: Colors.orange),
+                tooltip: '调试工具',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LocalStorageDebugPage(),
+                    ),
+                  );
+                },
+              )
+            : null,
         title: Text(
           AppLocalizations.of(context)!.appTitle,
           style: const TextStyle(

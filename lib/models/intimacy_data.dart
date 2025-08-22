@@ -7,8 +7,6 @@ class IntimacyData {
   final int totalGames;
   final int wins;
   final int losses;
-  final List<String> unlockedDialogues;
-  final List<String> achievedMilestones;
 
   IntimacyData({
     required this.npcId,
@@ -17,8 +15,6 @@ class IntimacyData {
     this.totalGames = 0,
     this.wins = 0,
     this.losses = 0,
-    this.unlockedDialogues = const [],
-    this.achievedMilestones = const [],
   });
 
   int get intimacyLevel {
@@ -74,8 +70,6 @@ class IntimacyData {
     int? totalGames,
     int? wins,
     int? losses,
-    List<String>? unlockedDialogues,
-    List<String>? achievedMilestones,
   }) {
     return IntimacyData(
       npcId: npcId ?? this.npcId,
@@ -84,8 +78,6 @@ class IntimacyData {
       totalGames: totalGames ?? this.totalGames,
       wins: wins ?? this.wins,
       losses: losses ?? this.losses,
-      unlockedDialogues: unlockedDialogues ?? this.unlockedDialogues,
-      achievedMilestones: achievedMilestones ?? this.achievedMilestones,
     );
   }
 
@@ -97,8 +89,6 @@ class IntimacyData {
       'totalGames': totalGames,
       'wins': wins,
       'losses': losses,
-      'unlockedDialogues': unlockedDialogues,
-      'achievedMilestones': achievedMilestones,
     };
   }
 
@@ -112,8 +102,6 @@ class IntimacyData {
       totalGames: json['totalGames'] ?? 0,
       wins: json['wins'] ?? 0,
       losses: json['losses'] ?? 0,
-      unlockedDialogues: List<String>.from(json['unlockedDialogues'] ?? []),
-      achievedMilestones: List<String>.from(json['achievedMilestones'] ?? []),
     );
   }
 
@@ -125,8 +113,6 @@ class IntimacyData {
       'totalGames': totalGames,
       'wins': wins,
       'losses': losses,
-      'unlockedDialogues': unlockedDialogues,
-      'achievedMilestones': achievedMilestones,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
@@ -140,38 +126,9 @@ class IntimacyData {
       totalGames: data['totalGames'] ?? 0,
       wins: data['wins'] ?? 0,
       losses: data['losses'] ?? 0,
-      unlockedDialogues: List<String>.from(data['unlockedDialogues'] ?? []),
-      achievedMilestones: List<String>.from(data['achievedMilestones'] ?? []),
     );
   }
 }
 
-class IntimacyReward {
-  final int pointsRequired;
-  final String type;
-  final String rewardId;
-  final String description;
-
-  IntimacyReward({
-    required this.pointsRequired,
-    required this.type,
-    required this.rewardId,
-    required this.description,
-  });
-}
-
-class IntimacyMilestone {
-  final int level;
-  final String id;
-  final String title;
-  final String description;
-  final IntimacyReward? reward;
-
-  IntimacyMilestone({
-    required this.level,
-    required this.id,
-    required this.title,
-    required this.description,
-    this.reward,
-  });
-}
+// 已移除 IntimacyReward 和 IntimacyMilestone 类
+// 对话系统已简化为随机选择，不需要解锁和里程碑机制

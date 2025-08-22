@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 用户只能访问自己的数据
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // users集合 - 用户档案（只存云端）
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+    
+    // gameProgress集合 - 游戏进度（本地为主，云端备份）
+    match /gameProgress/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+    
+    // npcConfigs集合 - NPC配置（公开读取）
+    match /npcConfigs/{document=**} {
+      allow read: if true;
+      allow write: if false; // 只能通过控制台修改
+    }
+    
+    // 其他现有规则保持不变
+    match /gameHistory/{userId}/games/{gameId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+    
+    // 排行榜（公开读取）
+    match /leaderboard/{document=**} {
+      allow read: if true;
+      allow write: if false; // 通过云函数更新
+    }
+  }
+}

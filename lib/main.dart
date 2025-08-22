@@ -13,6 +13,9 @@ import 'services/admob_service.dart';
 import 'services/npc_config_service.dart';
 import 'services/dialogue_service.dart';
 import 'services/language_service.dart';
+import 'services/storage/local_storage_service.dart';
+import 'services/game_progress_service.dart';
+import 'services/temp_state_service.dart';
 import 'utils/logger_utils.dart';
 
 void main() async {
@@ -20,6 +23,14 @@ void main() async {
   
   // Initialize logger
   LoggerUtils.init(debugMode: true);
+  
+  // Initialize Storage Services
+  try {
+    // LocalStorage doesn't need init anymore
+    LoggerUtils.info('存储服务初始化成功');
+  } catch (e) {
+    LoggerUtils.error('存储服务初始化失败: $e');
+  }
   
   // Initialize Firebase
   try {
@@ -52,6 +63,10 @@ void main() async {
   } catch (e) {
     LoggerUtils.error('对话服务初始化失败: $e');
   }
+  
+  // Game Progress Service will be initialized after user login
+  // to ensure we have a valid user ID for database operations
+  LoggerUtils.info('游戏进度服务将在用户登录后初始化');
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

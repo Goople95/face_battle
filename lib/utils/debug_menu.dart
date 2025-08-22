@@ -1,0 +1,326 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'local_storage_debug_tool.dart';
+import '../utils/logger_utils.dart';
+
+/// 调试菜单组件
+/// 可以添加到任何页面的AppBar或Drawer中
+class DebugMenu extends StatelessWidget {
+  const DebugMenu({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.bug_report),
+      tooltip: '调试工具',
+      onSelected: (value) => _handleMenuSelection(context, value),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'view_storage',
+          child: ListTile(
+            leading: Icon(Icons.storage),
+            title: Text('查看本地存储'),
+            subtitle: Text('查看SharedPreferences数据'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'print_storage',
+          child: ListTile(
+            leading: Icon(Icons.print),
+            title: Text('打印到控制台'),
+            subtitle: Text('在日志中输出所有数据'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'export_data',
+          child: ListTile(
+            leading: Icon(Icons.download),
+            title: Text('导出数据'),
+            subtitle: Text('导出为JSON格式'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'storage_size',
+          child: ListTile(
+            leading: Icon(Icons.info),
+            title: Text('存储统计'),
+            subtitle: Text('查看存储大小和数量'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'clear_user_data',
+          enabled: FirebaseAuth.instance.currentUser != null,
+          child: ListTile(
+            leading: const Icon(Icons.person_remove, color: Colors.orange),
+            title: const Text('清除当前用户数据'),
+            subtitle: Text(
+              FirebaseAuth.instance.currentUser?.uid ?? '未登录',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'clear_all',
+          child: ListTile(
+            leading: Icon(Icons.delete_forever, color: Colors.red),
+            title: Text('清除所有数据', style: TextStyle(color: Colors.red)),
+            subtitle: Text('危险操作！'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleMenuSelection(BuildContext context, String value) async {
+    switch (value) {
+      case 'view_storage':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LocalStorageDebugPage(),
+          ),
+        );
+        break;
+        
+      case 'print_storage':
+        await LocalStorageDebugTool.printAllData();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('数据已打印到控制台，请查看日志')),
+          );
+        }
+        break;
+        
+      case 'export_data':
+        final jsonString = await LocalStorageDebugTool.exportToJson();
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('导出的数据'),
+              content: Container(
+                constraints: const BoxConstraints(maxHeight: 400),
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    jsonString,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // TODO: 实现复制到剪贴板
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('数据已复制到剪贴板')),
+                    );
+                  },
+                  child: const Text('复制'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('关闭'),
+                ),
+              ],
+            ),
+          );
+        }
+        break;
+        
+      case 'storage_size':
+        final data = await LocalStorageDebugTool.getAllLocalData();
+        final size = await LocalStorageDebugTool.getStorageSize();
+        final sizeText = _formatSize(size);
+        
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('存储统计'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('数据条目: ${data.length} 个'),
+                  const SizedBox(height: 8),
+                  Text('总大小: $sizeText'),
+                  const SizedBox(height: 16),
+                  const Text('分类统计:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ...LocalStorageDebugTool.categorizeData(data).entries.map(
+                    (e) => Text('${e.key}: ${e.value.length} 个'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('确定'),
+                ),
+              ],
+            ),
+          );
+        }
+        break;
+        
+      case 'clear_user_data':
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+        if (userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('用户未登录')),
+          );
+          return;
+        }
+        
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('确认清除'),
+            content: Text('确定要清除用户 $userId 的所有本地数据吗？'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('清除', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+        
+        if (confirm == true) {
+          await LocalStorageDebugTool.clearUserData(userId);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('用户数据已清除')),
+            );
+          }
+        }
+        break;
+        
+      case 'clear_all':
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('危险操作'),
+            content: const Text(
+              '确定要清除所有本地存储数据吗？\n'
+              '这将删除所有用户的游戏进度、设置等数据！\n'
+              '此操作不可恢复！',
+              style: TextStyle(color: Colors.red),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('确认清除', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+        
+        if (confirm == true) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+          LoggerUtils.info('已清除所有本地存储数据');
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('所有本地数据已清除'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+        break;
+    }
+  }
+  
+  String _formatSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+}
+
+/// 快速调试按钮
+/// 可以悬浮在任何页面上
+class DebugFloatingButton extends StatelessWidget {
+  final Widget child;
+  final bool enabled;
+  
+  const DebugFloatingButton({
+    Key? key,
+    required this.child,
+    this.enabled = true,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          right: 16,
+          bottom: 80,
+          child: FloatingActionButton.small(
+            heroTag: 'debug_fab',
+            backgroundColor: Colors.orange,
+            onPressed: () async {
+              await LocalStorageDebugTool.printAllData();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('调试信息已输出到控制台'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            child: const Icon(Icons.bug_report, size: 20),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 在开发环境中自动添加调试菜单
+class DebugWrapper extends StatelessWidget {
+  final Widget child;
+  final bool showInRelease;
+  
+  const DebugWrapper({
+    Key? key,
+    required this.child,
+    this.showInRelease = false,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // 只在调试模式下显示，或者明确允许在发布版本显示
+    const bool isDebugMode = !bool.fromEnvironment('dart.vm.product');
+    
+    if (!isDebugMode && !showInRelease) {
+      return child;
+    }
+    
+    return DebugFloatingButton(
+      enabled: true,
+      child: child,
+    );
+  }
+}

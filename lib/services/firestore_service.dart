@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_profile.dart';
 import '../models/game_progress.dart';
 import '../utils/logger_utils.dart';
+import 'ip_location_service.dart';
 
 /// Firestore数据库服务
 class FirestoreService {
@@ -15,55 +16,107 @@ class FirestoreService {
   /// 获取用户集合引用
   CollectionReference get _usersCollection => _firestore.collection('users');
 
-  /// 创建或更新用户档案
-  Future<void> createOrUpdateUserProfile(User user, String provider) async {
+  /// 创建或更新用户档案（完整版 - 一次性更新所有登录信息）
+  Future<void> updateUserCompleteLoginInfo({
+    required User user,
+    required String provider,
+    required Map<String, dynamic> deviceInfo,
+    required Map<String, dynamic> locationInfo,
+    required String deviceLanguage,
+    required String appVersion,
+  }) async {
     try {
       final docRef = _usersCollection.doc(user.uid);
-      
-      // 检查是否已存在
       final doc = await docRef.get();
+      final now = DateTime.now();
       
       if (!doc.exists) {
-        // 创建新用户文档，包含profile和progress
-        final now = DateTime.now();
+        // 创建新用户 - 一次性设置所有字段
         final userData = {
-          // Profile字段
-          'accountCreatedAt': Timestamp.fromDate(now),
-          'lastLoginAt': Timestamp.fromDate(now),
-          'loginProvider': provider.toLowerCase(),
-          'username': user.email?.split('@')[0] ?? 'player',
-          'displayName': user.displayName ?? 'Player',
-          'email': user.email ?? '',
-          'photoUrl': user.photoURL,
-          'language': 'zh',
-          'country': null,
-          'isActive': true,
-          
-          // Progress字段（初始值）
-          'totalGames': 0,
-          'totalWins': 0,
-          'totalLosses': 0,
-          'winRate': 0.0,
-          'totalChallenges': 0,
-          'successfulChallenges': 0,
-          'totalBids': 0,
-          'successfulBids': 0,
-          'highestWinStreak': 0,
-          'currentWinStreak': 0,
-          'favoriteOpponent': null,
-          'lastPlayedAt': null,
-          'totalPlayTimeMinutes': 0,
-          'achievements': [],
-          'vsAIWins': {},
-          'vsAILosses': {},
+          'profile': {
+            // 基本信息
+            'userId': user.uid,
+            'email': user.email ?? '',
+            'displayName': user.displayName ?? 'Player',
+            'photoUrl': user.photoURL,
+            
+            // 账号信息
+            'accountCreatedAt': Timestamp.fromDate(now),
+            'lastLoginAt': Timestamp.fromDate(now),
+            'loginMethod': provider.toLowerCase(),
+            'userType': 'normal',
+            
+            // 语言设置
+            'deviceLanguage': deviceLanguage,
+            'userSelectedLanguage': null,  // 用户未选择
+            
+            // 地理位置信息
+            'country': locationInfo['country'],
+            'countryCode': locationInfo['countryCode'],
+            'region': locationInfo['region'],
+            'city': locationInfo['city'],
+            'timezone': locationInfo['timezone'],
+            'utcOffset': IpLocationService.getUTCOffset(locationInfo['timezone']),
+            'isp': locationInfo['isp'],
+            
+            // 应用版本
+            'appVersion': appVersion,
+          },
+          // 设备信息
+          'device': deviceInfo,
         };
         
         await docRef.set(userData);
-        LoggerUtils.info('创建新用户档案: ${user.uid}');
+        LoggerUtils.info('创建新用户档案（包含完整信息）: ${user.uid}');
       } else {
-        // 仅更新最后登录时间
+        // 更新已有用户 - 一次性更新所有登录相关字段
         await docRef.update({
-          'lastLoginAt': Timestamp.fromDate(DateTime.now()),
+          'profile.lastLoginAt': Timestamp.fromDate(now),
+          'profile.deviceLanguage': deviceLanguage,
+          'profile.country': locationInfo['country'],
+          'profile.countryCode': locationInfo['countryCode'],
+          'profile.region': locationInfo['region'],
+          'profile.city': locationInfo['city'],
+          'profile.timezone': locationInfo['timezone'],
+          'profile.utcOffset': IpLocationService.getUTCOffset(locationInfo['timezone']),
+          'profile.isp': locationInfo['isp'],
+          'profile.appVersion': appVersion,
+          'device': deviceInfo,
+        });
+        LoggerUtils.info('更新用户登录信息（一次性完成）: ${user.uid}');
+      }
+    } catch (e) {
+      LoggerUtils.error('更新用户完整登录信息失败: $e');
+      rethrow;
+    }
+  }
+  
+  /// 创建或更新用户档案（简化版 - 保留兼容性）
+  Future<void> createOrUpdateUserProfile(User user, String provider) async {
+    try {
+      final docRef = _usersCollection.doc(user.uid);
+      final doc = await docRef.get();
+      
+      if (!doc.exists) {
+        // 创建基本用户文档
+        final now = DateTime.now();
+        final userData = {
+          'profile': {
+            'userId': user.uid,
+            'email': user.email ?? '',
+            'displayName': user.displayName ?? 'Player',
+            'photoUrl': user.photoURL,
+            'accountCreatedAt': Timestamp.fromDate(now),
+            'lastLoginAt': Timestamp.fromDate(now),
+            'loginMethod': provider.toLowerCase(),
+            'userType': 'normal',
+          }
+        };
+        await docRef.set(userData);
+        LoggerUtils.info('创建基本用户档案: ${user.uid}');
+      } else {
+        await docRef.update({
+          'profile.lastLoginAt': Timestamp.fromDate(DateTime.now()),
         });
         LoggerUtils.info('更新用户登录时间: ${user.uid}');
       }
@@ -79,7 +132,11 @@ class FirestoreService {
       final doc = await _usersCollection.doc(userId).get();
       
       if (doc.exists) {
-        return UserProfile.fromFirestore(doc);
+        final data = doc.data() as Map<String, dynamic>?;
+        if (data != null && data['profile'] != null) {
+          final profileData = data['profile'] as Map<String, dynamic>;
+          return UserProfile.fromMap(profileData);
+        }
       }
       return null;
     } catch (e) {
@@ -88,34 +145,8 @@ class FirestoreService {
     }
   }
 
-  /// 获取游戏进度
-  Future<GameProgress?> getGameProgress(String userId) async {
-    try {
-      final doc = await _usersCollection.doc(userId).get();
-      
-      if (doc.exists) {
-        return GameProgress.fromFirestore(doc);
-      }
-      return null;
-    } catch (e) {
-      LoggerUtils.error('获取游戏进度失败: $e');
-      return null;
-    }
-  }
-
-  /// 更新游戏进度
-  Future<void> updateGameProgress(GameProgress progress) async {
-    try {
-      // 直接更新主文档中的progress字段
-      await _usersCollection
-          .doc(progress.userId)
-          .update(progress.toFirestore());
-      LoggerUtils.info('更新游戏进度: ${progress.userId}');
-    } catch (e) {
-      LoggerUtils.error('更新游戏进度失败: $e');
-      rethrow;
-    }
-  }
+  // 游戏进度相关方法已移至 GameProgressService
+  // 游戏进度数据存储在独立的 gameProgress/{userId} 集合中
 
   /// 实时监听用户档案变化
   Stream<UserProfile?> watchUserProfile(String userId) {
@@ -130,27 +161,16 @@ class FirestoreService {
     });
   }
 
-  /// 实时监听游戏进度变化
-  Stream<GameProgress?> watchGameProgress(String userId) {
-    return _usersCollection
-        .doc(userId)
-        .snapshots()
-        .map((snapshot) {
-      if (snapshot.exists) {
-        return GameProgress.fromFirestore(snapshot);
-      }
-      return null;
-    });
-  }
 
-  /// 更新用户语言偏好
-  Future<void> updateUserLanguage(String userId, String language) async {
+  /// 更新用户选择的语言
+  Future<void> updateUserSelectedLanguage(String userId, String language) async {
     try {
       await _usersCollection
           .doc(userId)
-          .update({'language': language});
+          .update({'profile.userSelectedLanguage': language});
+      LoggerUtils.info('用户选择语言已更新: $language');
     } catch (e) {
-      LoggerUtils.error('更新语言偏好失败: $e');
+      LoggerUtils.error('更新用户选择语言失败: $e');
     }
   }
 
@@ -177,30 +197,9 @@ class FirestoreService {
     int? successfulBidsInGame,
   }) async {
     try {
-      // 获取当前进度
-      final progress = await getGameProgress(userId);
-      if (progress == null) return;
-      
-      // 更新进度
-      final updatedProgress = progress.updateAfterGame(
-        won: won,
-        opponent: opponent,
-        gameDurationMinutes: gameDurationMinutes,
-        madeChallenge: madeChallenge,
-        challengeSuccessful: challengeSuccessful,
-        bidsInGame: bidsInGame,
-        successfulBidsInGame: successfulBidsInGame,
-      );
-      
-      // 检查成就
-      final newAchievements = updatedProgress.checkAchievements();
-      if (newAchievements.isNotEmpty) {
-        updatedProgress.achievements.addAll(newAchievements);
-        LoggerUtils.info('获得新成就: $newAchievements');
-      }
-      
-      // 保存更新
-      await updateGameProgress(updatedProgress);
+      // 游戏进度更新已移至 GameProgressService
+      // 这里暂时不处理，应该调用 GameProgressService.instance.updateGameResult()
+      LoggerUtils.info('游戏结果更新应该使用 GameProgressService');
     } catch (e) {
       LoggerUtils.error('记录游戏结果失败: $e');
     }

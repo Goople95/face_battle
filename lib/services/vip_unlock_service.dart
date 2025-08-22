@@ -1,8 +1,8 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../models/ai_personality.dart';
 import '../widgets/vip_unlock_dialog.dart';
 import '../utils/logger_utils.dart';
+import 'storage/local_storage_service.dart';
 
 /// VIP解锁管理服务（精简版）
 class VIPUnlockService {
@@ -21,21 +21,21 @@ class VIPUnlockService {
 
   /// 检查VIP角色是否已解锁
   Future<bool> isUnlocked(String characterId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final storage = LocalStorageService.instance;
     
     // 检查永久解锁
-    bool permanentUnlock = prefs.getBool('$_vipUnlockPrefix$characterId') ?? false;
+    bool permanentUnlock = await storage.getBool('$_vipUnlockPrefix$characterId') ?? false;
     if (permanentUnlock) return true;
     
     // 检查临时解锁
-    String? tempUnlockTime = prefs.getString('$_tempUnlockPrefix$characterId');
+    String? tempUnlockTime = await storage.getString('$_tempUnlockPrefix$characterId');
     if (tempUnlockTime != null) {
       DateTime unlockTime = DateTime.parse(tempUnlockTime);
       if (DateTime.now().isBefore(unlockTime.add(tempUnlockDuration))) {
         return true;
       } else {
         // 过期清除
-        await prefs.remove('$_tempUnlockPrefix$characterId');
+        await storage.remove('$_tempUnlockPrefix$characterId');
       }
     }
     
@@ -44,18 +44,19 @@ class VIPUnlockService {
 
   /// 永久解锁VIP角色
   Future<bool> permanentUnlock(String characterId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final storage = LocalStorageService.instance;
     
     // 检查宝石余额
-    int gems = prefs.getInt(_gemsKey) ?? 0;
+    int gems = await storage.getInt(_gemsKey) ?? 0;
     if (gems < vipUnlockPrice) {
       LoggerUtils.info('宝石不足，无法解锁VIP角色 $characterId');
       return false;
     }
     
     // 扣除宝石并解锁
-    await prefs.setInt(_gemsKey, gems - vipUnlockPrice);
-    await prefs.setBool('$_vipUnlockPrefix$characterId', true);
+    await storage.setInt(_gemsKey, gems - vipUnlockPrice);
+    // 保存解锁状态
+    await storage.setBool('$_vipUnlockPrefix$characterId', true);
     
     LoggerUtils.info('成功永久解锁VIP角色 $characterId');
     return true;
@@ -63,8 +64,8 @@ class VIPUnlockService {
 
   /// 临时解锁VIP角色（看广告）
   Future<void> temporaryUnlock(String characterId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
+    final storage = LocalStorageService.instance;
+    await storage.setString(
       '$_tempUnlockPrefix$characterId',
       DateTime.now().toIso8601String(),
     );
@@ -73,29 +74,29 @@ class VIPUnlockService {
 
   /// 获取用户宝石数量
   Future<int> getUserGems() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_gemsKey) ?? 0;
+    final storage = LocalStorageService.instance;
+    return await storage.getInt(_gemsKey) ?? 0;
   }
 
   /// 添加宝石
   Future<void> addGems(int amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    int currentGems = prefs.getInt(_gemsKey) ?? 0;
-    await prefs.setInt(_gemsKey, currentGems + amount);
+    final storage = LocalStorageService.instance;
+    int currentGems = await storage.getInt(_gemsKey) ?? 0;
+    await storage.setInt(_gemsKey, currentGems + amount);
     LoggerUtils.info('添加 $amount 宝石，当前余额: ${currentGems + amount}');
   }
 
   /// 获取VIP角色的解锁状态
   Future<VIPStatus> getVIPStatus(String characterId) async {
-    final prefs = await SharedPreferences.getInstance();
+    final storage = LocalStorageService.instance;
     
     // 检查永久解锁
-    if (prefs.getBool('$_vipUnlockPrefix$characterId') ?? false) {
+    if (await storage.getBool('$_vipUnlockPrefix$characterId') ?? false) {
       return VIPStatus.unlocked;
     }
     
     // 检查临时解锁
-    String? tempUnlockTime = prefs.getString('$_tempUnlockPrefix$characterId');
+    String? tempUnlockTime = await storage.getString('$_tempUnlockPrefix$characterId');
     if (tempUnlockTime != null) {
       DateTime unlockTime = DateTime.parse(tempUnlockTime);
       DateTime expireTime = unlockTime.add(tempUnlockDuration);
@@ -109,8 +110,8 @@ class VIPUnlockService {
 
   /// 获取临时解锁剩余时间
   Future<Duration?> getTempUnlockRemaining(String characterId) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? tempUnlockTime = prefs.getString('$_tempUnlockPrefix$characterId');
+    final storage = LocalStorageService.instance;
+    String? tempUnlockTime = await storage.getString('$_tempUnlockPrefix$characterId');
     
     if (tempUnlockTime != null) {
       DateTime unlockTime = DateTime.parse(tempUnlockTime);

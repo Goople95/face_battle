@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'game_state.dart';
 import '../utils/logger_utils.dart';
+import '../services/storage/local_storage_service.dart';
 
 /// 玩家画像 - 记录玩家的游戏风格和特征
 class PlayerProfile {
@@ -22,13 +21,8 @@ class PlayerProfile {
   int totalBids = 0;  // 总叫牌次数
   int successfulBids = 0;  // 成功的叫牌次数
   
-  // 与每个AI的对战记录
-  Map<String, Map<String, int>> vsAIRecords = {
-    'professor': {'wins': 0, 'losses': 0},
-    'gambler': {'wins': 0, 'losses': 0},
-    'provocateur': {'wins': 0, 'losses': 0},
-    'youngwoman': {'wins': 0, 'losses': 0},
-  };
+  // 与每个AI的对战记录 - 只使用数字ID
+  Map<String, Map<String, int>> vsAIRecords = {};
   
   // 叫牌风格分析
   Map<int, int> preferredValues = {}; // 偏好的点数
@@ -135,13 +129,55 @@ class PlayerProfile {
     this.lastPlayTime = lastPlayTime ?? DateTime.now();
   }
   
+  /// 记录NPC喝醉（玩家胜利导致NPC喝醉）
+  void recordAIDrunk(String aiId) {
+    if (!vsAIRecords.containsKey(aiId)) {
+      vsAIRecords[aiId] = {
+        'totalGames': 0,
+        'wins': 0,
+        'losses': 0,
+        'playerDrunkCount': 0,
+        'aiDrunkCount': 0,
+      };
+    }
+    vsAIRecords[aiId]!['aiDrunkCount'] = (vsAIRecords[aiId]!['aiDrunkCount'] ?? 0) + 1;
+  }
+  
+  /// 记录玩家喝醉（NPC胜利导致玩家喝醉）
+  void recordPlayerDrunk(String aiId) {
+    if (!vsAIRecords.containsKey(aiId)) {
+      vsAIRecords[aiId] = {
+        'totalGames': 0,
+        'wins': 0,
+        'losses': 0,
+        'playerDrunkCount': 0,
+        'aiDrunkCount': 0,
+      };
+    }
+    vsAIRecords[aiId]!['playerDrunkCount'] = (vsAIRecords[aiId]!['playerDrunkCount'] ?? 0) + 1;
+  }
+
   /// 从一局游戏中学习
   void learnFromGame(GameRound round, bool playerWon, {String? aiId}) {
     totalGames++;
     if (playerWon) totalWins++;
     
     // 记录与特定AI的对战结果
-    if (aiId != null && vsAIRecords.containsKey(aiId)) {
+    if (aiId != null) {
+      // 初始化该AI的记录（如果不存在）
+      if (!vsAIRecords.containsKey(aiId)) {
+        vsAIRecords[aiId] = {
+          'totalGames': 0,
+          'wins': 0,
+          'losses': 0,
+          'playerDrunkCount': 0,  // 玩家被该NPC喝醉的次数
+          'aiDrunkCount': 0,      // 该NPC被玩家喝醉的次数
+        };
+      }
+      
+      // 更新战绩
+      vsAIRecords[aiId]!['totalGames'] = (vsAIRecords[aiId]!['totalGames'] ?? 0) + 1;
+      
       if (playerWon) {
         vsAIRecords[aiId]!['wins'] = (vsAIRecords[aiId]!['wins'] ?? 0) + 1;
       } else {
@@ -695,7 +731,7 @@ ${_getSuggestedStrategy()}
   /// 保存到本地存储
   Future<void> save() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final storage = LocalStorageService.instance;
       Map<String, dynamic> data = {
         'totalGames': totalGames,
         'totalWins': totalWins,
@@ -718,8 +754,7 @@ ${_getSuggestedStrategy()}
         'vsAIRecords': vsAIRecords,
         'npcIntimacy': npcIntimacy,
       };
-      String jsonString = jsonEncode(data);
-      await prefs.setString('player_profile', jsonString);
+      await storage.setJson('player_profile', data);
       LoggerUtils.info('Player profile saved successfully');
     } catch (e) {
       LoggerUtils.error('Error saving player profile: $e');
@@ -728,54 +763,56 @@ ${_getSuggestedStrategy()}
   
   /// 从本地存储加载
   static Future<PlayerProfile> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? data = prefs.getString('player_profile');
+    final storage = LocalStorageService.instance;
+    final data = await storage.getJson('player_profile');
     
     PlayerProfile profile = PlayerProfile();
     
     if (data != null) {
       try {
-        Map<String, dynamic> json = jsonDecode(data);
-        profile.totalGames = json['totalGames'] ?? 0;
-        profile.totalWins = json['totalWins'] ?? 0;
-        profile.totalChallenges = json['totalChallenges'] ?? 0;
-        profile.successfulChallenges = json['successfulChallenges'] ?? 0;
-        profile.totalBluffs = json['totalBluffs'] ?? 0;
-        profile.caughtBluffing = json['caughtBluffing'] ?? 0;
-        if (json['preferredValues'] != null) {
-          Map<String, dynamic> prefValues = json['preferredValues'];
+        profile.totalGames = data['totalGames'] ?? 0;
+        profile.totalWins = data['totalWins'] ?? 0;
+        profile.totalChallenges = data['totalChallenges'] ?? 0;
+        profile.successfulChallenges = data['successfulChallenges'] ?? 0;
+        profile.totalBluffs = data['totalBluffs'] ?? 0;
+        profile.caughtBluffing = data['caughtBluffing'] ?? 0;
+        if (data['preferredValues'] != null) {
+          Map<String, dynamic> prefValues = data['preferredValues'];
           profile.preferredValues = prefValues.map((k, v) => MapEntry(int.parse(k), v as int));
         }
-        profile.averageBidIncrease = json['averageBidIncrease'] ?? 0.0;
-        profile.totalPlayerBids = json['totalPlayerBids'] ?? 0;
-        profile.aggressiveBids = json['aggressiveBids'] ?? 0;
-        profile.normalBids = json['normalBids'] ?? 0;
-        profile.patterns = Map<String, int>.from(json['patterns'] ?? profile.patterns);
-        profile.bluffingTendency = json['bluffingTendency'] ?? 0.5;
-        profile.aggressiveness = json['aggressiveness'] ?? 0.5;
-        profile.predictability = json['predictability'] ?? 0.5;
-        profile.challengeRate = json['challengeRate'] ?? 0.0;
+        profile.averageBidIncrease = data['averageBidIncrease'] ?? 0.0;
+        profile.totalPlayerBids = data['totalPlayerBids'] ?? 0;
+        profile.aggressiveBids = data['aggressiveBids'] ?? 0;
+        profile.normalBids = data['normalBids'] ?? 0;
+        profile.patterns = Map<String, int>.from(data['patterns'] ?? profile.patterns);
+        profile.bluffingTendency = data['bluffingTendency'] ?? 0.5;
+        profile.aggressiveness = data['aggressiveness'] ?? 0.5;
+        profile.predictability = data['predictability'] ?? 0.5;
+        profile.challengeRate = data['challengeRate'] ?? 0.0;
         
-        if (json['lastGameTime'] != null) {
-          profile.lastGameTime = DateTime.parse(json['lastGameTime']);
+        if (data['lastGameTime'] != null) {
+          profile.lastGameTime = DateTime.parse(data['lastGameTime']);
         }
         
-        if (json['recentGames'] != null) {
-          profile.recentGames = (json['recentGames'] as List)
+        if (data['recentGames'] != null) {
+          profile.recentGames = (data['recentGames'] as List)
             .map((g) => GameRecord.fromJson(g))
             .toList();
         }
         
-        if (json['vsAIRecords'] != null) {
-          // 直接覆盖整个vsAIRecords，而不是只更新已存在的key
-          Map<String, dynamic> records = json['vsAIRecords'];
+        if (data['vsAIRecords'] != null) {
+          // 只加载数字ID的AI记录
+          Map<String, dynamic> records = data['vsAIRecords'];
           records.forEach((key, value) {
-            profile.vsAIRecords[key] = Map<String, int>.from(value);
+            // 只保留数字ID的记录
+            if (RegExp(r'^\d+$').hasMatch(key)) {
+              profile.vsAIRecords[key] = Map<String, int>.from(value);
+            }
           });
         }
         
-        if (json['npcIntimacy'] != null) {
-          profile.npcIntimacy = Map<String, int>.from(json['npcIntimacy']);
+        if (data['npcIntimacy'] != null) {
+          profile.npcIntimacy = Map<String, int>.from(data['npcIntimacy']);
         }
       } catch (e) {
         LoggerUtils.error('Error loading player profile: $e');

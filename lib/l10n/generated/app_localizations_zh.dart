@@ -9,10 +9,10 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => '骰子吹牛';
+  String get appTitle => '骰色天香';
 
   @override
-  String get gameNameChinese => '骰子吹牛';
+  String get gameNameChinese => '骰色天香';
 
   @override
   String get loginTitle => '欢迎';

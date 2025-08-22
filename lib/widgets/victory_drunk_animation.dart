@@ -10,6 +10,7 @@ import 'dart:math' as math;
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
 import '../services/intimacy_service.dart';
+import '../services/game_progress_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 醉倒胜利动画
@@ -152,6 +153,10 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
               _hasLeveledUp = true;
             });
           }
+          // IntimacyService已经记录了亲密度，这里只需要同步到GameProgressService
+          // 注意：IntimacyService.recordNPCDrunk已经添加了亲密度点数
+          // 这里传递相同的值以保持GameProgressService同步
+          GameProgressService.instance.addNpcIntimacy(widget.defeatedAI.id, _intimacyMinutes);
         });
         // 淡出当前场景
         _fadeController.reverse().then((_) {
@@ -214,16 +219,23 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             // 停止脉冲动画，减少rebuild
             _pulseController.stop();
             
-            // 生成20-60之间的随机数
-            _intimacyMinutes = 20 + math.Random().nextInt(41);
-            // 记录NPC醉倒，增加亲密度并检测升级
-            IntimacyService().recordNPCDrunk(widget.defeatedAI.id, _intimacyMinutes).then((leveledUp) {
-              if (leveledUp && mounted) {
-                setState(() {
-                  _hasLeveledUp = true;
-                });
-              }
-            });
+            // 如果还没有生成亲密度分钟数，则生成（避免重复）
+            if (_intimacyMinutes == 0) {
+              // 生成20-60之间的随机数
+              _intimacyMinutes = 20 + math.Random().nextInt(41);
+              // 记录NPC醉倒，增加亲密度并检测升级
+              IntimacyService().recordNPCDrunk(widget.defeatedAI.id, _intimacyMinutes).then((leveledUp) {
+                if (leveledUp && mounted) {
+                  setState(() {
+                    _hasLeveledUp = true;
+                  });
+                }
+                // IntimacyService已经记录了亲密度，这里只需要同步到GameProgressService
+                // 注意：IntimacyService.recordNPCDrunk已经添加了亲密度点数
+                // 这里传递相同的值以保持GameProgressService同步
+                GameProgressService.instance.addNpcIntimacy(widget.defeatedAI.id, _intimacyMinutes);
+              });
+            }
             
             // 淡出视频场景
             _fadeController.reverse().then((_) {

@@ -21,6 +21,7 @@ import '../widgets/animated_intimacy_display.dart';
 import '../services/share_image_service.dart';
 import '../services/intimacy_service.dart';
 import '../services/dialogue_service.dart';
+import '../services/game_progress_service.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
@@ -36,7 +37,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late AIService _aiService;
-  PlayerProfile? _playerProfile;
+  GameProgressData? _gameProgress;  // 替代 PlayerProfile
   DrinkingState? _drinkingState;
   
   GameRound? _currentRound;
@@ -511,6 +512,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   Future<void> _resolveChallenge(bool playerChallenged) async {
     if (_currentRound == null || _currentRound!.currentBid == null) return;
     
+    LoggerUtils.info('=== 游戏回合结束 ===');
+    LoggerUtils.info('  - 质疑方: ${playerChallenged ? "玩家" : "AI"}');
+    
     final isBidTrue = _currentRound!.isBidTrue(_currentRound!.currentBid!);
     
     String winner;
@@ -527,6 +531,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       winner = isBidTrue ? 'Player' : 'AI';
     }
     
+    LoggerUtils.info('  - 叫牌真假: ${isBidTrue ? "真" : "假"}');
+    LoggerUtils.info('  - 胜利者: $winner');
+    
     setState(() {
       _playerChallenged = playerChallenged; // Record who challenged
       _currentRound!.isRoundOver = true;
@@ -534,15 +541,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _showDice = true; // Reveal all dice
     });
     
-    // 游戏结束，更新玩家画像和饮酒状态
-    if (_playerProfile != null) {
-      bool playerWon = winner == 'Player';
-      _playerProfile!.learnFromGame(
-        _currentRound!, 
-        playerWon,
-        aiId: widget.aiPersonality.id,
-      );
-      _playerProfile!.save(); // 保存到本地
+    // 游戏结束，更新游戏进度和统计
+    bool playerWon = winner == 'Player';
+    
+    // 更新游戏进度统计（现在包含所有原PlayerProfile的功能）
+    LoggerUtils.info('=== 调用 GameProgressService.updateGameResult ===');
+    LoggerUtils.info('  - 玩家胜负: ${playerWon ? "胜利" : "失败"}');
+    LoggerUtils.info('  - AI ID: ${widget.aiPersonality.id}');
+    await GameProgressService.instance.updateGameResult(
+      _currentRound!,
+      playerWon,
+      widget.aiPersonality.id,
+    );
+    LoggerUtils.info('=== updateGameResult 调用完成 ===');
       
       // 不在这里更新亲密度，只在NPC喝醉时更新
       
@@ -564,6 +575,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             
             // 如果AI喝醉了，显示胜利提示
             if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
+              // 记录NPC喝醉（使用GameProgressService）
+              await GameProgressService.instance.recordNPCDrunk(widget.aiPersonality.id);
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showAIDrunkDialog();
               });
@@ -579,6 +592,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             
             // 如果玩家喝醉了，显示提示
             if (_drinkingState!.isDrunk) {
+              // 记录玩家喝醉
+              _playerProfile!.recordPlayerDrunk(widget.aiPersonality.id);
+              _playerProfile!.save();
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showDrunkAnimation();
               });

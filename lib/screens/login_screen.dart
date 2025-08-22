@@ -120,21 +120,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         
         // 游戏标题
         const Text(
-          '骰子吹牛',
+          'Dice Girls',
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Liar's Dice",
-          style: TextStyle(
-            fontSize: 20,
-            color: Colors.white70,
-            letterSpacing: 1,
           ),
         ),
       ],

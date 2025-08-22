@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/player_profile.dart';
 import '../utils/logger_utils.dart';
-import 'dart:convert';
+import 'storage/local_storage_service.dart';
+import 'intimacy_service.dart';
 
 /// 用户服务 - 管理用户数据和游戏统计
 class UserService extends ChangeNotifier {
@@ -19,6 +19,13 @@ class UserService extends ChangeNotifier {
   Future<void> initialize(User? user) async {
     _currentUser = user;
     
+    // 设置LocalStorageService的用户ID
+    final userId = user?.uid ?? 'guest';
+    LocalStorageService.instance.setUserId(userId);
+    
+    // 设置IntimacyService的用户ID
+    IntimacyService().setUserId(userId);
+    
     if (user != null) {
       // 加载或创建用户档案
       await _loadOrCreateProfile(user.uid);
@@ -33,14 +40,12 @@ class UserService extends ChangeNotifier {
   /// 加载或创建用户档案
   Future<void> _loadOrCreateProfile(String uid) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final profileKey = 'user_profile_$uid';
-      final profileJson = prefs.getString(profileKey);
+      final storage = LocalStorageService.instance;
+      final profileData = await storage.getJson('player_profile');
       
-      if (profileJson != null) {
+      if (profileData != null) {
         // 加载已有档案
-        final data = json.decode(profileJson);
-        _playerProfile = PlayerProfile.fromJson(data);
+        _playerProfile = PlayerProfile.fromJson(profileData);
         LoggerUtils.info('加载用户档案: ${_playerProfile!.nickname}');
       } else {
         // 创建新档案
@@ -70,12 +75,11 @@ class UserService extends ChangeNotifier {
   /// 加载游客档案
   Future<void> _loadGuestProfile() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final profileJson = prefs.getString('guest_profile');
+      final storage = LocalStorageService.instance;
+      final profileData = await storage.getJson('player_profile');
       
-      if (profileJson != null) {
-        final data = json.decode(profileJson);
-        _playerProfile = PlayerProfile.fromJson(data);
+      if (profileData != null) {
+        _playerProfile = PlayerProfile.fromJson(profileData);
         LoggerUtils.info('加载游客档案');
       } else {
         _playerProfile = PlayerProfile(
@@ -124,14 +128,8 @@ class UserService extends ChangeNotifier {
     if (_playerProfile == null) return;
     
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final profileJson = json.encode(_playerProfile!.toJson());
-      
-      if (_currentUser != null) {
-        await prefs.setString('user_profile_${_currentUser!.uid}', profileJson);
-      } else {
-        await prefs.setString('guest_profile', profileJson);
-      }
+      final storage = LocalStorageService.instance;
+      await storage.setJson('player_profile', _playerProfile!.toJson());
     } catch (e) {
       LoggerUtils.error('保存用户档案失败: $e');
     }

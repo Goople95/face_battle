@@ -2,7 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'dart:io';
 import 'firestore_service.dart';
+import 'device_info_service.dart';
+import 'game_progress_service.dart';
+import 'storage/local_storage_service.dart';
+import 'ip_location_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 认证服务 - 管理用户登录状态
@@ -55,8 +61,8 @@ class AuthService extends ChangeNotifier {
         
         // 保存用户信息到Firestore
         if (_user != null) {
-          await FirestoreService().createOrUpdateUserProfile(_user!, 'google');
-          await _saveUserLocally(_user!);
+          // 统一处理登录后的所有更新（自动登录也使用相同流程）
+          await _handleUserLogin(_user!, 'google');
         }
         
         notifyListeners();
@@ -104,8 +110,9 @@ class AuthService extends ChangeNotifier {
       
       // 保存用户信息到Firestore
       if (_user != null) {
-        await FirestoreService().createOrUpdateUserProfile(_user!, 'google');
-        await _saveUserLocally(_user!);
+        // 首先设置LocalStorageService的用户ID
+        // 统一处理登录后的所有更新
+        await _handleUserLogin(_user!, 'google');
       }
       
       _setLoading(false);
@@ -124,6 +131,10 @@ class AuthService extends ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
+      
+      // 检查是否配置了有效的Facebook应用ID
+      // 注意：当前使用的是测试ID，仅能消除错误日志，不能实现实际登录
+      LoggerUtils.warning('Facebook登录使用测试配置，生产环境需要配置真实的应用ID');
       
       // 触发Facebook登录流程
       final LoginResult result = await FacebookAuth.instance.login(
@@ -148,8 +159,9 @@ class AuthService extends ChangeNotifier {
           
           // 保存用户信息到Firestore
           if (_user != null) {
-            await FirestoreService().createOrUpdateUserProfile(_user!, 'facebook');
-            await _saveUserLocally(_user!);
+            // 首先设置LocalStorageService的用户ID
+            // 统一处理登录后的所有更新
+            await _handleUserLogin(_user!, 'facebook');
           }
           
           _setLoading(false);
@@ -182,10 +194,35 @@ class AuthService extends ChangeNotifier {
       _setLoading(true);
       _clearError();
       
+      // 注意：Firebase的匿名登录会在以下情况重用用户ID：
+      // 1. 应用数据未完全清除
+      // 2. Android自动备份恢复了认证状态
+      // 3. Firebase SDK缓存了凭证
+      // 这可能导致卸载重装后仍使用相同的匿名用户ID
+      
       final UserCredential userCredential = 
           await _auth.signInAnonymously();
       
       _user = userCredential.user;
+      
+      if (_user != null) {
+        LoggerUtils.info('匿名登录成功: ${_user!.uid}');
+        LoggerUtils.info('  账号创建时间: ${_user!.metadata.creationTime}');
+        LoggerUtils.info('  最后登录时间: ${_user!.metadata.lastSignInTime}');
+        
+        // 检查是否是重用的旧匿名账号
+        if (_user!.metadata.creationTime != null && 
+            _user!.metadata.lastSignInTime != null) {
+          final timeDiff = _user!.metadata.lastSignInTime!
+              .difference(_user!.metadata.creationTime!);
+          if (timeDiff.inMinutes > 5) {
+            LoggerUtils.warning('检测到重用的匿名账号（创建于${timeDiff.inHours}小时前）');
+            // 这是正常的，Firebase会重用匿名账号
+            // GameProgressService会从云端恢复数据
+          }
+        }
+      }
+      
       _setLoading(false);
       notifyListeners();
       return _user;
@@ -201,6 +238,9 @@ class AuthService extends ChangeNotifier {
   Future<void> signOut() async {
     try {
       _setLoading(true);
+      
+      // 同步数据到云端（登出前最后一次同步）
+      await GameProgressService.instance.syncToCloud();
       
       // 登出所有平台
       await Future.wait([
@@ -271,9 +311,53 @@ class AuthService extends ChangeNotifier {
     _errorMessage = null;
   }
   
-  /// 保存用户信息到本地（可选）
-  Future<void> _saveUserLocally(User user) async {
-    // 可以使用 SharedPreferences 保存一些用户信息
-    // 用于离线展示或快速加载
+  /// 统一处理用户登录后的数据更新
+  Future<void> _handleUserLogin(User user, String provider) async {
+    try {
+      // 1. 设置 LocalStorage 用户ID
+      LocalStorageService.instance.setUserId(user.uid);
+      
+      // 2. 并发收集所有需要的信息
+      final results = await Future.wait([
+        DeviceInfoService.instance.collectDeviceInfo(),
+        IpLocationService.instance.getUserCountryInfo(),
+        _getAppVersion(),
+      ]);
+      
+      final deviceInfo = results[0] as Map<String, dynamic>;
+      final locationInfo = results[1] as Map<String, dynamic>;
+      final appVersion = results[2] as String;
+      final deviceLanguage = Platform.localeName;
+      
+      // 3. 一次性更新所有用户信息到 Firestore
+      await FirestoreService().updateUserCompleteLoginInfo(
+        user: user,
+        provider: provider,
+        deviceInfo: deviceInfo,
+        locationInfo: locationInfo,
+        deviceLanguage: deviceLanguage,
+        appVersion: appVersion,
+      );
+      
+      // 4. 初始化游戏进度服务
+      await GameProgressService.instance.initialize();
+      
+      LoggerUtils.info('用户登录处理完成: ${user.uid} (版本: $appVersion)');
+    } catch (e) {
+      LoggerUtils.error('处理用户登录失败: $e');
+      // 不抛出错误，避免影响登录流程
+    }
+  }
+  
+  /// 获取应用版本（包含build number）
+  Future<String> _getAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      // 返回完整版本信息：version+buildNumber
+      return '${packageInfo.version}+${packageInfo.buildNumber}';
+    } catch (e) {
+      LoggerUtils.warning('获取应用版本失败: $e');
+      return '0.1.2+1'; // 默认值，更新为当前版本
+    }
   }
 }

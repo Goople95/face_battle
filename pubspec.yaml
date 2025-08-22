@@ -1,7 +1,7 @@
 name: face_battle
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.1
+version: 0.1.2+1
 
 environment:
   sdk: ^3.8.1
@@ -12,7 +12,7 @@ dependencies:
   flame: ^1.18.0
   rive: ^0.12.3
   provider: ^6.1.1
-  http: ^1.1.0
+  http: ^1.2.0
   logger: ^2.0.2
   shared_preferences: ^2.2.0
   video_player: ^2.8.2
@@ -29,6 +29,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  device_info_plus: ^10.1.0
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:
@@ -53,8 +55,7 @@ flutter:
     - assets/people/1001/videos/
     - assets/people/1002/
     - assets/people/1002/videos/
-    - assets/people/1003/
-    - assets/people/1003/videos/
+
 
 flutter_launcher_icons:
   android: true
