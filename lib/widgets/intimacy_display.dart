@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/intimacy_data.dart';
 import '../services/intimacy_service.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class IntimacyDisplay extends StatelessWidget {
   final String npcId;
@@ -227,13 +228,13 @@ class IntimacyDisplay extends StatelessWidget {
                 ),
                 _buildStatItem(
                   icon: Icons.emoji_events,
-                  label: '胜利',
+                  label: AppLocalizations.of(context)!.victory,
                   value: intimacy.wins.toString(),
                   color: Colors.green,
                 ),
                 _buildStatItem(
                   icon: Icons.percent,
-                  label: '胜率',
+                  label: AppLocalizations.of(context)!.winRate,
                   value: '${(intimacy.winRate * 100).toInt()}%',
                   color: _getColorForLevel(intimacy.intimacyLevel),
                 ),

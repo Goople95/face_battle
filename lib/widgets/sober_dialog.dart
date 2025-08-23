@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/drinking_state.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 醒酒选项对话框
 class SoberDialog extends StatelessWidget {
@@ -74,20 +75,20 @@ class SoberDialog extends StatelessWidget {
                 color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Column(
+              child: Column(
                 children: [
                   Text(
-                    '你已经烂醉如泥，无法继续游戏！\n需要醒酒才能继续',
+                    AppLocalizations.of(context)!.drunkStatus,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    '💡 提示：10分钟自然醒酒1杯，1小时完全恢复',
-                    style: TextStyle(
+                    AppLocalizations.of(context)!.soberTip,
+                    style: const TextStyle(
                       color: Colors.yellow,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
@@ -105,7 +106,7 @@ class SoberDialog extends StatelessWidget {
                 if (drinkingState.soberPotions > 0)
                   _buildOption(
                     icon: Icons.medication_liquid,
-                    title: '使用醒酒药水',
+                    title: AppLocalizations.of(context)!.useSoberPotion,
                     subtitle: '剩余 ${drinkingState.soberPotions} 瓶',
                     color: Colors.green,
                     onTap: () {
@@ -122,7 +123,7 @@ class SoberDialog extends StatelessWidget {
                 // 看广告醒酒
                 _buildOption(
                   icon: Icons.play_circle_outline,
-                  title: '观看广告醒酒',
+                  title: AppLocalizations.of(context)!.watchAdToSoberTitle,
                   subtitle: '免费，立即完全清醒',
                   color: Colors.blue,
                   onTap: () {
@@ -140,7 +141,7 @@ class SoberDialog extends StatelessWidget {
                 _buildOption(
                   icon: Icons.home,
                   title: '回家休息',
-                  subtitle: '返回主页，自然醒酒',
+                  subtitle: AppLocalizations.of(context)!.returnToHome,
                   color: Colors.grey,
                   onTap: () {
                     Navigator.of(context).pop();

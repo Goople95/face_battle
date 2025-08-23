@@ -287,4 +287,191 @@ class AppLocalizationsPt extends AppLocalizations {
   String agreeToTerms(Object privacy, Object terms) {
     return 'Ao continuar, você concorda com nossos $terms e $privacy';
   }
+
+  @override
+  String get playerDataAnalysis => 'Your Data Analysis';
+
+  @override
+  String get vsRecord => 'Battle Record';
+
+  @override
+  String get gameStyle => 'Game Style';
+
+  @override
+  String get bluffingTendency => 'Bluffing Tendency';
+
+  @override
+  String get aggressiveness => 'Aggressiveness';
+
+  @override
+  String get challengeRate => 'Challenge Rate';
+
+  @override
+  String totalGames(Object count) {
+    return '$count games';
+  }
+
+  @override
+  String get win => 'W';
+
+  @override
+  String get lose => 'L';
+
+  @override
+  String get debugTool => 'Debug Tool';
+
+  @override
+  String get noVIPCharacters => 'No VIP Characters';
+
+  @override
+  String minutes(Object count) {
+    return '$count minutes';
+  }
+
+  @override
+  String get sober => 'Sober Up';
+
+  @override
+  String get useSoberPotion => 'Use Sober Potion';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String aiIsDrunk(Object name) {
+    return '$name is drunk!';
+  }
+
+  @override
+  String get aiDrunkMessage => 'She\'s too drunk to play\nHelp her sober up';
+
+  @override
+  String get watchAdToSober => 'Watch Ad';
+
+  @override
+  String languageSwitched(Object language) {
+    return 'Language switched to $language';
+  }
+
+  @override
+  String get instructionsDetail =>
+      '• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they\'re lying';
+
+  @override
+  String get yourDice => 'You rolled';
+
+  @override
+  String bidCall(Object quantity, Object value) {
+    return 'Bid: $quantity×$value';
+  }
+
+  @override
+  String challengeSuccessRate(Object rate) {
+    return 'Challenge Success: $rate%';
+  }
+
+  @override
+  String get bidMustBeHigher => 'Bid must be higher than current';
+
+  @override
+  String get roundEnd => 'Round End';
+
+  @override
+  String get backToHome => 'Back to Home';
+
+  @override
+  String get playAgain => 'Play Again';
+
+  @override
+  String get shareResult => 'Share Result';
+
+  @override
+  String get aiThinking => 'AI is thinking...';
+
+  @override
+  String get bidHistory => 'Bid History';
+
+  @override
+  String get completeBidHistory => 'Complete Bid History';
+
+  @override
+  String get totalGamesCount => 'Games';
+
+  @override
+  String get watchAdSuccess => '✨ Watched ad, fully sober!';
+
+  @override
+  String get usedSoberPotion => 'Used sober potion, -2 drinks!';
+
+  @override
+  String aiSoberSuccess(Object name) {
+    return '✨ $name is sober!';
+  }
+
+  @override
+  String get drunkStatus => 'You\'re too drunk to continue!\nNeed to sober up';
+
+  @override
+  String get soberTip =>
+      '💡 Tip: Naturally sober 1 drink per 10 min, fully recover in 1 hour';
+
+  @override
+  String get watchAdToSoberTitle => 'Watch Ad to Sober';
+
+  @override
+  String get returnToHome => 'Return home, naturally sober';
+
+  @override
+  String get youRolled => 'Your Dice';
+
+  @override
+  String aiRolled(Object name) {
+    return '$name\'s Dice';
+  }
+
+  @override
+  String get myDice => 'My Dice';
+
+  @override
+  String get challenging => 'Challenging';
+
+  @override
+  String get gameTips => 'Game Tips';
+
+  @override
+  String userIdPrefix(Object id) {
+    return 'ID: $id';
+  }
+
+  @override
+  String get vipLabel => 'VIP';
+
+  @override
+  String tempUnlockTime(Object minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String privateTime(Object minutes) {
+    return 'Private time: $minutes minutes';
+  }
+
+  @override
+  String get victory => 'Victory';
+
+  @override
+  String intimacyLevelShort(Object level) {
+    return 'Lv.$level';
+  }
+
+  @override
+  String get watchAdUnlock => 'Watch Ad';
+
+  @override
+  String drunkAndWon(Object name) {
+    return '$name passed out, you won!';
+  }
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
 }

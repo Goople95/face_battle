@@ -618,6 +618,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By continuing, you agree to our {terms} and {privacy}'**
   String agreeToTerms(Object privacy, Object terms);
+
+  /// No description provided for @playerDataAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Data Analysis'**
+  String get playerDataAnalysis;
+
+  /// No description provided for @vsRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Battle Record'**
+  String get vsRecord;
+
+  /// No description provided for @gameStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Style'**
+  String get gameStyle;
+
+  /// No description provided for @bluffingTendency.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluffing Tendency'**
+  String get bluffingTendency;
+
+  /// No description provided for @aggressiveness.
+  ///
+  /// In en, this message translates to:
+  /// **'Aggressiveness'**
+  String get aggressiveness;
+
+  /// No description provided for @challengeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge Rate'**
+  String get challengeRate;
+
+  /// No description provided for @totalGames.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} games'**
+  String totalGames(Object count);
+
+  /// No description provided for @win.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get win;
+
+  /// No description provided for @lose.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
+  String get lose;
+
+  /// No description provided for @debugTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Tool'**
+  String get debugTool;
+
+  /// No description provided for @noVIPCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'No VIP Characters'**
+  String get noVIPCharacters;
+
+  /// No description provided for @minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes'**
+  String minutes(Object count);
+
+  /// No description provided for @sober.
+  ///
+  /// In en, this message translates to:
+  /// **'Sober Up'**
+  String get sober;
+
+  /// No description provided for @useSoberPotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Sober Potion'**
+  String get useSoberPotion;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @aiIsDrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is drunk!'**
+  String aiIsDrunk(Object name);
+
+  /// No description provided for @aiDrunkMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'She\'s too drunk to play\nHelp her sober up'**
+  String get aiDrunkMessage;
+
+  /// No description provided for @watchAdToSober.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Ad'**
+  String get watchAdToSober;
+
+  /// No description provided for @languageSwitched.
+  ///
+  /// In en, this message translates to:
+  /// **'Language switched to {language}'**
+  String languageSwitched(Object language);
+
+  /// No description provided for @instructionsDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they\'re lying'**
+  String get instructionsDetail;
+
+  /// No description provided for @yourDice.
+  ///
+  /// In en, this message translates to:
+  /// **'You rolled'**
+  String get yourDice;
+
+  /// No description provided for @bidCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Bid: {quantity}×{value}'**
+  String bidCall(Object quantity, Object value);
+
+  /// No description provided for @challengeSuccessRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge Success: {rate}%'**
+  String challengeSuccessRate(Object rate);
+
+  /// No description provided for @bidMustBeHigher.
+  ///
+  /// In en, this message translates to:
+  /// **'Bid must be higher than current'**
+  String get bidMustBeHigher;
+
+  /// No description provided for @roundEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Round End'**
+  String get roundEnd;
+
+  /// No description provided for @backToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Home'**
+  String get backToHome;
+
+  /// No description provided for @playAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Again'**
+  String get playAgain;
+
+  /// No description provided for @shareResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Result'**
+  String get shareResult;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is thinking...'**
+  String get aiThinking;
+
+  /// No description provided for @bidHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Bid History'**
+  String get bidHistory;
+
+  /// No description provided for @completeBidHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Bid History'**
+  String get completeBidHistory;
+
+  /// No description provided for @totalGamesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get totalGamesCount;
+
+  /// No description provided for @watchAdSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ Watched ad, fully sober!'**
+  String get watchAdSuccess;
+
+  /// No description provided for @usedSoberPotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Used sober potion, -2 drinks!'**
+  String get usedSoberPotion;
+
+  /// No description provided for @aiSoberSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ {name} is sober!'**
+  String aiSoberSuccess(Object name);
+
+  /// No description provided for @drunkStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re too drunk to continue!\nNeed to sober up'**
+  String get drunkStatus;
+
+  /// No description provided for @soberTip.
+  ///
+  /// In en, this message translates to:
+  /// **'💡 Tip: Naturally sober 1 drink per 10 min, fully recover in 1 hour'**
+  String get soberTip;
+
+  /// No description provided for @watchAdToSoberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Ad to Sober'**
+  String get watchAdToSoberTitle;
+
+  /// No description provided for @returnToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Return home, naturally sober'**
+  String get returnToHome;
+
+  /// No description provided for @youRolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Dice'**
+  String get youRolled;
+
+  /// No description provided for @aiRolled.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s Dice'**
+  String aiRolled(Object name);
+
+  /// No description provided for @myDice.
+  ///
+  /// In en, this message translates to:
+  /// **'My Dice'**
+  String get myDice;
+
+  /// No description provided for @challenging.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenging'**
+  String get challenging;
+
+  /// No description provided for @gameTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Tips'**
+  String get gameTips;
+
+  /// No description provided for @userIdPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'ID: {id}'**
+  String userIdPrefix(Object id);
+
+  /// No description provided for @vipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'VIP'**
+  String get vipLabel;
+
+  /// No description provided for @tempUnlockTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String tempUnlockTime(Object minutes);
+
+  /// No description provided for @privateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Private time: {minutes} minutes'**
+  String privateTime(Object minutes);
+
+  /// No description provided for @victory.
+  ///
+  /// In en, this message translates to:
+  /// **'Victory'**
+  String get victory;
+
+  /// No description provided for @intimacyLevelShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Lv.{level}'**
+  String intimacyLevelShort(Object level);
+
+  /// No description provided for @watchAdUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Ad'**
+  String get watchAdUnlock;
+
+  /// No description provided for @drunkAndWon.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} passed out, you won!'**
+  String drunkAndWon(Object name);
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
 }
 
 class _AppLocalizationsDelegate

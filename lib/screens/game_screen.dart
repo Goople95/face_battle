@@ -21,6 +21,7 @@ import '../services/share_image_service.dart';
 import '../services/intimacy_service.dart';
 import '../services/dialogue_service.dart';
 import '../services/game_progress_service.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
@@ -303,7 +304,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _showDice = false; // Don't show AI dice at start
       _aiExpression = isPlayerFirst ? 'thinking' : 'confident';
       _aiDialogue = isPlayerFirst 
-        ? '轮到你了'
+        ? AppLocalizations.of(context)!.yourTurn
         : '让我先来！';
       _currentAIEmotion = _aiExpression;  // 同步更新视频表情
     });
@@ -335,7 +336,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       if (_currentRound!.currentBid!.value == 1 && newBid.value != 1) {
         _showSnackBar('叫了1之后，换其他数字必须增加数量');
       } else {
-        _showSnackBar('出价必须高于当前报数');
+        _showSnackBar(AppLocalizations.of(context)!.bidMustBeHigher);
       }
       return;
     }
@@ -805,7 +806,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   double confidence = option['confidence'] ?? 0.0;
                                   
                                   if (option['type'] == 'challenge') {
-                                    optionText = '质疑';
+                                    optionText = AppLocalizations.of(context)!.challenge;
                                   } else if (option['bid'] != null) {
                                     Bid bid = option['bid'];
                                     optionText = '叫牌: ${bid.quantity}个${bid.value}';
@@ -1307,6 +1308,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 _drinkingState!.watchAdToSoberPlayer();
                 _drinkingState!.save();
               });
+              // 记录看广告醒酒次数（玩家自己）
+              GameProgressService.instance.recordAdSober();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('✨ 广告观看完成，完全清醒了！'),
@@ -2410,9 +2413,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 4),
               winner == 'Player' 
-                ? const Text(
-                    '你赢了！',
-                    style: TextStyle(
+                ? Text(
+                    AppLocalizations.of(context)!.youWin,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -2551,7 +2554,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 8),
               Text(
-                '完整叫牌记录',
+                AppLocalizations.of(context)!.completeBidHistory,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -3025,7 +3028,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 8),
               Text(
-                '你的数据分析',
+                AppLocalizations.of(context)!.playerDataAnalysis,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -3072,7 +3075,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 Colors.red,
               ),
               _buildMiniStat(
-                '质疑率',
+                AppLocalizations.of(context)!.challengeRate,
                 '${(_gameProgress!.totalChallenges * 100.0 / _gameProgress!.totalGames).toStringAsFixed(0)}%',
                 Colors.purple,
               ),
@@ -3413,7 +3416,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       const Icon(Icons.casino, size: 24, color: Colors.white),
                       const SizedBox(width: 8),
                       Text(
-                        '报数：$_selectedQuantity个$_selectedValue',
+                        AppLocalizations.of(context)!.bidCall(_selectedQuantity.toString(), _selectedValue.toString()),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -3486,7 +3489,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       ],
                     ),
                     Text(
-                      '质疑成功率: ${(_calculateChallengeProbability() * 100).toStringAsFixed(1)}%',
+                      AppLocalizations.of(context)!.challengeSuccessRate(((_calculateChallengeProbability() * 100).toStringAsFixed(1))),
                       style: TextStyle(
                         fontSize: 11,
                         color: _calculateChallengeProbability() > 0.5

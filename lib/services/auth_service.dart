@@ -132,13 +132,13 @@ class AuthService extends ChangeNotifier {
       _setLoading(true);
       _clearError();
       
-      // 检查是否配置了有效的Facebook应用ID
-      // 注意：当前使用的是测试ID，仅能消除错误日志，不能实现实际登录
-      LoggerUtils.warning('Facebook登录使用测试配置，生产环境需要配置真实的应用ID');
+      // Facebook登录配置已就绪
+      LoggerUtils.info('Facebook登录开始');
       
       // 触发Facebook登录流程
+      // 注意：email权限需要Facebook应用审核，开发阶段只使用public_profile
       final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['email', 'public_profile'],
+        permissions: ['public_profile'],  // 只使用公开资料权限
       );
       
       // 检查登录状态
@@ -157,9 +157,77 @@ class AuthService extends ChangeNotifier {
           
           _user = userCredential.user;
           
-          // 保存用户信息到Firestore
+          // 获取Facebook用户信息（包括头像）
           if (_user != null) {
-            // 首先设置LocalStorageService的用户ID
+            try {
+              // 获取Facebook用户详细信息
+              // 明确请求需要的字段，并设置大尺寸头像
+              final userData = await FacebookAuth.instance.getUserData(
+                fields: "name,picture.width(200).height(200)",
+              );
+              LoggerUtils.info('Facebook用户信息: $userData');
+              
+              // 获取Facebook头像URL
+              String? photoURL;
+              if (userData.containsKey('picture')) {
+                final picture = userData['picture'];
+                if (picture is Map && picture['data'] != null && picture['data']['url'] != null) {
+                  photoURL = picture['data']['url'];
+                  LoggerUtils.info('Facebook头像URL (从返回数据): $photoURL');
+                } else {
+                  LoggerUtils.warning('Facebook头像数据格式不正确: $picture');
+                }
+              } else {
+                LoggerUtils.warning('Facebook用户数据中没有picture字段');
+              }
+              
+              // 如果没有从userData获取到完整的头像URL，或者URL看起来不对，使用Graph API构造
+              if (photoURL == null || !photoURL.contains('http') || photoURL.contains('/picture') && !photoURL.contains('?')) {
+                // 使用Facebook用户ID构造高质量头像URL
+                final String? userId = userData['id']?.toString();
+                if (userId != null) {
+                  // 使用type=large获取大尺寸头像，不使用redirect参数让Flutter自动处理重定向
+                  photoURL = 'https://graph.facebook.com/$userId/picture?type=large&width=200&height=200';
+                  LoggerUtils.info('使用Graph API构造的头像URL: $photoURL');
+                }
+              }
+              
+              // 获取用户名称
+              String? displayName;
+              if (userData.containsKey('name')) {
+                displayName = userData['name'];
+                LoggerUtils.info('Facebook用户名称: $displayName');
+              } else {
+                LoggerUtils.warning('Facebook用户数据中没有name字段');
+              }
+              
+              // 更新Firebase用户信息
+              bool needsReload = false;
+              
+              // 更新头像
+              if (photoURL != null && photoURL.isNotEmpty) {
+                await _user!.updatePhotoURL(photoURL);
+                needsReload = true;
+                LoggerUtils.info('已更新Firebase用户头像');
+              }
+              
+              // 更新显示名称
+              if (displayName != null && displayName.isNotEmpty) {
+                await _user!.updateDisplayName(displayName);
+                needsReload = true;
+                LoggerUtils.info('已更新Firebase用户名称');
+              }
+              
+              // 如果有更新，重新加载用户
+              if (needsReload) {
+                await _user!.reload();
+                _user = _auth.currentUser;
+                LoggerUtils.info('已重新加载Firebase用户，名称: ${_user?.displayName}, 头像: ${_user?.photoURL}');
+              }
+            } catch (e) {
+              LoggerUtils.error('获取Facebook用户详情失败: $e');
+            }
+            
             // 统一处理登录后的所有更新
             await _handleUserLogin(_user!, 'facebook');
           }
@@ -285,7 +353,19 @@ class AuthService extends ChangeNotifier {
   }
   
   /// 获取用户头像URL
-  String? get photoURL => _user?.photoURL;
+  String? get photoURL {
+    final url = _user?.photoURL;
+    if (url != null && url.isNotEmpty) {
+      LoggerUtils.debug('AuthService返回用户头像URL: $url');
+      // 确保Facebook头像URL包含正确的参数
+      if (url.contains('facebook.com') && !url.contains('type=')) {
+        final enhancedUrl = '$url?type=large&width=200&height=200';
+        LoggerUtils.debug('增强Facebook头像URL: $enhancedUrl');
+        return enhancedUrl;
+      }
+    }
+    return url;
+  }
   
   /// 获取用户邮箱
   String? get email => _user?.email;

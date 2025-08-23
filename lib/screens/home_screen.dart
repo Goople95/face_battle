@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,6 +24,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../utils/local_storage_debug_tool.dart';
 import '../services/npc_config_service.dart';
 import '../services/storage/local_storage_service.dart';
+import '../utils/logger_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,6 +46,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _startTimer();
     // 同步语言设置
     _syncLanguageSettings();
+    // 监听authService变化，更新userService
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncUserService();
+    });
+  }
+  
+  Future<void> _syncUserService() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userService = Provider.of<UserService>(context, listen: false);
+    
+    // 如果用户信息不一致，更新UserService
+    if (authService.user != null && 
+        (userService.currentUser?.uid != authService.user?.uid ||
+         userService.currentUser?.displayName != authService.user?.displayName ||
+         userService.currentUser?.photoURL != authService.user?.photoURL)) {
+      LoggerUtils.info('同步UserService用户信息:');
+      LoggerUtils.info('  名称: ${authService.user?.displayName}');
+      LoggerUtils.info('  头像: ${authService.user?.photoURL}');
+      await userService.initialize(authService.user);
+    }
   }
   
   Future<void> _syncLanguageSettings() async {
@@ -142,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (nextSoberSeconds == 0) {
       // 显示预估的总醒酒时间
       final totalMinutes = aiDrinks * 10;
-      return '约${totalMinutes}分钟';
+      return AppLocalizations.of(context)!.aboutMinutes(totalMinutes.toString());
     }
     
     // 计算实际剩余的总时间（秒）
@@ -168,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (nextSoberSeconds == 0) {
       // 显示预估的总醒酒时间
       final totalMinutes = playerDrinks * 10;
-      return '约${totalMinutes}分钟';
+      return AppLocalizations.of(context)!.aboutMinutes(totalMinutes.toString());
     }
     
     // 计算实际剩余的总时间（秒）
@@ -186,13 +208,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final authService = Provider.of<AuthService>(context);
     final userService = Provider.of<UserService>(context);
     
+    // 检查用户信息是否需要同步
+    if (authService.user != null && 
+        (userService.currentUser?.uid != authService.user?.uid ||
+         userService.currentUser?.displayName != authService.user?.displayName ||
+         userService.currentUser?.photoURL != authService.user?.photoURL)) {
+      // 使用addPostFrameCallback避免在build过程中调用setState
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _syncUserService();
+      });
+    }
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF1A0000),  // 深黑红色
         leading: kDebugMode 
             ? IconButton(
                 icon: const Icon(Icons.bug_report, color: Colors.orange),
-                tooltip: '调试工具',
+                tooltip: AppLocalizations.of(context)!.debugTool,
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -293,12 +326,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
-                        '• 双方各掷5颗骰子，轮流报数\n'
-                        '• 1点是万能牌，可当任何点数\n'
-                        '• 报数必须递增或换更高点数\n'
-                        '• 质疑对方时判断真假',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.instructionsDetail,
+                        style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white70,
                         ),
@@ -346,9 +376,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 size: 28,
               ),
               const SizedBox(width: 10),
-              const Text(
-                '你的数据分析',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.playerDataAnalysis,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -363,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   border: Border.all(color: Colors.green, width: 1),
                 ),
                 child: Text(
-                  '${_gameProgress!.totalGames}局',
+                  AppLocalizations.of(context)!.totalGames(_gameProgress!.totalGames.toString()),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -456,6 +486,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     _drinkingState!.watchAdToSoberPlayer();
                                     _drinkingState!.save();
                                   });
+                                  // 记录看广告醒酒次数（玩家自己）
+                                  GameProgressService.instance.recordAdSober();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('✨ 看完广告，完全清醒了！'),
@@ -478,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               });
                               Navigator.of(context).pop();
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('使用醒酒药水，清醒了2杯！')),
+                                SnackBar(content: Text(AppLocalizations.of(context)!.usedSoberPotion)),
                               );
                             },
                             onCancel: () {
@@ -491,9 +523,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         backgroundColor: Colors.green,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       ),
-                      child: const Text(
-                        '醒酒',
-                        style: TextStyle(fontSize: 12),
+                      child: Text(
+                        AppLocalizations.of(context)!.sober,
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                 ],
@@ -513,17 +545,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatItem(
-                  '虚张倾向',
+                  AppLocalizations.of(context)!.bluffingTendency,
                   '${(_gameProgress!.bluffingTendency * 100).toStringAsFixed(0)}%',
                   Colors.orange,
                 ),
                 _buildStatItem(
-                  '激进程度',
+                  AppLocalizations.of(context)!.aggressiveness,
                   '${(_gameProgress!.aggressiveness * 100).toStringAsFixed(0)}%',
                   Colors.red,
                 ),
                 _buildStatItem(
-                  '质疑率',
+                  AppLocalizations.of(context)!.challengeRate,
                   '${(_gameProgress!.challengeRate * 100).toStringAsFixed(0)}%',
                   Colors.purple,
                 ),
@@ -534,9 +566,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const SizedBox(height: 16),
           
           // VS AI Records
-          const Text(
-            '对战记录',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.vsRecord,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -627,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         ),
                         Text(
-                          '$wins胜 $losses负',
+                          '$wins${AppLocalizations.of(context)!.win} $losses${AppLocalizations.of(context)!.lose}',
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
@@ -684,9 +716,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '游戏风格',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.gameStyle,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -770,10 +802,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final normalCharacters = AIPersonalities.normalCharacters;
     
     if (normalCharacters.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          '加载中...',
-          style: TextStyle(color: Colors.white54),
+          AppLocalizations.of(context)!.loading,
+          style: const TextStyle(color: Colors.white54),
         ),
       );
     }
@@ -810,10 +842,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final vipCharacters = AIPersonalities.vipCharacters;
     
     if (vipCharacters.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          '暂无VIP角色',
-          style: TextStyle(color: Colors.amber),
+          AppLocalizations.of(context)!.noVIPCharacters,
+          style: const TextStyle(color: Colors.amber),
         ),
       );
     }
@@ -1128,7 +1160,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       Text(
-                        '胜',
+                        AppLocalizations.of(context)!.win,
                         style: TextStyle(
                           fontSize: 10,
                             color: Colors.white.withValues(alpha: 0.6),
@@ -1144,7 +1176,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         ),
                         Text(
-                          '负',
+                          AppLocalizations.of(context)!.lose,
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.white.withValues(alpha: 0.6),
@@ -1521,7 +1553,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                             ),
                             Text(
-                              '胜',
+                              AppLocalizations.of(context)!.win,
                               style: TextStyle(
                                 fontSize: 9,
                                 color: isLocked ? Colors.grey.shade500 : Colors.white60,
@@ -1537,7 +1569,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                             ),
                             Text(
-                              '负',
+                              AppLocalizations.of(context)!.lose,
                               style: TextStyle(
                                 fontSize: 9,
                                 color: isLocked ? Colors.grey.shade500 : Colors.white60,
@@ -1597,7 +1629,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 10),
               Text(
-                '${personality.name}醉了！',
+                AppLocalizations.of(context)!.aiIsDrunk(personality.name),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -1676,9 +1708,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             _drinkingState!.watchAdToSoberAI(personality.id);
                             _drinkingState!.save();
                           });
+                          // 记录为NPC看广告醒酒次数
+                          GameProgressService.instance.recordAdSober(npcId: personality.id);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('✨ ${personality.name}醒酒成功！'),
+                              content: Text(AppLocalizations.of(context)!.aiSoberSuccess(personality.name)),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -1796,7 +1830,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               
               // 用户ID
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.7, // 最大宽度为屏幕的70%
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -1804,16 +1841,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.fingerprint,
-                      size: 16,
-                      color: Colors.white70,
+                    Expanded(
+                      child: Text(
+                        'ID: ${authService.uid ?? "未登录"}',
+                        style: const TextStyle(
+                          fontSize: 12,  // 减小2号，从14改为12
+                          color: Colors.white70,
+                          letterSpacing: -0.2,  // 稍微减小字母间距以显示更多内容
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'ID: ${authService.uid?.substring(0, 8) ?? "未登录"}',
-                      style: const TextStyle(
-                        fontSize: 14,
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () {
+                        if (authService.uid != null) {
+                          Clipboard.setData(ClipboardData(text: authService.uid!));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppLocalizations.of(context)!.copiedToClipboard),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Icon(
+                        Icons.copy,
+                        size: 14,  // 图标也相应减小
                         color: Colors.white70,
                       ),
                     ),
@@ -1841,7 +1896,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Colors.green,
                           ),
                           _buildStatItem(
-                            '场次',
+                            AppLocalizations.of(context)!.totalGamesCount,
                             '${userService.playerProfile!.totalGames}',
                             Colors.blue,
                           ),

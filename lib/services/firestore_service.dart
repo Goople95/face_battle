@@ -70,7 +70,10 @@ class FirestoreService {
         LoggerUtils.info('创建新用户档案（包含完整信息）: ${user.uid}');
       } else {
         // 更新已有用户 - 一次性更新所有登录相关字段
+        // 包括更新displayName和photoUrl（可能已经改变）
         await docRef.update({
+          'profile.displayName': user.displayName ?? 'Player',
+          'profile.photoUrl': user.photoURL,
           'profile.lastLoginAt': Timestamp.fromDate(now),
           'profile.deviceLanguage': deviceLanguage,
           'profile.country': locationInfo['country'],
@@ -83,7 +86,7 @@ class FirestoreService {
           'profile.appVersion': appVersion,
           'device': deviceInfo,
         });
-        LoggerUtils.info('更新用户登录信息（一次性完成）: ${user.uid}');
+        LoggerUtils.info('更新用户登录信息（包括头像和名称）: ${user.uid}');
       }
     } catch (e) {
       LoggerUtils.error('更新用户完整登录信息失败: $e');
@@ -115,10 +118,13 @@ class FirestoreService {
         await docRef.set(userData);
         LoggerUtils.info('创建基本用户档案: ${user.uid}');
       } else {
+        // 更新现有用户的登录时间、显示名称和头像
         await docRef.update({
+          'profile.displayName': user.displayName ?? 'Player',
+          'profile.photoUrl': user.photoURL,
           'profile.lastLoginAt': Timestamp.fromDate(DateTime.now()),
         });
-        LoggerUtils.info('更新用户登录时间: ${user.uid}');
+        LoggerUtils.info('更新用户信息（包括头像）: ${user.uid}');
       }
     } catch (e) {
       LoggerUtils.error('创建/更新用户档案失败: $e');

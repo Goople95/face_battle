@@ -270,6 +270,74 @@ class GameProgressService {
     LoggerUtils.info('GameProgressService: 本地进度已清除');
   }
   
+  /// 记录看广告醒酒
+  Future<void> recordAdSober({String? npcId}) async {
+    LoggerUtils.info('GameProgressService.recordAdSober: 记录看广告醒酒');
+    
+    // 获取或创建进度
+    var progress = _cachedProgress ?? GameProgressData(userId: currentUserId ?? '');
+    
+    if (npcId != null) {
+      // 为NPC看广告醒酒
+      LoggerUtils.info('  - 为NPC $npcId 看广告醒酒');
+      
+      // 确保NPC记录存在
+      if (!progress.vsNPCRecords.containsKey(npcId)) {
+        progress.vsNPCRecords[npcId] = {
+          'totalGames': 0,
+          'wins': 0,
+          'losses': 0,
+          'playerDrunkCount': 0,
+          'aiDrunkCount': 0,
+          'adSoberForNPC': 0,
+          'adUnlockForNPC': 0,
+        };
+      }
+      
+      final record = progress.vsNPCRecords[npcId]!;
+      record['adSoberForNPC'] = (record['adSoberForNPC'] ?? 0) + 1;
+      LoggerUtils.info('  - NPC $npcId 累计被看广告醒酒 ${record['adSoberForNPC']} 次');
+    } else {
+      // 玩家自己看广告醒酒
+      progress.adSoberCount++;
+      LoggerUtils.info('  - 玩家累计看广告醒酒 ${progress.adSoberCount} 次');
+    }
+    
+    // 更新时间戳并保存
+    progress.lastUpdated = DateTime.now();
+    await saveProgress(progress);
+  }
+  
+  /// 记录看广告解锁VIP
+  Future<void> recordAdUnlockVIP(String npcId) async {
+    LoggerUtils.info('GameProgressService.recordAdUnlockVIP: 记录看广告解锁VIP');
+    LoggerUtils.info('  - 为NPC $npcId 看广告解锁VIP');
+    
+    // 获取或创建进度
+    var progress = _cachedProgress ?? GameProgressData(userId: currentUserId ?? '');
+    
+    // 确保NPC记录存在
+    if (!progress.vsNPCRecords.containsKey(npcId)) {
+      progress.vsNPCRecords[npcId] = {
+        'totalGames': 0,
+        'wins': 0,
+        'losses': 0,
+        'playerDrunkCount': 0,
+        'aiDrunkCount': 0,
+        'adSoberForNPC': 0,
+        'adUnlockForNPC': 0,
+      };
+    }
+    
+    final record = progress.vsNPCRecords[npcId]!;
+    record['adUnlockForNPC'] = (record['adUnlockForNPC'] ?? 0) + 1;
+    LoggerUtils.info('  - NPC $npcId 累计被看广告解锁 ${record['adUnlockForNPC']} 次');
+    
+    // 更新时间戳并保存
+    progress.lastUpdated = DateTime.now();
+    await saveProgress(progress);
+  }
+  
   // === 私有方法 ===
   
   /// 保存到本地
@@ -286,6 +354,8 @@ class GameProgressService {
         'losses': 0,
         'playerDrunkCount': 0,
         'aiDrunkCount': 0,
+        'adSoberForNPC': 0,
+        'adUnlockForNPC': 0,
       };
     }
     
@@ -594,6 +664,7 @@ class GameProgressData {
   int currentWinStreak;
   int highestWinStreak;
   int totalDrinks;
+  int adSoberCount; // 看广告醒酒次数（玩家自己）
   Map<String, int> npcIntimacy; // NPC ID -> 亲密度点数
   List<String> unlockedNPCs;
   List<String> achievements;
@@ -624,6 +695,7 @@ class GameProgressData {
     this.currentWinStreak = 0,
     this.highestWinStreak = 0,
     this.totalDrinks = 0,
+    this.adSoberCount = 0,
     Map<String, int>? npcIntimacy,
     List<String>? unlockedNPCs,
     List<String>? achievements,
@@ -652,6 +724,7 @@ class GameProgressData {
     'currentWinStreak': currentWinStreak,
     'highestWinStreak': highestWinStreak,
     'totalDrinks': totalDrinks,
+    'adSoberCount': adSoberCount,
     'npcIntimacy': npcIntimacy,
     'unlockedNPCs': unlockedNPCs,
     'achievements': achievements,
@@ -677,6 +750,7 @@ class GameProgressData {
     'currentWinStreak': currentWinStreak,
     'highestWinStreak': highestWinStreak,
     'totalDrinks': totalDrinks,
+    'adSoberCount': adSoberCount,
     'npcIntimacy': npcIntimacy,
     'unlockedNPCs': unlockedNPCs,
     'achievements': achievements,
@@ -768,6 +842,8 @@ class GameProgressData {
       'losses': 0,
       'playerDrunkCount': 0,
       'aiDrunkCount': 0,
+      'adSoberForNPC': 0,  // 为这个NPC看广告醒酒的次数
+      'adUnlockForNPC': 0,  // 为这个NPC看广告解锁VIP的次数
     };
   }
   
@@ -804,6 +880,7 @@ class GameProgressData {
       currentWinStreak: json['currentWinStreak'] ?? 0,
       highestWinStreak: json['highestWinStreak'] ?? 0,
       totalDrinks: json['totalDrinks'] ?? 0,
+      adSoberCount: json['adSoberCount'] ?? 0,
       npcIntimacy: Map<String, int>.from(json['npcIntimacy'] ?? {}),
       unlockedNPCs: List<String>.from(json['unlockedNPCs'] ?? []),
       achievements: List<String>.from(json['achievements'] ?? []),

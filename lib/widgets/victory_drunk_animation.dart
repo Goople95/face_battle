@@ -12,6 +12,7 @@ import '../models/drinking_state.dart';
 import '../services/intimacy_service.dart';
 import '../services/game_progress_service.dart';
 import '../utils/logger_utils.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 醉倒胜利动画
 class VictoryDrunkAnimation extends StatefulWidget {
@@ -680,7 +681,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             
             // 第一行：独处时间和亲密度增加
             Text(
-              '你们独处了${_intimacyMinutes}分钟',
+              AppLocalizations.of(context)!.privateTime(_intimacyMinutes.toString()),
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.white.withValues(alpha: 0.9),

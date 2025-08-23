@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../utils/logger_utils.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 登录页面
 class LoginScreen extends StatefulWidget {
@@ -143,10 +144,39 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         children: [
           // Google登录按钮
           _buildGoogleSignInButton(authService),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           
-          // Facebook登录按钮（暂时隐藏，需要配置）
-          // _buildFacebookSignInButton(authService),
+          // 分隔线
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  AppLocalizations.of(context)!.or,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Facebook登录按钮
+          _buildFacebookSignInButton(authService),
           
           // 错误信息显示
           if (authService.errorMessage != null) ...[
@@ -225,9 +255,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           fit: BoxFit.contain,
                         ),
                       ),
-                      const Text(
-                        '使用 Google 账号登录',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.loginWithGoogle,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF3C4043),
@@ -242,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
-  /* Widget _buildFacebookSignInButton(AuthService authService) { // reserved for future social login
+  Widget _buildFacebookSignInButton(AuthService authService) {
     return SizedBox(
       width: double.infinity,
       height: 54,
@@ -266,33 +296,51 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(27),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: Image.asset(
-                    'assets/icons/facebook_logo.png',
-                    fit: BoxFit.contain,
-                    color: Colors.white,
+            child: authService.isLoading
+                ? const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: Image.asset(
+                            'assets/icons/facebook_logo.png',
+                            fit: BoxFit.contain,
+                            // 不设置color，保持原始颜色
+                          ),
+                        ),
+                      ),
+                      Text(
+                        AppLocalizations.of(context)!.loginWithFacebook,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          letterSpacing: 0.25,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const Text(
-                  '使用 Facebook 账号登录',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    letterSpacing: 0.25,
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
     );
-  } */
+  }
 }

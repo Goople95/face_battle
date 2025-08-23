@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/ai_personality.dart';
 import '../services/vip_unlock_service.dart';
+import '../services/game_progress_service.dart';
 import '../utils/ad_helper.dart';
 import '../config/character_assets.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// VIP解锁对话框
 class VIPUnlockDialog extends StatefulWidget {
@@ -137,7 +139,7 @@ const SizedBox(height: 20),
                 // 看广告临时解锁
                 _buildUnlockOption(
                   icon: Icons.play_circle_outline,
-                  title: '观看广告',
+                  title: AppLocalizations.of(context)!.watchAdUnlock,
                   subtitle: '免费游玩1小时',
                   color: Colors.blue,
                   onTap: () async {
@@ -149,6 +151,8 @@ const SizedBox(height: 20),
                         context: context,
                       onRewarded: (reward) async {
                         await _vipService.temporaryUnlock(widget.character.id);
+                        // 记录看广告解锁VIP的次数
+                        await GameProgressService.instance.recordAdUnlockVIP(widget.character.id);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

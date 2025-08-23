@@ -285,6 +285,192 @@ class AppLocalizationsZh extends AppLocalizations {
   String agreeToTerms(Object privacy, Object terms) {
     return '继续即表示您同意我们的$terms和$privacy';
   }
+
+  @override
+  String get playerDataAnalysis => '你的数据分析';
+
+  @override
+  String get vsRecord => '对战记录';
+
+  @override
+  String get gameStyle => '游戏风格';
+
+  @override
+  String get bluffingTendency => '虚张倾向';
+
+  @override
+  String get aggressiveness => '激进程度';
+
+  @override
+  String get challengeRate => '质疑率';
+
+  @override
+  String totalGames(Object count) {
+    return '$count局';
+  }
+
+  @override
+  String get win => '胜';
+
+  @override
+  String get lose => '负';
+
+  @override
+  String get debugTool => '调试工具';
+
+  @override
+  String get noVIPCharacters => '暂无VIP角色';
+
+  @override
+  String minutes(Object count) {
+    return '$count分钟';
+  }
+
+  @override
+  String get sober => '醒酒';
+
+  @override
+  String get useSoberPotion => '使用醒酒药水';
+
+  @override
+  String get close => '关闭';
+
+  @override
+  String aiIsDrunk(Object name) {
+    return '$name醉了！';
+  }
+
+  @override
+  String get aiDrunkMessage => '她喝醉了，无法陪你游戏\n需要你帮她醒酒';
+
+  @override
+  String get watchAdToSober => '看广告';
+
+  @override
+  String languageSwitched(Object language) {
+    return '语言已切换为 $language';
+  }
+
+  @override
+  String get instructionsDetail =>
+      '• 双方各掷5颗骰子，轮流报数\n• 1点是万能牌，可当任何点数\n• 报数必须递增或换更高点数\n• 质疑对方时判断真假';
+
+  @override
+  String get yourDice => '你掷出了';
+
+  @override
+  String bidCall(Object quantity, Object value) {
+    return '报数：$quantity个$value';
+  }
+
+  @override
+  String challengeSuccessRate(Object rate) {
+    return '质疑成功率: $rate%';
+  }
+
+  @override
+  String get bidMustBeHigher => '出价必须高于当前报数';
+
+  @override
+  String get roundEnd => '回合结束';
+
+  @override
+  String get backToHome => '回到主页';
+
+  @override
+  String get playAgain => '再来一局';
+
+  @override
+  String get shareResult => '分享战绩';
+
+  @override
+  String get aiThinking => 'AI正在思考...';
+
+  @override
+  String get bidHistory => '叫牌记录';
+
+  @override
+  String get completeBidHistory => '完整叫牌记录';
+
+  @override
+  String get totalGamesCount => '场次';
+
+  @override
+  String get watchAdSuccess => '✨ 看完广告，完全清醒了！';
+
+  @override
+  String get usedSoberPotion => '使用醒酒药水，清醒了2杯！';
+
+  @override
+  String aiSoberSuccess(Object name) {
+    return '✨ $name醒酒成功！';
+  }
+
+  @override
+  String get drunkStatus => '你已经烂醉如泥，无法继续游戏！\n需要醒酒才能继续';
+
+  @override
+  String get soberTip => '💡 提示：10分钟自然醒酒1杯，1小时完全恢复';
+
+  @override
+  String get watchAdToSoberTitle => '观看广告醒酒';
+
+  @override
+  String get returnToHome => '返回主页，自然醒酒';
+
+  @override
+  String get youRolled => '你的骰子';
+
+  @override
+  String aiRolled(Object name) {
+    return '$name的骰子';
+  }
+
+  @override
+  String get myDice => '我的骰子';
+
+  @override
+  String get challenging => '正在挑战';
+
+  @override
+  String get gameTips => '游戏提示';
+
+  @override
+  String userIdPrefix(Object id) {
+    return 'ID: $id';
+  }
+
+  @override
+  String get vipLabel => 'VIP';
+
+  @override
+  String tempUnlockTime(Object minutes) {
+    return '$minutes分钟';
+  }
+
+  @override
+  String privateTime(Object minutes) {
+    return '你们独处了$minutes分钟';
+  }
+
+  @override
+  String get victory => '胜利';
+
+  @override
+  String intimacyLevelShort(Object level) {
+    return 'Lv.$level';
+  }
+
+  @override
+  String get watchAdUnlock => '观看广告';
+
+  @override
+  String drunkAndWon(Object name) {
+    return '$name醉倒了，你赢了！';
+  }
+
+  @override
+  String get copiedToClipboard => '已复制到剪贴板';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
