@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
-import '../models/player_profile.dart';
+import '../models/game_progress.dart';
+import 'game_progress_service.dart';
 import '../utils/logger_utils.dart';
 import 'elite_ai_engine.dart';
 import 'master_ai_engine.dart';
@@ -10,7 +11,7 @@ import 'dialogue_service.dart';
 /// 精简版AI服务 - 作为Gemini API的降级备用
 class AIService {
   final AIPersonality personality;
-  final PlayerProfile? playerProfile;
+  final GameProgressData? playerProfile;
   final random = math.Random();
   late final EliteAIEngine eliteEngine;
   late final MasterAIEngine masterEngine;

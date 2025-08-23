@@ -6,7 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 import 'game_screen.dart';
 import '../models/ai_personality.dart';
-import '../models/player_profile.dart';
+import '../services/game_progress_service.dart';
+import '../models/game_progress.dart';
 import '../models/drinking_state.dart';
 import '../widgets/sober_dialog.dart';
 import '../services/auth_service.dart';
@@ -20,6 +21,8 @@ import '../services/intimacy_service.dart';
 import '../models/intimacy_data.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../utils/local_storage_debug_tool.dart';
+import '../services/npc_config_service.dart';
+import '../services/storage/local_storage_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,7 +32,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  PlayerProfile? _playerProfile;
+  GameProgressData? _gameProgress;
   DrinkingState? _drinkingState;
   Timer? _soberTimer;
   
@@ -82,24 +85,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
   
   Future<void> _loadData() async {
-    final profile = await PlayerProfile.load();
+    // 先初始化用户ID相关的服务
+    if (mounted) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      if (authService.uid != null) {
+        // 设置用户ID到各个服务
+        LocalStorageService.instance.setUserId(authService.uid!);
+        IntimacyService().setUserId(authService.uid!);
+        GameProgressService.instance.setUserId(authService.uid!);
+      }
+    }
+    
+    // 然后加载数据
+    final progress = await GameProgressService.instance.loadProgress();
     final drinking = await DrinkingState.loadStatic();
     
     // 更新醒酒状态（DrinkingState.load() 内部已经调用了 updateSoberStatus）
     // drinking.updateSoberStatus();  // 不需要重复调用
     // await drinking.save();  // 如果没有实际变化，不需要保存
     
-    // 初始化亲密度服务
-    if (mounted) {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      if (authService.uid != null) {
-        IntimacyService().setUserId(authService.uid!);
-        // VIPUnlockService已被CloudDataService替代
-      }
-    }
-    
     setState(() {
-      _playerProfile = profile;
+      _gameProgress = progress;
       _drinkingState = drinking;
     });
   }
@@ -304,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 SizedBox(height: 40.h),
                 
                 // Player Profile Analysis
-                if (_playerProfile != null && _playerProfile!.totalGames > 0) ...[
+                if (_gameProgress != null && _gameProgress!.totalGames > 0) ...[
                   _buildPlayerAnalysis(),
                 ],
                 
@@ -341,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(width: 10),
               const Text(
-                '玩家数据分析',
+                '你的数据分析',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -357,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   border: Border.all(color: Colors.green, width: 1),
                 ),
                 child: Text(
-                  '${_playerProfile!.totalGames}局',
+                  '${_gameProgress!.totalGames}局',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -411,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 size: 16,
                                 color: index < _drinkingState!.drinksConsumed
                                   ? Colors.red.shade300
-                                  : Colors.grey.withValues(alpha: 0.3),
+                                  : Colors.grey.withValues(alpha: 0.8),
                               );
                             }),
                             // 显示醒酒倒计时
@@ -508,17 +514,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               children: [
                 _buildStatItem(
                   '虚张倾向',
-                  '${(_playerProfile!.bluffingTendency * 100).toStringAsFixed(0)}%',
+                  '${(_gameProgress!.bluffingTendency * 100).toStringAsFixed(0)}%',
                   Colors.orange,
                 ),
                 _buildStatItem(
                   '激进程度',
-                  '${(_playerProfile!.aggressiveness * 100).toStringAsFixed(0)}%',
+                  '${(_gameProgress!.aggressiveness * 100).toStringAsFixed(0)}%',
                   Colors.red,
                 ),
                 _buildStatItem(
                   '质疑率',
-                  '${(_playerProfile!.challengeRate * 100).toStringAsFixed(0)}%',
+                  '${(_gameProgress!.challengeRate * 100).toStringAsFixed(0)}%',
                   Colors.purple,
                 ),
               ],
@@ -538,39 +544,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 10),
           
-          ..._playerProfile!.vsAIRecords.entries.map((entry) {
+          ..._gameProgress!.vsNPCRecords.entries.map((entry) {
             final aiId = entry.key;
             final record = entry.value;
             final wins = record['wins'] ?? 0;
             final losses = record['losses'] ?? 0;
             final total = wins + losses;
             
-            String aiName = '';
-            Color aiColor = Colors.grey;
-            if (aiId == '0001' || aiId == 'professor') { // 兼容旧ID
-              aiName = '稳重大叔';
-              aiColor = Colors.blue;
-            } else if (aiId == '0002' || aiId == 'gambler') {
-              aiName = '冲动小哥';
-              aiColor = Colors.red;
-            } else if (aiId == '0003' || aiId == 'provocateur') {
-              aiName = '心机御姐';
-              aiColor = Colors.purple;
-            } else if (aiId == '0004' || aiId == 'youngwoman') {
-              aiName = '活泼少女';
-              aiColor = Colors.pink;
-            } else if (aiId == '1001' || aiId == 'aki') {
-              aiName = '亚希';
-              aiColor = Colors.pink;
-            } else if (aiId == '1002' || aiId == 'katerina') {
-              aiName = '卡捷琳娜';
-              aiColor = Colors.deepPurple;
-            } else if (aiId == '1003' || aiId == 'lena') {
-              aiName = '莱娜';
-              aiColor = Colors.indigo;
-            }
+            // 使用NPCConfigService动态获取NPC信息
+            final npcService = NPCConfigService();
+            final npc = npcService.getNPCById(aiId);
             
-            if (total == 0) return const SizedBox.shrink();
+            // 如果找不到NPC配置，跳过
+            if (npc == null || total == 0) return const SizedBox.shrink();
+            
+            final aiName = npc.name;
+            
+            // 根据国家选择颜色主题
+            Color aiColor = Colors.grey;
+            switch (npc.country) {
+              case 'Germany':
+                aiColor = Colors.indigo;
+                break;
+              case 'Russia':
+                aiColor = Colors.deepPurple;
+                break;
+              case 'Japan':
+                aiColor = Colors.pink;
+                break;
+              case 'Brazil':
+                aiColor = Colors.orange;
+                break;
+              default:
+                aiColor = Colors.blue;
+            }
             
             final winRate = wins * 100.0 / total;
             
@@ -687,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _playerProfile!.getStyleDescription(),
+                  _gameProgress!.getStyleDescription(),
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.9),
@@ -1064,7 +1071,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         size: 12,
                         color: index < aiDrinks
                           ? Colors.red.shade300
-                          : Colors.grey.withValues(alpha: 0.3),
+                          : Colors.grey.withValues(alpha: 0.8),
                       );
                     }),
                     // 显示醒酒倒计时
@@ -1097,41 +1104,39 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
-                // VS Record
-                if (_playerProfile != null && 
-                    _playerProfile!.vsAIRecords[personality.id] != null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
+                // VS Record - 始终显示战绩（即使是0胜0负）
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${_playerProfile!.vsAIRecords[personality.id]!['wins'] ?? 0}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade300,
-                          ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${_gameProgress?.vsNPCRecords[personality.id]?['wins'] ?? 0}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade300,
                         ),
-                        Text(
-                          '胜',
-                          style: TextStyle(
-                            fontSize: 10,
+                      ),
+                      Text(
+                        '胜',
+                        style: TextStyle(
+                          fontSize: 10,
                             color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${_playerProfile!.vsAIRecords[personality.id]!['losses'] ?? 0}',
+                          '${_gameProgress?.vsNPCRecords[personality.id]?['losses'] ?? 0}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -1149,49 +1154,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ),
                 ],
-                ],
               ),
             ),
-            // Win rate badge (top right corner)
-            if (_playerProfile != null && 
-                _playerProfile!.vsAIRecords[personality.id] != null &&
-                ((_playerProfile!.vsAIRecords[personality.id]!['wins'] ?? 0) + 
-                 (_playerProfile!.vsAIRecords[personality.id]!['losses'] ?? 0)) > 0) 
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: (_playerProfile!.vsAIRecords[personality.id]!['wins']! > 
-                            _playerProfile!.vsAIRecords[personality.id]!['losses']!)
-                      ? Colors.green.withValues(alpha: 0.9)
-                      : Colors.red.withValues(alpha: 0.9),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    '${((_playerProfile!.vsAIRecords[personality.id]!['wins'] ?? 0) * 100 ~/ 
-                      ((_playerProfile!.vsAIRecords[personality.id]!['wins'] ?? 0) + 
-                       (_playerProfile!.vsAIRecords[personality.id]!['losses'] ?? 0)))}%',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -1506,10 +1470,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               color: isLocked
                                 ? (index < aiDrinks 
                                     ? Colors.grey.shade500 
-                                    : Colors.grey.withValues(alpha: 0.2))
+                                    : Colors.grey.withValues(alpha: 0.7))
                                 : (index < aiDrinks
                                     ? Colors.red.shade300
-                                    : Colors.grey.withValues(alpha: 0.3)),
+                                    : Colors.grey.withValues(alpha: 0.8)),
                             );
                           }),
                         ],
@@ -1530,6 +1494,56 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                      ),
+                      
+                      // VS Record - 显示战绩（即使是0胜0负）
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${_gameProgress?.vsNPCRecords[personality.id]?['wins'] ?? 0}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isLocked ? Colors.grey.shade400 : Colors.green.shade300,
+                              ),
+                            ),
+                            Text(
+                              '胜',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: isLocked ? Colors.grey.shade500 : Colors.white60,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_gameProgress?.vsNPCRecords[personality.id]?['losses'] ?? 0}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isLocked ? Colors.grey.shade400 : Colors.red.shade300,
+                              ),
+                            ),
+                            Text(
+                              '负',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: isLocked ? Colors.grey.shade500 : Colors.white60,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

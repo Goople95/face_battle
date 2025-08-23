@@ -1,202 +1,128 @@
 import '../models/intimacy_data.dart';
 import '../utils/logger_utils.dart';
-import 'storage/local_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'game_progress_service.dart';
 
-/// 亲密度服务 - 仅管理本地缓存
-/// Firestore存储已移至GameProgressService中的npcIntimacy字段
+/// 亲密度服务 - GameProgressService 的轻量级包装器
+/// 保持原有 API 不变，内部调用 GameProgressService
+/// 不再使用本地独立的 intimacy_xxxx 存储
 class IntimacyService {
   static final IntimacyService _instance = IntimacyService._internal();
   factory IntimacyService() => _instance;
   IntimacyService._internal();
 
-  final Map<String, IntimacyData> _intimacyCache = {};
   String? _currentUserId;
-  
-  static const String _localStoragePrefix = 'intimacy_';
   
   void setUserId(String userId) {
     _currentUserId = userId;
-    // 设置LocalStorageService的用户ID
-    LocalStorageService.instance.setUserId(userId);
-    _loadAllIntimacyData();
+    // GameProgressService 会自动处理用户 ID
   }
 
-  Future<void> _loadAllIntimacyData() async {
-    if (_currentUserId == null) return;
-    
-    try {
-      await _loadFromLocal();
-      
-      // 不再自动同步Firestore，亲密度数据由GameProgressService管理
-    } catch (e) {
-      LoggerUtils.error('加载亲密度数据失败: $e');
-    }
-  }
-
-  Future<void> _loadFromLocal() async {
-    if (_currentUserId == null) return;
-    
-    try {
-      final storage = LocalStorageService.instance;
-      // 使用基础方法获取所有亲密度数据
-      final userKeys = await storage.getUserKeys();
-      final intimacyKeys = userKeys.where((key) => key.startsWith('intimacy_'));
-      
-      _intimacyCache.clear();
-      for (final key in intimacyKeys) {
-        final npcId = key.substring('intimacy_'.length);
-        final data = await storage.getJson(key);
-        if (data != null) {
-          _intimacyCache[npcId] = IntimacyData.fromJson(data);
-        }
-      }
-      
-      LoggerUtils.info('从本地加载了 ${_intimacyCache.length} 个NPC的亲密度数据 (用户: $_currentUserId)');
-    } catch (e) {
-      LoggerUtils.error('从本地加载亲密度数据失败: $e');
-    }
-  }
-
-  // Firestore同步已移除 - 亲密度数据现在由GameProgressService管理
-  // NPC亲密度数据存储在gameProgress/{userId}的npcIntimacy字段中
-
-  Future<void> _saveToLocal(IntimacyData intimacy) async {
-    if (_currentUserId == null) return;
-    
-    try {
-      final storage = LocalStorageService.instance;
-      await storage.setJson('intimacy_${intimacy.npcId}', intimacy.toJson());
-    } catch (e) {
-      LoggerUtils.error('保存到本地失败: $e');
-    }
-  }
-
-  // 保存到Firestore的方法已移除
-  // 亲密度数据现在通过GameProgressService统一管理
-
+  /// 获取 NPC 的亲密度数据
+  /// 从 GameProgressService 获取数据并转换为 IntimacyData 格式
   IntimacyData getIntimacy(String npcId) {
-    if (!_intimacyCache.containsKey(npcId)) {
-      _intimacyCache[npcId] = IntimacyData(
-        npcId: npcId,
-        lastInteraction: DateTime.now(),
-      );
-    }
-    return _intimacyCache[npcId]!;
-  }
-
-  Future<void> updateIntimacy(String npcId, IntimacyData updatedData) async {
-    _intimacyCache[npcId] = updatedData;
+    final points = GameProgressService.instance.getNpcIntimacy(npcId);
+    final level = GameProgressService.instance.getNpcIntimacyLevel(npcId);
     
-    await Future.wait([
-      _saveToLocal(updatedData),
-      // 不再直接保存到Firestore
-    ]);
+    // 从 GameProgress 获取战绩数据
+    final progress = GameProgressService.instance.getCachedProgress();
+    final vsRecord = progress?.vsNPCRecords[npcId] ?? {};
     
-    LoggerUtils.info('更新NPC $npcId 的亲密度: ${updatedData.intimacyPoints} (等级: ${updatedData.intimacyLevel})');
-  }
-
-  Future<void> addIntimacyPoints(String npcId, int points, {String? reason}) async {
-    final current = getIntimacy(npcId);
-    final oldLevel = current.intimacyLevel;
-    
-    final updated = current.copyWith(
-      intimacyPoints: current.intimacyPoints + points,
-      lastInteraction: DateTime.now(),
+    return IntimacyData(
+      npcId: npcId,
+      intimacyPoints: points,
+      lastInteraction: DateTime.now(), // 这个字段已不重要
+      totalGames: (vsRecord['wins'] ?? 0) + (vsRecord['losses'] ?? 0),
+      wins: vsRecord['wins'] ?? 0,
+      losses: vsRecord['losses'] ?? 0,
     );
+  }
+
+  /// 更新亲密度（内部方法，不对外暴露）
+  Future<void> _updateIntimacy(String npcId, int pointsToAdd) async {
+    await GameProgressService.instance.addNpcIntimacy(npcId, pointsToAdd);
+    LoggerUtils.info('NPC $npcId 获得 $pointsToAdd 亲密度点数');
+  }
+
+  /// 添加亲密度点数
+  Future<void> addIntimacyPoints(String npcId, int points, {String? reason}) async {
+    final oldLevel = GameProgressService.instance.getNpcIntimacyLevel(npcId);
     
-    await updateIntimacy(npcId, updated);
+    await _updateIntimacy(npcId, points);
     
-    if (updated.intimacyLevel > oldLevel) {
-      _onLevelUp(npcId, oldLevel, updated.intimacyLevel);
+    final newLevel = GameProgressService.instance.getNpcIntimacyLevel(npcId);
+    if (newLevel > oldLevel) {
+      _onLevelUp(npcId, oldLevel, newLevel);
     }
     
     LoggerUtils.info('NPC $npcId 获得 $points 亲密度点数${reason != null ? " (原因: $reason)" : ""}');
   }
 
+  /// 记录 NPC 喝醉后的亲密度增长
   Future<bool> recordNPCDrunk(String npcId, int minutesSpentTogether) async {
-    final current = getIntimacy(npcId);
-    final oldLevel = current.intimacyLevel;
+    final oldLevel = GameProgressService.instance.getNpcIntimacyLevel(npcId);
     
     // 每分钟 = 1点亲密度
     // 20-60分钟对应20-60点亲密度
     int pointsToAdd = minutesSpentTogether;
     
-    final updated = current.copyWith(
-      intimacyPoints: current.intimacyPoints + pointsToAdd,
-      lastInteraction: DateTime.now(),
-      totalGames: current.totalGames + 1,
-      wins: current.wins + 1,  // 把NPC喝醉算作胜利
-    );
-    
-    // 保存到本地和Firestore
-    await updateIntimacy(npcId, updated);
+    // 使用 GameProgressService 更新亲密度（内部会处理升级日志）
+    await GameProgressService.instance.addNpcIntimacy(npcId, pointsToAdd);
     
     // 检测是否升级
-    bool leveledUp = false;
-    if (updated.intimacyLevel > oldLevel) {
-      _onLevelUp(npcId, oldLevel, updated.intimacyLevel);
-      leveledUp = true;
-    }
+    final newLevel = GameProgressService.instance.getNpcIntimacyLevel(npcId);
+    bool leveledUp = newLevel > oldLevel;
     
+    final currentPoints = GameProgressService.instance.getNpcIntimacy(npcId);
     LoggerUtils.info('与醉酒的 $npcId 独处了 $minutesSpentTogether 分钟，获得 $pointsToAdd 亲密度');
-    LoggerUtils.info('当前亲密度: ${updated.intimacyPoints} (等级: ${updated.intimacyLevel})');
+    LoggerUtils.info('当前亲密度: $currentPoints (等级: $newLevel)');
     
     return leveledUp;
   }
 
+  /// 亲密度升级回调
   void _onLevelUp(String npcId, int oldLevel, int newLevel) {
     LoggerUtils.info('NPC $npcId 亲密度升级！$oldLevel -> $newLevel');
-    
+    // 可以在这里添加升级奖励或通知
   }
 
-  // 已移除 unlockDialogue 和 achieveMilestone 方法
-  // 对话现在是随机选择的，不需要解锁机制
-
+  /// 获取所有 NPC 的亲密度数据
   Map<String, IntimacyData> getAllIntimacyData() {
-    return Map.from(_intimacyCache);
+    final progress = GameProgressService.instance.getCachedProgress();
+    if (progress == null) return {};
+    
+    final Map<String, IntimacyData> result = {};
+    for (final entry in progress.npcIntimacy.entries) {
+      result[entry.key] = getIntimacy(entry.key);
+    }
+    return result;
   }
 
+  /// 获取亲密度最高的 NPC
   List<IntimacyData> getTopIntimacyNPCs({int limit = 5}) {
-    final allData = _intimacyCache.values.toList();
+    final allData = getAllIntimacyData().values.toList();
     allData.sort((a, b) => b.intimacyPoints.compareTo(a.intimacyPoints));
     return allData.take(limit).toList();
   }
 
+  /// 检查亲密度等级是否满足要求
   bool checkIntimacyRequirement(String npcId, int requiredLevel) {
-    final intimacy = getIntimacy(npcId);
-    return intimacy.intimacyLevel >= requiredLevel;
+    final level = GameProgressService.instance.getNpcIntimacyLevel(npcId);
+    return level >= requiredLevel;
   }
 
+  /// 重置 NPC 的亲密度
   Future<void> resetIntimacy(String npcId) async {
-    final fresh = IntimacyData(
-      npcId: npcId,
-      lastInteraction: DateTime.now(),
-    );
-    
-    await updateIntimacy(npcId, fresh);
-    LoggerUtils.info('重置NPC $npcId 的亲密度数据');
-  }
-
-  Future<void> clearAllLocalData() async {
-    if (_currentUserId == null) return;
-    
-    try {
-      // 使用LocalStorageService的清除方法
-      final storage = LocalStorageService.instance;
-      final userKeys = await storage.getUserKeys();
-      final intimacyKeys = userKeys.where((key) => key.startsWith('intimacy_'));
-      
-      for (final key in intimacyKeys) {
-        await storage.remove(key);
-      }
-      
-      _intimacyCache.clear();
-      LoggerUtils.info('清除用户 $_currentUserId 的本地亲密度数据');
-    } catch (e) {
-      LoggerUtils.error('清除本地数据失败: $e');
+    final progress = GameProgressService.instance.getCachedProgress();
+    if (progress != null) {
+      progress.npcIntimacy[npcId] = 0;
+      await GameProgressService.instance.saveProgress(progress);
+      LoggerUtils.info('重置NPC $npcId 的亲密度数据');
     }
   }
 
-  // 已移除里程碑系统 - 简化存储逻辑
+  /// 清除所有本地数据（已废弃，因为数据由 GameProgressService 管理）
+  Future<void> clearAllLocalData() async {
+    LoggerUtils.info('IntimacyService.clearAllLocalData 已废弃，数据由 GameProgressService 管理');
+    // 不再需要清除独立的 intimacy_xxxx 文件
+  }
 }

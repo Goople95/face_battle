@@ -58,9 +58,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF1B4332), // 深墨绿色
-              Color(0xFF2D6A4F), // 中墨绿色
-              Color(0xFF40916C), // 浅墨绿色
+              Color(0xFF1A0000), // 深黑红色
+              Color(0xFF2D0000), // 中黑红色  
+              Color(0xFF400000), // 暗红色
             ],
           ),
         ),
@@ -95,25 +95,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Widget _buildLogo() {
     return Column(
       children: [
-        // 骰子图标
+        // 应用Logo
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: Colors.white,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 10,
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
             ],
           ),
-          child: const Icon(
-            Icons.casino,
-            size: 60,
-            color: Colors.green,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/icons/app_logo.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(height: 20),

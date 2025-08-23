@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
-import '../models/player_profile.dart';
 import '../models/drinking_state.dart';
 import '../services/ai_service.dart';
 import '../services/auth_service.dart';
@@ -216,9 +215,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
   
   Future<void> _loadPlayerProfile() async {
-    _playerProfile = await PlayerProfile.load();
+    // 加载游戏进度（替代原PlayerProfile）
+    _gameProgress = await GameProgressService.instance.loadProgress();
     _drinkingState = await DrinkingState.loadStatic();
-    // 初始化AI服务，传入玩家画像
+    // 初始化AI服务
     _aiService = AIService(personality: widget.aiPersonality);
     setState(() {}); // Update UI after loading
   }
@@ -520,13 +520,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     String winner;
     if (playerChallenged) {
       winner = isBidTrue ? 'AI' : 'Player';
-      // 记录玩家质疑
-      if (_playerProfile != null) {
-        _playerProfile!.totalChallenges++;
-        if (!isBidTrue) {
-          _playerProfile!.successfulChallenges++;
-        }
-      }
+      // 质疑统计已在 GameProgressService.updateGameResult 中处理
     } else {
       winner = isBidTrue ? 'Player' : 'AI';
     }
@@ -562,6 +556,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       
       // 更新饮酒状态
       if (_drinkingState != null) {
+        bool needRecordNPCDrunk = false;
+        bool needRecordPlayerDrunk = false;
+        
         // 在setState中更新饮酒状态，确保界面立即刷新
         setState(() {
           if (playerWon) {
@@ -576,7 +573,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             // 如果AI喝醉了，显示胜利提示
             if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
               // 记录NPC喝醉（使用GameProgressService）
-              await GameProgressService.instance.recordNPCDrunk(widget.aiPersonality.id);
+              needRecordNPCDrunk = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showAIDrunkDialog();
               });
@@ -592,15 +589,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             
             // 如果玩家喝醉了，显示提示
             if (_drinkingState!.isDrunk) {
-              // 记录玩家喝醉
-              _playerProfile!.recordPlayerDrunk(widget.aiPersonality.id);
-              _playerProfile!.save();
+              // 记录玩家喝醉（使用GameProgressService）
+              needRecordPlayerDrunk = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _showDrunkAnimation();
               });
             }
           }
         });
+        
+        // 在setState外处理异步操作
+        if (needRecordNPCDrunk) {
+          await GameProgressService.instance.recordNPCDrunk(widget.aiPersonality.id);
+        }
+        if (needRecordPlayerDrunk) {
+          await GameProgressService.instance.recordPlayerDrunk(widget.aiPersonality.id);
+        }
         
         // 5秒后清除对话
         Future.delayed(const Duration(seconds: 5), () {
@@ -619,7 +623,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
     
     // Don't show dialog anymore - result is shown on game board
-  }
   
   void _showReviewDialog() {
     if (_currentRound == null) return;
@@ -2082,9 +2085,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 if (_gameStarted && (_currentRound?.isRoundOver ?? false))
                   _buildCompleteBidHistoryPanel(),
                   
-                // 玩家数据分析 (游戏结束后显示)
+                // 你的数据分析 (游戏结束后显示)
                 if (_gameStarted && (_currentRound?.isRoundOver ?? false) && 
-                    _playerProfile != null && _playerProfile!.totalGames > 0)
+                    _gameProgress != null && _gameProgress!.totalGames > 0)
                   _buildPlayerAnalysisPanel(),
                 
                 // Camera preview removed for privacy
@@ -3022,7 +3025,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 8),
               Text(
-                '玩家数据分析',
+                '你的数据分析',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -3038,7 +3041,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   border: Border.all(color: Colors.green, width: 1),
                 ),
                 child: Text(
-                  '${_playerProfile!.totalGames}局',
+                  '${_gameProgress!.totalGames}局',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -3055,29 +3058,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             children: [
               _buildMiniStat(
                 '总胜率',
-                '${(_playerProfile!.totalWins * 100.0 / _playerProfile!.totalGames).toStringAsFixed(0)}%',
+                '${(_gameProgress!.totalWins * 100.0 / _gameProgress!.totalGames).toStringAsFixed(0)}%',
                 Colors.blue,
               ),
               _buildMiniStat(
                 '虚张倾向',
-                '${(_playerProfile!.bluffingTendency * 100).toStringAsFixed(0)}%',
+                '${(_gameProgress!.bluffingTendency * 100).toStringAsFixed(0)}%',
                 Colors.orange,
               ),
               _buildMiniStat(
                 '激进程度',
-                '${(_playerProfile!.aggressiveness * 100).toStringAsFixed(0)}%',
+                '${(_gameProgress!.aggressiveness * 100).toStringAsFixed(0)}%',
                 Colors.red,
               ),
               _buildMiniStat(
                 '质疑率',
-                '${(_playerProfile!.totalChallenges * 100.0 / _playerProfile!.totalGames).toStringAsFixed(0)}%',
+                '${(_gameProgress!.totalChallenges * 100.0 / _gameProgress!.totalGames).toStringAsFixed(0)}%',
                 Colors.purple,
               ),
             ],
           ),
           const SizedBox(height: 6),
           // VS Current AI Record
-          if (_playerProfile!.vsAIRecords[widget.aiPersonality.id] != null) ...[
+          if (_gameProgress!.vsNPCRecords[widget.aiPersonality.id] != null) ...[
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -3110,7 +3113,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins'] ?? 0}胜',
+                    '${_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0}胜',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -3119,7 +3122,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['losses'] ?? 0}负',
+                    '${_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses'] ?? 0}负',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -3128,21 +3131,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   const Spacer(),
                   // Win rate
-                  if ((_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins'] ?? 0) + 
-                      (_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['losses'] ?? 0) > 0) ...[
+                  if ((_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0) + 
+                      (_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses'] ?? 0) > 0) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins']! > 
-                                _playerProfile!.vsAIRecords[widget.aiPersonality.id]!['losses']!)
+                        color: (_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins']! > 
+                                _gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses']!)
                           ? Colors.green.withValues(alpha: 0.3)
                           : Colors.red.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        '胜率${((_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins'] ?? 0) * 100.0 / 
-                          ((_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['wins'] ?? 0) + 
-                           (_playerProfile!.vsAIRecords[widget.aiPersonality.id]!['losses'] ?? 0))).toStringAsFixed(0)}%',
+                        '胜率${((_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0) * 100.0 / 
+                          ((_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0) + 
+                           (_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses'] ?? 0))).toStringAsFixed(0)}%',
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -3173,7 +3176,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '游戏风格：${_playerProfile!.getStyleDescription()}',
+                    '游戏风格：${_gameProgress!.getStyleDescription()}',
                     style: const TextStyle(
                       fontSize: 11,
                       color: Colors.white70,
@@ -3259,7 +3262,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           size: 14,
           color: isFilled 
             ? (isAI ? Colors.red.shade300 : Colors.amber.shade300)
-            : Colors.grey.withValues(alpha: 0.2),
+            : Colors.grey.withValues(alpha: 0.8),
         );
       }),
     );

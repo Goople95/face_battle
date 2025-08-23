@@ -26,12 +26,19 @@ class GameProgressService {
   /// 获取当前用户ID
   String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
   
+  /// 设置用户ID（同步设置到LocalStorageService）
+  void setUserId(String userId) {
+    _local.setUserId(userId);
+    LoggerUtils.info('GameProgressService: 设置用户ID为 $userId');
+  }
+  
   /// 初始化服务
   Future<void> initialize() async {
     LoggerUtils.info('GameProgressService: 初始化');
     
-    // 如果有用户登录，加载进度
+    // 如果有用户登录，设置用户ID并加载进度
     if (currentUserId != null) {
+      setUserId(currentUserId!);
       await loadProgress();
     }
   }
@@ -190,6 +197,32 @@ class GameProgressService {
     await saveProgress(progress);
   }
   
+  /// 记录玩家喝醉（替代原 PlayerProfile.recordPlayerDrunk）
+  Future<void> recordPlayerDrunk(String npcId) async {
+    var progress = _cachedProgress ?? GameProgressData(userId: currentUserId ?? '');
+    
+    // 更新vsNPCRecords中的醉酒统计
+    if (!progress.vsNPCRecords.containsKey(npcId)) {
+      progress.vsNPCRecords[npcId] = {
+        'totalGames': 0,
+        'wins': 0,
+        'losses': 0,
+        'playerDrunkCount': 0,
+        'aiDrunkCount': 0,
+      };
+    }
+    
+    progress.vsNPCRecords[npcId]!['playerDrunkCount'] = 
+        (progress.vsNPCRecords[npcId]!['playerDrunkCount'] ?? 0) + 1;
+    
+    LoggerUtils.info('记录玩家被NPC $npcId 喝醉，累计 ${progress.vsNPCRecords[npcId]!['playerDrunkCount']} 次');
+    
+    await saveProgress(progress);
+  }
+  
+  /// 获取缓存的进度数据（供 IntimacyService 使用）
+  GameProgressData? getCachedProgress() => _cachedProgress;
+  
   /// 获取NPC亲密度
   int getNpcIntimacy(String npcId) {
     return _cachedProgress?.npcIntimacy[npcId] ?? 0;
@@ -226,46 +259,8 @@ class GameProgressService {
       return false;
     }
     
-    _isSyncing = true;
-    
-    try {
-      LoggerUtils.info('GameProgressService: 开始同步到云端');
-      
-      // 更新同步时间戳
-      _cachedProgress!.lastSyncTime = DateTime.now();
-      
-      // 保存到云端（使用 toFirestore 方法）
-      await _cloud.saveGameProgress(_cachedProgress!.toFirestore());
-      
-      // 更新本地时间戳
-      await _saveToLocal(_cachedProgress!);
-      
-      _lastSyncTime = DateTime.now();
-      LoggerUtils.info('GameProgressService: 同步成功');
-      return true;
-    } catch (e) {
-      LoggerUtils.error('GameProgressService: 同步失败 $e');
-      return false;
-    } finally {
-      _isSyncing = false;
-    }
-  }
-  
-  /// 从云端强制拉取（覆盖本地）
-  Future<bool> pullFromCloud() async {
-    try {
-      final cloudJson = await _cloud.getGameProgress();
-      if (cloudJson != null) {
-        _cachedProgress = GameProgressData.fromJson(cloudJson);
-        await _saveToLocal(_cachedProgress!);
-        LoggerUtils.info('GameProgressService: 从云端拉取成功');
-        return true;
-      }
-      return false;
-    } catch (e) {
-      LoggerUtils.error('GameProgressService: 从云端拉取失败 $e');
-      return false;
-    }
+    // 调用内部同步方法
+    return await _syncToCloud(_cachedProgress!);
   }
   
   /// 清除本地进度
@@ -372,6 +367,25 @@ class GameProgressService {
     progress.predictability = 0.5; // 暂时固定，可以后续优化
   }
   
+  /// 处理云端到本地的同步
+  Future<void> _handleCloudToLocalSync(GameProgressData cloudData) async {
+    final syncTime = DateTime.now();
+    cloudData.lastSyncTime = syncTime;
+    cloudData.lastSyncDirection = 'cloud-to-local';
+    
+    // 保存到本地
+    await _saveToLocal(cloudData);
+    
+    // 更新云端的同步信息
+    await _cloud.saveGameProgress({
+      ...cloudData.toFirestore(),
+      'lastSyncTime': syncTime,
+      'lastSyncDirection': 'cloud-to-local',
+    });
+    
+    LoggerUtils.info('  - 已更新本地和云端的同步信息 (cloud-to-local)');
+  }
+  
   /// 合并本地和云端进度
   Future<GameProgressData?> _mergeProgress(
     GameProgressData? local,
@@ -402,8 +416,7 @@ class GameProgressService {
     // 只有云端数据（新设备或重装应用）
     if (local == null && cloud != null) {
       LoggerUtils.info('GameProgressService: 使用云端进度（本地无数据，可能是新设备）');
-      // 重要：需要保存到本地，避免每次都从云端拉取
-      await _saveToLocal(cloud);
+      await _handleCloudToLocalSync(cloud);
       return cloud;
     }
     
@@ -425,6 +438,7 @@ class GameProgressService {
     } else if (cloudTime.isAfter(localTime)) {
       // 云端更新（可能是其他设备修改）
       LoggerUtils.info('  决策: 使用云端版本（更新）');
+      await _handleCloudToLocalSync(cloud);
       return cloud;
     } else {
       // 时间戳相同（极少见），比较游戏局数
@@ -433,6 +447,7 @@ class GameProgressService {
         return local;
       } else {
         LoggerUtils.info('  决策: 时间戳相同，使用云端版本（局数更多）');
+        await _handleCloudToLocalSync(cloud);
         return cloud;
       }
     }
@@ -516,15 +531,26 @@ class GameProgressService {
     try {
       _isSyncing = true;
       
-      // 更新同步时间（注意：这会修改传入的对象）
-      progress.lastSyncTime = DateTime.now();
-      _lastSyncTime = progress.lastSyncTime;
+      // 记录同步时间
+      final syncTime = DateTime.now();
       
-      // 保存到云端（使用 toFirestore 方法）
-      final success = await _cloud.saveGameProgress(progress.toFirestore());
+      // 创建要同步的数据（包含更新的同步信息）
+      final dataToSync = {
+        ...progress.toFirestore(),
+        'lastSyncTime': syncTime,
+        'lastSyncDirection': 'local-to-cloud',
+      };
+      
+      // 保存到云端
+      final success = await _cloud.saveGameProgress(dataToSync);
       
       if (success) {
-        LoggerUtils.info('GameProgressService: 成功同步到云端');
+        // 只在成功后更新本地的同步信息
+        progress.lastSyncTime = syncTime;
+        progress.lastSyncDirection = 'local-to-cloud';
+        _lastSyncTime = syncTime;
+        
+        LoggerUtils.info('GameProgressService: 成功同步到云端 (local-to-cloud)');
         // 更新本地缓存的同步时间
         await _saveToLocal(progress);
       } else {
@@ -537,6 +563,24 @@ class GameProgressService {
       return false;
     } finally {
       _isSyncing = false;
+    }
+  }
+  
+  /// 重置游戏进度
+  Future<void> resetProgress() async {
+    try {
+      final userId = currentUserId;
+      if (userId == null) return;
+      
+      // 创建新的空进度
+      final newProgress = GameProgressData(userId: userId);
+      
+      // 保存到本地和云端
+      await saveProgress(newProgress);
+      
+      LoggerUtils.info('GameProgressService: 已重置游戏进度');
+    } catch (e) {
+      LoggerUtils.error('GameProgressService: 重置进度失败 $e');
     }
   }
 }
@@ -560,12 +604,17 @@ class GameProgressData {
   double challengeRate;       // 质疑率 (0-1)
   double predictability;      // 可预测性 (0-1)
   
+  // 额外的统计字段（为了兼容旧代码）
+  int totalChallenges;        // 总质疑次数
+  int successfulChallenges;   // 成功质疑次数
+  
   // 与每个NPC的战绩统计
   Map<String, Map<String, int>> vsNPCRecords; // NPC ID -> 战绩数据
   
   // 关键时间戳字段
   DateTime lastUpdated;      // 数据最后修改时间（用于同步判断）
-  DateTime? lastSyncTime;    // 最后同步到云端的时间
+  DateTime? lastSyncTime;    // 最后成功同步的时间
+  String? lastSyncDirection; // 最后同步方向: 'local-to-cloud' 或 'cloud-to-local'
   
   GameProgressData({
     required this.userId,
@@ -582,9 +631,12 @@ class GameProgressData {
     this.aggressiveness = 0.5,
     this.challengeRate = 0.5,
     this.predictability = 0.5,
+    this.totalChallenges = 0,
+    this.successfulChallenges = 0,
     Map<String, Map<String, int>>? vsNPCRecords,
     DateTime? lastUpdated,
     this.lastSyncTime,
+    this.lastSyncDirection,
   }) : npcIntimacy = npcIntimacy ?? {},
        unlockedNPCs = unlockedNPCs ?? [],
        achievements = achievements ?? [],
@@ -607,10 +659,13 @@ class GameProgressData {
     'aggressiveness': aggressiveness,
     'challengeRate': challengeRate,
     'predictability': predictability,
+    'totalChallenges': totalChallenges,
+    'successfulChallenges': successfulChallenges,
     'vsNPCRecords': vsNPCRecords,
     // 使用 UTC 时间存储，避免时区问题
     'lastUpdated': lastUpdated.toUtc().toIso8601String(),
     'lastSyncTime': lastSyncTime?.toUtc().toIso8601String(),
+    'lastSyncDirection': lastSyncDirection,
   };
   
   // 云端存储序列化（使用 DateTime 对象）
@@ -629,10 +684,13 @@ class GameProgressData {
     'aggressiveness': aggressiveness,
     'challengeRate': challengeRate,
     'predictability': predictability,
+    'totalChallenges': totalChallenges,
+    'successfulChallenges': successfulChallenges,
     'vsNPCRecords': vsNPCRecords,
     // Firestore 会自动处理 DateTime 对象
     'lastUpdated': lastUpdated,
     'lastSyncTime': lastSyncTime,
+    'lastSyncDirection': lastSyncDirection,
   };
   
   // 解析vsNPCRecords
@@ -648,6 +706,69 @@ class GameProgressData {
       });
     }
     return result;
+  }
+  
+  /// 获取玩家风格描述
+  String getStyleDescription() {
+    if (totalGames == 0) return '新手玩家';
+    
+    List<String> traits = [];
+    
+    // 基于虚张倾向
+    if (bluffingTendency > 0.7) {
+      traits.add('虚张高手');
+    } else if (bluffingTendency > 0.5) {
+      traits.add('善于虚张');
+    } else if (bluffingTendency < 0.3) {
+      traits.add('诚实玩家');
+    }
+    
+    // 基于激进程度
+    if (aggressiveness > 0.7) {
+      traits.add('激进型');
+    } else if (aggressiveness > 0.5) {
+      traits.add('进攻型');
+    } else if (aggressiveness < 0.3) {
+      traits.add('保守型');
+    }
+    
+    // 基于质疑率
+    if (challengeRate > 0.5) {
+      traits.add('质疑狂魔');
+    } else if (challengeRate < 0.2) {
+      traits.add('谨慎质疑');
+    }
+    
+    return traits.isEmpty ? '均衡型玩家' : traits.join('、');
+  }
+  
+  /// 获取胜率
+  double getWinRate() {
+    if (totalGames == 0) return 0;
+    return totalWins.toDouble() / totalGames;
+  }
+  
+  /// 获取与特定NPC的胜率
+  double getVsNPCWinRate(String npcId) {
+    final record = vsNPCRecords[npcId];
+    if (record == null) return 0;
+    
+    final total = (record['totalGames'] ?? 0);
+    if (total == 0) return 0;
+    
+    final wins = (record['wins'] ?? 0);
+    return wins.toDouble() / total;
+  }
+  
+  /// 获取与特定NPC的战绩
+  Map<String, int> getVsNPCRecord(String npcId) {
+    return vsNPCRecords[npcId] ?? {
+      'totalGames': 0,
+      'wins': 0,
+      'losses': 0,
+      'playerDrunkCount': 0,
+      'aiDrunkCount': 0,
+    };
   }
   
   // 解析日期时间（兼容 Firestore Timestamp 和字符串格式）
@@ -690,9 +811,12 @@ class GameProgressData {
       aggressiveness: (json['aggressiveness'] ?? 0.5).toDouble(),
       challengeRate: (json['challengeRate'] ?? 0.5).toDouble(),
       predictability: (json['predictability'] ?? 0.5).toDouble(),
+      totalChallenges: json['totalChallenges'] ?? 0,
+      successfulChallenges: json['successfulChallenges'] ?? 0,
       vsNPCRecords: _parseVsNPCRecords(json['vsNPCRecords']),
       lastUpdated: _parseDateTime(json['lastUpdated']) ?? DateTime.now(),
       lastSyncTime: _parseDateTime(json['lastSyncTime']),
+      lastSyncDirection: json['lastSyncDirection'],
     );
   }
 }

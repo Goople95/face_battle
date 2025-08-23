@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import '../models/game_state.dart';
 import '../models/ai_personality.dart';
-import '../models/player_profile.dart';
+import '../models/game_progress.dart';
+import 'game_progress_service.dart';
 import '../config/api_config.dart';
 import '../utils/logger_utils.dart';
 import 'bid_options_calculator.dart';
@@ -17,7 +18,7 @@ class GeminiService {
   static String get _baseUrl => ApiConfig.geminiEndpoint;
   
   final AIPersonality personality;
-  final PlayerProfile? playerProfile;
+  final GameProgressData? playerProfile;
   late final EliteAIEngine eliteEngine;
   late final MasterAIEngine masterEngine;  // 新的大师级AI
   

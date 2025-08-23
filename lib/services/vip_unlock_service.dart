@@ -23,6 +23,11 @@ class VIPUnlockService {
   Future<bool> isUnlocked(String characterId) async {
     final storage = LocalStorageService.instance;
     
+    // 如果用户未登录，返回false
+    if (storage.currentUserId == null) {
+      return false;
+    }
+    
     // 检查永久解锁
     bool permanentUnlock = await storage.getBool('$_vipUnlockPrefix$characterId') ?? false;
     if (permanentUnlock) return true;
@@ -75,6 +80,12 @@ class VIPUnlockService {
   /// 获取用户宝石数量
   Future<int> getUserGems() async {
     final storage = LocalStorageService.instance;
+    
+    // 如果用户未登录，返回0
+    if (storage.currentUserId == null) {
+      return 0;
+    }
+    
     return await storage.getInt(_gemsKey) ?? 0;
   }
 

@@ -153,10 +153,8 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
               _hasLeveledUp = true;
             });
           }
-          // IntimacyService已经记录了亲密度，这里只需要同步到GameProgressService
-          // 注意：IntimacyService.recordNPCDrunk已经添加了亲密度点数
-          // 这里传递相同的值以保持GameProgressService同步
-          GameProgressService.instance.addNpcIntimacy(widget.defeatedAI.id, _intimacyMinutes);
+          // IntimacyService.recordNPCDrunk 内部已经调用了 GameProgressService.addNpcIntimacy
+          // 不需要再次调用，否则会导致亲密度重复增加
         });
         // 淡出当前场景
         _fadeController.reverse().then((_) {
@@ -230,10 +228,8 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                     _hasLeveledUp = true;
                   });
                 }
-                // IntimacyService已经记录了亲密度，这里只需要同步到GameProgressService
-                // 注意：IntimacyService.recordNPCDrunk已经添加了亲密度点数
-                // 这里传递相同的值以保持GameProgressService同步
-                GameProgressService.instance.addNpcIntimacy(widget.defeatedAI.id, _intimacyMinutes);
+                // IntimacyService.recordNPCDrunk 内部已经调用了 GameProgressService.addNpcIntimacy
+                // 不需要再次调用，否则会导致亲密度重复增加
               });
             }
             
