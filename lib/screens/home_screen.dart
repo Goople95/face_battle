@@ -38,6 +38,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DrinkingState? _drinkingState;
   Timer? _soberTimer;
   
+  // 获取当前应用的locale代码
+  String _getLocaleCode(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final languageCode = locale.languageCode;
+    final countryCode = locale.countryCode;
+    
+    // 处理中文的特殊情况
+    if (languageCode == 'zh') {
+      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
+        return 'zh_TW';
+      }
+      return 'zh';
+    }
+    
+    return languageCode;
+  }
+  
+  // 获取本地化的NPC名称
+  String _getLocalizedName(BuildContext context, AIPersonality personality) {
+    return personality.getLocalizedName(_getLocaleCode(context));
+  }
+  
+  // 获取本地化的NPC描述
+  String _getLocalizedDescription(BuildContext context, AIPersonality personality) {
+    return personality.getLocalizedDescription(_getLocaleCode(context));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -590,7 +617,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             // 如果找不到NPC配置，跳过
             if (npc == null || total == 0) return const SizedBox.shrink();
             
-            final aiName = npc.name;
+            final aiName = _getLocalizedName(context, npc);
             
             // 根据国家选择颜色主题
             Color aiColor = Colors.grey;
@@ -1019,7 +1046,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  personality.name,
+                  _getLocalizedName(context, personality),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1125,7 +1152,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
-                      personality.description,
+                      _getLocalizedDescription(context, personality),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 11,
@@ -1407,7 +1434,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       
                       // 名字
                       Text(
-                        personality.name,
+                        _getLocalizedName(context, personality),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -1517,7 +1544,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
-                            personality.description,
+                            _getLocalizedDescription(context, personality),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 11,
@@ -1629,7 +1656,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 10),
               Text(
-                AppLocalizations.of(context)!.aiIsDrunk(personality.name),
+                AppLocalizations.of(context)!.aiIsDrunk(_getLocalizedName(context, personality)),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -1712,7 +1739,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           GameProgressService.instance.recordAdSober(npcId: personality.id);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(AppLocalizations.of(context)!.aiSoberSuccess(personality.name)),
+                              content: Text(AppLocalizations.of(context)!.aiSoberSuccess(_getLocalizedName(context, personality))),
                               backgroundColor: Colors.green,
                             ),
                           );

@@ -39,7 +39,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gameInstructions => '游戏说明';
 
   @override
-  String get instructionsContent => '每位玩家秘密掷5个骰子。轮流叫注骰子总数。如果你认为对方在说谎就质疑！';
+  String get instructionsContent =>
+      '每位玩家秘密掷5个骰子。轮流叫注骰子总数。如果你认为对方在说谎就质疑！\n\n• 1为万能点数，可以当作任何数字\n• 一旦有人叫过1，该回合1就不再是万能点数';
 
   @override
   String get playerStats => '玩家统计';
@@ -359,13 +360,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get yourDice => '你掷出了';
 
   @override
+  String get playerDiceLabel => '你的骰子';
+
+  @override
+  String aiDiceLabel(Object name) {
+    return '$name的骰子';
+  }
+
+  @override
   String bidCall(Object quantity, Object value) {
     return '报数：$quantity个$value';
   }
 
   @override
-  String challengeSuccessRate(Object rate) {
-    return '质疑成功率: $rate%';
+  String challengeSuccessRateDisplay(Object rate) {
+    return '成功率: $rate%';
   }
 
   @override
@@ -471,6 +480,114 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get copiedToClipboard => '已复制到剪贴板';
+
+  @override
+  String pleaseWaitThinking(Object name) {
+    return '$name思考中...';
+  }
+
+  @override
+  String get pleaseBid => '请叫牌';
+
+  @override
+  String get showDice => '开骰子！';
+
+  @override
+  String get challengeOpponent => '质疑对手叫牌';
+
+  @override
+  String challengePlayerBid(Object quantity, Object value) {
+    return '质疑玩家叫牌：$quantity个$value';
+  }
+
+  @override
+  String get playerShowDice => '玩家开骰子！';
+
+  @override
+  String aiShowDice(Object name) {
+    return '$name开骰子！';
+  }
+
+  @override
+  String get soberOptions => '醒酒选项';
+
+  @override
+  String get adLoadFailed => '广告加载失败';
+
+  @override
+  String get adWatchedSober => '✨ 广告观看完成，完全清醒了！';
+
+  @override
+  String aiSoberedUp(Object name) {
+    return '✨ $name醒酒了，继续对战！';
+  }
+
+  @override
+  String get challengeProbability => '质疑概率计算';
+
+  @override
+  String get challengeWillSucceed => '质疑必定成功';
+
+  @override
+  String get challengeWillFail => '质疑必定失败';
+
+  @override
+  String get challengeSuccessRate => '质疑成功率';
+
+  @override
+  String aiDecisionProcess(Object name) {
+    return '$name决策过程';
+  }
+
+  @override
+  String challengePlayerBidAction(Object quantity, Object value) {
+    return '质疑玩家叫牌：$quantity个$value';
+  }
+
+  @override
+  String get challengeOpponentAction => '质疑对手叫牌';
+
+  @override
+  String openingBidAction(Object quantity, Object value) {
+    return '开局叫牌：$quantity个$value';
+  }
+
+  @override
+  String respondToBidAction(
+    Object aiQuantity,
+    Object aiValue,
+    Object playerQuantity,
+    Object playerValue,
+  ) {
+    return '回应玩家$playerQuantity个$playerValue，叫牌：$aiQuantity个$aiValue';
+  }
+
+  @override
+  String get continueBiddingAction => '继续叫牌';
+
+  @override
+  String get challengeProbabilityLog => '质疑概率计算（玩家视角）';
+
+  @override
+  String get challengeWillDefinitelySucceed => '质疑必定成功';
+
+  @override
+  String get challengeWillDefinitelyFail => '质疑必定失败';
+
+  @override
+  String get challengeProbabilityResult => '质疑概率结果';
+
+  @override
+  String get challengeSuccessRateValue => '质疑成功率';
+
+  @override
+  String get challenger => '质疑方';
+
+  @override
+  String get intimacyTip => '只要你把我灌醉就可以提高亲密度哦～';
+
+  @override
+  String get gameGreeting => '欢迎！一起玩吧！';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -508,7 +625,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get gameInstructions => '遊戲說明';
 
   @override
-  String get instructionsContent => '每位玩家秘密擲5個骰子。輪流叫注骰子總數。如果你認為對方在說謊就質疑！';
+  String get instructionsContent =>
+      '每位玩家秘密擲5個骰子。輪流叫注骰子總數。如果你認為對方在說謊就質疑！\n\n• 1為萬能點數，可以當作任何數字\n• 一旦有人叫過1，該回合1就不再是萬能點數';
 
   @override
   String get playerStats => '玩家統計';
@@ -754,4 +872,128 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String agreeToTerms(Object privacy, Object terms) {
     return '繼續即表示您同意我們的$terms和$privacy';
   }
+
+  @override
+  String get playerDiceLabel => '你的骰子';
+
+  @override
+  String aiDiceLabel(Object name) {
+    return '$name的骰子';
+  }
+
+  @override
+  String challengeSuccessRateDisplay(Object rate) {
+    return '成功率: $rate%';
+  }
+
+  @override
+  String get usedSoberPotion => '使用醒酒藥水，清醒了2杯！';
+
+  @override
+  String pleaseWaitThinking(Object name) {
+    return '$name思考中...';
+  }
+
+  @override
+  String get pleaseBid => '請叫牌';
+
+  @override
+  String get showDice => '開骰子！';
+
+  @override
+  String get challengeOpponent => '質疑對手叫牌';
+
+  @override
+  String challengePlayerBid(Object quantity, Object value) {
+    return '質疑玩家叫牌：$quantity個$value';
+  }
+
+  @override
+  String get playerShowDice => '玩家開骰子！';
+
+  @override
+  String aiShowDice(Object name) {
+    return '$name開骰子！';
+  }
+
+  @override
+  String get soberOptions => '醒酒選項';
+
+  @override
+  String get adLoadFailed => '廣告加載失敗';
+
+  @override
+  String get adWatchedSober => '✨ 廣告觀看完成，完全清醒了！';
+
+  @override
+  String aiSoberedUp(Object name) {
+    return '✨ $name醒酒了，繼續對戰！';
+  }
+
+  @override
+  String get challengeProbability => '質疑概率計算';
+
+  @override
+  String get challengeWillSucceed => '質疑必定成功';
+
+  @override
+  String get challengeWillFail => '質疑必定失敗';
+
+  @override
+  String get challengeSuccessRate => '質疑成功率';
+
+  @override
+  String aiDecisionProcess(Object name) {
+    return '$name決策過程';
+  }
+
+  @override
+  String challengePlayerBidAction(Object quantity, Object value) {
+    return '質疑玩家叫牌：$quantity個$value';
+  }
+
+  @override
+  String get challengeOpponentAction => '質疑對手叫牌';
+
+  @override
+  String openingBidAction(Object quantity, Object value) {
+    return '開局叫牌：$quantity個$value';
+  }
+
+  @override
+  String respondToBidAction(
+    Object aiQuantity,
+    Object aiValue,
+    Object playerQuantity,
+    Object playerValue,
+  ) {
+    return '回應玩家$playerQuantity個$playerValue，叫牌：$aiQuantity個$aiValue';
+  }
+
+  @override
+  String get continueBiddingAction => '繼續叫牌';
+
+  @override
+  String get challengeProbabilityLog => '質疑概率計算（玩家視角）';
+
+  @override
+  String get challengeWillDefinitelySucceed => '質疑必定成功';
+
+  @override
+  String get challengeWillDefinitelyFail => '質疑必定失敗';
+
+  @override
+  String get challengeProbabilityResult => '質疑概率結果';
+
+  @override
+  String get challengeSuccessRateValue => '質疑成功率';
+
+  @override
+  String get challenger => '質疑方';
+
+  @override
+  String get intimacyTip => '只要你把我灌醉就可以提高親密度哦～';
+
+  @override
+  String get gameGreeting => '歡迎！一起玩吧！';
 }

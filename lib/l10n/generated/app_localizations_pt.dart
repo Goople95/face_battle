@@ -40,7 +40,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get instructionsContent =>
-      'Cada jogador lança 5 dados secretamente. Revezem-se apostando no número total de dados. Desafie se achar que estão mentindo!';
+      'Cada jogador lança 5 dados secretamente. Revezem-se apostando no número total de dados. Desafie se achar que estão mentindo!\n\n• Os 1s são curingas e contam como qualquer número\n• Quando alguém apostar em 1s, eles perdem o status de curinga naquela rodada';
 
   @override
   String get playerStats => 'Estatísticas do Jogador';
@@ -361,13 +361,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get yourDice => 'You rolled';
 
   @override
+  String get playerDiceLabel => 'Seus dados';
+
+  @override
+  String aiDiceLabel(Object name) {
+    return 'Dados de $name';
+  }
+
+  @override
   String bidCall(Object quantity, Object value) {
     return 'Bid: $quantity×$value';
   }
 
   @override
-  String challengeSuccessRate(Object rate) {
-    return 'Challenge Success: $rate%';
+  String challengeSuccessRateDisplay(Object rate) {
+    return 'Taxa de sucesso: $rate%';
   }
 
   @override
@@ -401,7 +409,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get watchAdSuccess => '✨ Watched ad, fully sober!';
 
   @override
-  String get usedSoberPotion => 'Used sober potion, -2 drinks!';
+  String get usedSoberPotion =>
+      'Usou poção de sobriedade, ficou sóbrio de 2 bebidas!';
 
   @override
   String aiSoberSuccess(Object name) {
@@ -474,4 +483,115 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String pleaseWaitThinking(Object name) {
+    return '$name está pensando...';
+  }
+
+  @override
+  String get pleaseBid => 'Por favor aposte';
+
+  @override
+  String get showDice => 'Mostrar dados!';
+
+  @override
+  String get challengeOpponent => 'Desafiar aposta do oponente';
+
+  @override
+  String challengePlayerBid(Object quantity, Object value) {
+    return 'Desafiar aposta do jogador: $quantity×$value';
+  }
+
+  @override
+  String get playerShowDice => 'Jogador mostra os dados!';
+
+  @override
+  String aiShowDice(Object name) {
+    return '$name mostra os dados!';
+  }
+
+  @override
+  String get soberOptions => 'Opções para ficar sóbrio';
+
+  @override
+  String get adLoadFailed => 'Falha ao carregar anúncio';
+
+  @override
+  String get adWatchedSober => '✨ Anúncio assistido, completamente sóbrio!';
+
+  @override
+  String aiSoberedUp(Object name) {
+    return '✨ $name ficou sóbrio, continue o jogo!';
+  }
+
+  @override
+  String get challengeProbability => 'Probabilidade de desafio';
+
+  @override
+  String get challengeWillSucceed => 'O desafio terá sucesso';
+
+  @override
+  String get challengeWillFail => 'O desafio falhará';
+
+  @override
+  String get challengeSuccessRate => 'Taxa de sucesso do desafio';
+
+  @override
+  String aiDecisionProcess(Object name) {
+    return 'Processo de decisão de $name';
+  }
+
+  @override
+  String challengePlayerBidAction(Object quantity, Object value) {
+    return 'Desafiar aposta do jogador: $quantity×$value';
+  }
+
+  @override
+  String get challengeOpponentAction => 'Desafiar aposta do oponente';
+
+  @override
+  String openingBidAction(Object quantity, Object value) {
+    return 'Aposta inicial: $quantity×$value';
+  }
+
+  @override
+  String respondToBidAction(
+    Object aiQuantity,
+    Object aiValue,
+    Object playerQuantity,
+    Object playerValue,
+  ) {
+    return 'Responder a $playerQuantity×$playerValue do jogador, apostar: $aiQuantity×$aiValue';
+  }
+
+  @override
+  String get continueBiddingAction => 'Continuar apostando';
+
+  @override
+  String get challengeProbabilityLog =>
+      'Cálculo de probabilidade de desafio (Perspectiva do jogador)';
+
+  @override
+  String get challengeWillDefinitelySucceed =>
+      'O desafio definitivamente terá sucesso';
+
+  @override
+  String get challengeWillDefinitelyFail => 'O desafio definitivamente falhará';
+
+  @override
+  String get challengeProbabilityResult =>
+      'Resultado da probabilidade de desafio';
+
+  @override
+  String get challengeSuccessRateValue => 'Taxa de sucesso do desafio';
+
+  @override
+  String get challenger => 'Desafiador';
+
+  @override
+  String get intimacyTip => 'Me deixe bêbado para aumentar a intimidade~';
+
+  @override
+  String get gameGreeting => 'Bem-vindo! Vamos jogar!';
 }

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
+import 'app_localizations_id.dart';
 import 'app_localizations_pt.dart';
 import 'app_localizations_zh.dart';
 
@@ -98,6 +99,7 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('es'),
+    Locale('id'),
     Locale('pt'),
     Locale('zh'),
     Locale('zh', 'TW'),
@@ -166,7 +168,7 @@ abstract class AppLocalizations {
   /// Game instructions content
   ///
   /// In en, this message translates to:
-  /// **'Each player rolls 5 dice secretly. Take turns bidding on the total number of dice. Challenge if you think they\'re lying!'**
+  /// **'Each player rolls 5 dice secretly. Take turns bidding on the total number of dice. Challenge if you think they\'re lying! \n\n• 1s are wildcards and count as any number\n• Once someone bids on 1s, they lose wildcard status for that round'**
   String get instructionsContent;
 
   /// Player statistics title
@@ -745,17 +747,29 @@ abstract class AppLocalizations {
   /// **'You rolled'**
   String get yourDice;
 
+  /// No description provided for @playerDiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your dice'**
+  String get playerDiceLabel;
+
+  /// No description provided for @aiDiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s dice'**
+  String aiDiceLabel(Object name);
+
   /// No description provided for @bidCall.
   ///
   /// In en, this message translates to:
   /// **'Bid: {quantity}×{value}'**
   String bidCall(Object quantity, Object value);
 
-  /// No description provided for @challengeSuccessRate.
+  /// No description provided for @challengeSuccessRateDisplay.
   ///
   /// In en, this message translates to:
   /// **'Challenge Success: {rate}%'**
-  String challengeSuccessRate(Object rate);
+  String challengeSuccessRateDisplay(Object rate);
 
   /// No description provided for @bidMustBeHigher.
   ///
@@ -820,7 +834,7 @@ abstract class AppLocalizations {
   /// No description provided for @usedSoberPotion.
   ///
   /// In en, this message translates to:
-  /// **'Used sober potion, -2 drinks!'**
+  /// **'Used sober potion, sobered up 2 drinks!'**
   String get usedSoberPotion;
 
   /// No description provided for @aiSoberSuccess.
@@ -936,6 +950,185 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
   String get copiedToClipboard;
+
+  /// No description provided for @pleaseWaitThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is thinking...'**
+  String pleaseWaitThinking(Object name);
+
+  /// No description provided for @pleaseBid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please bid'**
+  String get pleaseBid;
+
+  /// No description provided for @showDice.
+  ///
+  /// In en, this message translates to:
+  /// **'Show dice!'**
+  String get showDice;
+
+  /// No description provided for @challengeOpponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge opponent\'s bid'**
+  String get challengeOpponent;
+
+  /// No description provided for @challengePlayerBid.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge player\'s bid: {quantity}×{value}'**
+  String challengePlayerBid(Object quantity, Object value);
+
+  /// No description provided for @playerShowDice.
+  ///
+  /// In en, this message translates to:
+  /// **'Player shows dice!'**
+  String get playerShowDice;
+
+  /// No description provided for @aiShowDice.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} shows dice!'**
+  String aiShowDice(Object name);
+
+  /// No description provided for @soberOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sober options'**
+  String get soberOptions;
+
+  /// No description provided for @adLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad failed to load'**
+  String get adLoadFailed;
+
+  /// No description provided for @adWatchedSober.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ Ad watched, fully sober!'**
+  String get adWatchedSober;
+
+  /// No description provided for @aiSoberedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ {name} sobered up, continue the game!'**
+  String aiSoberedUp(Object name);
+
+  /// No description provided for @challengeProbability.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge probability'**
+  String get challengeProbability;
+
+  /// No description provided for @challengeWillSucceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge will succeed'**
+  String get challengeWillSucceed;
+
+  /// No description provided for @challengeWillFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge will fail'**
+  String get challengeWillFail;
+
+  /// No description provided for @challengeSuccessRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge success rate'**
+  String get challengeSuccessRate;
+
+  /// No description provided for @aiDecisionProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} Decision Process'**
+  String aiDecisionProcess(Object name);
+
+  /// No description provided for @challengePlayerBidAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge player\'s bid: {quantity}×{value}'**
+  String challengePlayerBidAction(Object quantity, Object value);
+
+  /// No description provided for @challengeOpponentAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge opponent\'s bid'**
+  String get challengeOpponentAction;
+
+  /// No description provided for @openingBidAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening bid: {quantity}×{value}'**
+  String openingBidAction(Object quantity, Object value);
+
+  /// No description provided for @respondToBidAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond to player\'s {playerQuantity}×{playerValue}, bid: {aiQuantity}×{aiValue}'**
+  String respondToBidAction(
+    Object aiQuantity,
+    Object aiValue,
+    Object playerQuantity,
+    Object playerValue,
+  );
+
+  /// No description provided for @continueBiddingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue bidding'**
+  String get continueBiddingAction;
+
+  /// No description provided for @challengeProbabilityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge probability calculation (Player\'s perspective)'**
+  String get challengeProbabilityLog;
+
+  /// No description provided for @challengeWillDefinitelySucceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge will definitely succeed'**
+  String get challengeWillDefinitelySucceed;
+
+  /// No description provided for @challengeWillDefinitelyFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge will definitely fail'**
+  String get challengeWillDefinitelyFail;
+
+  /// No description provided for @challengeProbabilityResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge probability result'**
+  String get challengeProbabilityResult;
+
+  /// No description provided for @challengeSuccessRateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge success rate'**
+  String get challengeSuccessRateValue;
+
+  /// No description provided for @challenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenger'**
+  String get challenger;
+
+  /// No description provided for @intimacyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Get me drunk to increase intimacy~'**
+  String get intimacyTip;
+
+  /// No description provided for @gameGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome! Let\'s play!'**
+  String get gameGreeting;
 }
 
 class _AppLocalizationsDelegate
@@ -949,7 +1142,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'es', 'pt', 'zh'].contains(locale.languageCode);
+      <String>['en', 'es', 'id', 'pt', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -974,6 +1167,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEn();
     case 'es':
       return AppLocalizationsEs();
+    case 'id':
+      return AppLocalizationsId();
     case 'pt':
       return AppLocalizationsPt();
     case 'zh':

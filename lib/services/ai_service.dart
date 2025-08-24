@@ -16,6 +16,10 @@ class AIService {
   late final EliteAIEngine eliteEngine;
   late final MasterAIEngine masterEngine;
   
+  // 保存Master引擎的决策，供对话生成使用
+  String _lastMasterStrategy = '';
+  Map<String, dynamic>? _lastMasterDecision;
+  
   AIService({
     required this.personality,
     this.playerProfile,
@@ -30,12 +34,39 @@ class AIService {
     var masterDecision = masterEngine.makeDecision(round);
     var eliteDecision = eliteEngine.makeEliteDecision(round);
     
-    AILogger.logParsing('Local Master AI决策', {
+    // 保存Master的策略供对话生成使用
+    _lastMasterStrategy = masterDecision['strategy'] ?? '';
+    _lastMasterDecision = masterDecision;
+    
+    // 详细记录Master决策
+    AILogger.logParsing('🎯 [Master AI决策]', {
       'type': masterDecision['type'],
       'confidence': masterDecision['confidence'],
       'strategy': masterDecision['strategy'],
       'reasoning': masterDecision['reasoning'],
+      'bid': masterDecision['bid']?.toString(),
     });
+    
+    // 详细记录Elite决策（供对比观察）
+    // Elite直接返回决策，不是嵌套在choice字段中
+    AILogger.logParsing('👑 [Elite AI决策]', {
+      'type': eliteDecision['type'],
+      'confidence': eliteDecision['confidence'] ?? eliteDecision['successRate'],
+      'strategy': eliteDecision['strategy'],
+      'reasoning': eliteDecision['reasoning'],
+      'bid': eliteDecision['bid']?.toString(),
+      'psychTactic': eliteDecision['psychTactic'],
+    });
+    
+    // 对比两个引擎的决策差异
+    if (masterDecision['type'] != eliteDecision['type']) {
+      AILogger.logParsing('⚠️ [决策差异]', {
+        'Master选择': masterDecision['type'] == 'challenge' ? '质疑' : '"叫牌: ${masterDecision['bid']}"',
+        'Elite选择': eliteDecision['type'] == 'challenge' ? '质疑' : '"叫牌: ${eliteDecision['bid']}"',
+        'Master策略': masterDecision['strategy'],
+        'Elite策略': eliteDecision['strategy'],
+      });
+    }
     
     // 使用Master的决策，但提供Elite的选项列表用于UI显示
     List<Map<String, dynamic>>? eliteOptions = eliteDecision['allOptions'] as List<Map<String, dynamic>>?;
@@ -102,6 +133,26 @@ class AIService {
   (Bid, bool) generateBidWithAnalysis(GameRound round) {
     // 使用Master AI引擎（与decideAction保持一致）
     var masterDecision = masterEngine.makeDecision(round);
+    
+    // 也获取Elite的决策供对比
+    var eliteDecision = eliteEngine.makeEliteDecision(round);
+    
+    // 记录对比日志
+    AILogger.logParsing('🎯 [generateBid - Master]', {
+      'type': masterDecision['type'],
+      'bid': masterDecision['bid']?.toString(),
+      'strategy': masterDecision['strategy'],
+    });
+    
+    AILogger.logParsing('👑 [generateBid - Elite]', {
+      'type': eliteDecision['type'],
+      'bid': eliteDecision['bid']?.toString(),
+      'strategy': eliteDecision['strategy'],
+    });
+    
+    // 保存Master的策略供对话生成使用
+    _lastMasterStrategy = masterDecision['strategy'] ?? '';
+    _lastMasterDecision = masterDecision;
     
     // 确保是叫牌决策（不是质疑）
     if (masterDecision['type'] == 'challenge') {
@@ -352,47 +403,49 @@ class AIService {
     return coefficient * math.pow(p, k) * math.pow(1 - p, n - k);
   }
   
-  /// 生成对话和表情（使用Elite引擎）
+  /// 生成对话和表情（使用保存的Master决策）
   (String dialogue, String expression) generateDialogue(GameRound round, GameAction? lastAction, Bid? newBid) {
-    // 生成Elite决策获取策略信息
-    var eliteDecision = eliteEngine.makeEliteDecision(round);
+    // 使用已保存的Master策略，确保决策和对话一致
+    String strategy = _lastMasterStrategy;
+    Map<String, dynamic>? masterDecision = _lastMasterDecision;
     
     // 基于策略生成对话
+    final dialogueService = DialogueService();
     String dialogue = '';
     String expression = 'thinking';
     
-    // 如果有心理战术，优先使用
-    if (eliteDecision['psychTactic'] != null) {
-      switch (eliteDecision['psychTactic']) {
+    // 检查是否有特殊策略或心理战术
+    if (masterDecision != null && masterDecision['psychTactic'] != null) {
+      // 使用DialogueService获取心理战术对话
+      dialogue = dialogueService.getStrategyDialogue(
+        personality.id, 
+        masterDecision['psychTactic'], 
+        locale: 'zh_TW'
+      );
+      
+      // 根据心理战术设置表情
+      switch (masterDecision['psychTactic']) {
         case '反向陷阱':
-          dialogue = '我...不太确定';
           expression = 'nervous';
           break;
-        case '压力升级':
-          dialogue = '来真的吧！';
+        case '压力升級':
+        case '後期施壓':
           expression = 'confident';
           break;
-        case '模式破坏':
-          dialogue = '换个玩法';
+        case '模式破壞':
           expression = 'suspicious';
           break;
-        case '后期施压':
-          dialogue = '该结束了';
-          expression = 'confident';
-          break;
-        case '诱导激进':
-          dialogue = '你敢跟吗？';
+        case '誘導激進':
           expression = 'happy';
           break;
         default:
-          dialogue = _getStrategyDialogue(eliteDecision['strategy'] ?? '', lastAction, newBid);
+          expression = 'thinking';
       }
     } else {
-      dialogue = _getStrategyDialogue(eliteDecision['strategy'] ?? '', lastAction, newBid);
+      dialogue = _getStrategyDialogue(strategy, lastAction, newBid);
     }
     
     // 根据策略调整表情
-    String strategy = eliteDecision['strategy'] ?? '';
     if (strategy.contains('bluff')) {
       expression = random.nextDouble() < 0.3 ? 'nervous' : 'thinking';
     } else if (strategy.contains('value')) {
@@ -432,28 +485,27 @@ class AIService {
   
   /// 根据策略生成对话
   String _getStrategyDialogue(String strategy, GameAction? lastAction, Bid? newBid) {
+    final dialogueService = DialogueService();
+    
     if (lastAction == GameAction.challenge) {
-      return _getRandomFrom(['我不信', '你在虚张', '不可能', '让我看看']);
+      return dialogueService.getStrategyDialogue(personality.id, 'challenge_action', locale: 'zh_TW');
     }
     
-    switch (strategy) {
-      case 'value_bet':
-        return _getRandomFrom(['稳稳的', '我有货', '跟上来']);
-      case 'semi_bluff':
-        return _getRandomFrom(['试试看', '继续玩', '跟不跟']);
-      case 'bluff':
-      case 'pure_bluff':
-        return _getRandomFrom(['就这样', '全押了', '敢跟吗']);
-      case 'reverse_trap':
-        return '我...不太确定';
-      case 'pressure_play':
-        return '来真的吧！';
-      default:
-        if (newBid != null) {
-          return '我叫$newBid';
-        }
-        return '继续';
+    // 对于bluff和pure_bluff，统一使用bluff策略对话
+    String dialogueStrategy = strategy;
+    if (strategy == 'pure_bluff') {
+      dialogueStrategy = 'bluff';
     }
+    
+    // 如果没有匹配的策略，使用默认对话
+    final dialogue = dialogueService.getStrategyDialogue(personality.id, dialogueStrategy, locale: 'zh_TW');
+    
+    // 如果返回默认值且有newBid，显示叫牌信息
+    if (dialogue == '...' && newBid != null) {
+      return '我叫${newBid.quantity}個${newBid.value}';
+    }
+    
+    return dialogue;
   }
   
   String _getRandomFrom(List<String> options) {

@@ -82,7 +82,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
             
             // 角色名称
             Text(
-              widget.character.name,
+              widget.character.localizedName,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -92,7 +92,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
             
             // 角色描述
             Text(
-              widget.character.description,
+              widget.character.localizedDescription,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 14,
@@ -156,7 +156,7 @@ const SizedBox(height: 20),
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('✨ 已临时解锁${widget.character.name}，有效期1小时'),
+                              content: Text('✨ 已临时解锁${widget.character.localizedName}，有效期1小时'),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -186,7 +186,7 @@ const SizedBox(height: 20),
                         Navigator.of(context).pop(true);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('🎉 成功永久解锁${widget.character.name}'),
+                            content: Text('🎉 成功永久解锁${widget.character.localizedName}'),
                             backgroundColor: Colors.green,
                           ),
                         );

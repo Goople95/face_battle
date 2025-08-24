@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 import '../utils/logger_utils.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -178,6 +180,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           // Facebook登录按钮
           _buildFacebookSignInButton(authService),
           
+          const SizedBox(height: 24),
+          
+          // 服务条款和隐私政策链接
+          _buildLegalLinks(),
+          
           // 错误信息显示
           if (authService.errorMessage != null) ...[
             const SizedBox(height: 24),
@@ -342,5 +349,74 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         ),
       ),
     );
+  }
+  
+  Widget _buildLegalLinks() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InkWell(
+          onTap: () => _launchURL('https://hub.onedaytrek.com/terms.html'),
+          child: Text(
+            AppLocalizations.of(context)!.termsOfService,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 13,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+        Text(
+          '  |  ',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 13,
+          ),
+        ),
+        InkWell(
+          onTap: () => _launchURL('https://hub.onedaytrek.com/privacy.html'),
+          child: Text(
+            AppLocalizations.of(context)!.privacyPolicy,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 13,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        LoggerUtils.warning('无法打开链接: $url');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.networkError),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      LoggerUtils.error('打开链接失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.error),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

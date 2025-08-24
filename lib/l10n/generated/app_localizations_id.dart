@@ -4,287 +4,288 @@ import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
-/// The translations for English (`en`).
-class AppLocalizationsEn extends AppLocalizations {
-  AppLocalizationsEn([String locale = 'en']) : super(locale);
+/// The translations for Indonesian (`id`).
+class AppLocalizationsId extends AppLocalizations {
+  AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
   String get appTitle => 'Dice Girls';
 
   @override
-  String get gameNameChinese => 'Liar\'s Dice';
+  String get gameNameChinese => 'Dadu Pembohong';
 
   @override
-  String get loginTitle => 'Welcome';
+  String get loginTitle => 'Selamat Datang';
 
   @override
-  String get loginWithGoogle => 'Sign in with Google';
+  String get loginWithGoogle => 'Masuk dengan Google';
 
   @override
-  String get loginWithFacebook => 'Sign in with Facebook';
+  String get loginWithFacebook => 'Masuk dengan Facebook';
 
   @override
-  String get skipLogin => 'Skip';
+  String get skipLogin => 'Lewati';
 
   @override
-  String get or => 'OR';
+  String get or => 'ATAU';
 
   @override
-  String get selectOpponent => 'Select Opponent';
+  String get selectOpponent => 'Pilih Lawan';
 
   @override
-  String get vipOpponents => 'VIP Opponents';
+  String get vipOpponents => 'Lawan VIP';
 
   @override
-  String get gameInstructions => 'How to Play';
+  String get gameInstructions => 'Cara Bermain';
 
   @override
   String get instructionsContent =>
-      'Each player rolls 5 dice secretly. Take turns bidding on the total number of dice. Challenge if you think they\'re lying! \n\n• 1s are wildcards and count as any number\n• Once someone bids on 1s, they lose wildcard status for that round';
+      'Setiap pemain melempar 5 dadu secara rahasia. Bergantian bertaruh pada jumlah total dadu. Tantang jika Anda pikir mereka berbohong!\n\n• Angka 1 adalah wildcard dan bisa dihitung sebagai angka apa pun\n• Setelah seseorang bertaruh pada angka 1, maka 1 tidak lagi menjadi wildcard untuk ronde itu';
 
   @override
-  String get playerStats => 'Player Stats';
+  String get playerStats => 'Statistik Pemain';
 
   @override
-  String get wins => 'Wins';
+  String get wins => 'Menang';
 
   @override
-  String get losses => 'Losses';
+  String get losses => 'Kalah';
 
   @override
-  String get winRate => 'Win Rate';
+  String get winRate => 'Tingkat Kemenangan';
 
   @override
   String get level => 'Level';
 
   @override
   String intimacyLevel(Object level) {
-    return 'Intimacy Lv.$level';
+    return 'Keintiman Lv.$level';
   }
 
   @override
   String drinkCapacity(Object current, Object max) {
-    return '$current/$max drinks';
+    return '$current/$max minuman';
   }
 
   @override
   String soberTimeRemaining(Object time) {
-    return 'Sober in $time';
+    return 'Sadar dalam $time';
   }
 
   @override
   String aboutMinutes(Object minutes) {
-    return 'About $minutes min';
+    return 'Sekitar $minutes menit';
   }
 
   @override
-  String get startGame => 'Start Game';
+  String get startGame => 'Mulai Permainan';
 
   @override
-  String get continueGame => 'Continue';
+  String get continueGame => 'Lanjutkan';
 
   @override
-  String get newGame => 'New Game';
+  String get newGame => 'Permainan Baru';
 
   @override
-  String get exitGame => 'Exit Game';
+  String get exitGame => 'Keluar Permainan';
 
   @override
-  String get settings => 'Settings';
+  String get settings => 'Pengaturan';
 
   @override
-  String get language => 'Language';
+  String get language => 'Bahasa';
 
   @override
-  String get soundEffects => 'Sound Effects';
+  String get soundEffects => 'Efek Suara';
 
   @override
-  String get music => 'Music';
+  String get music => 'Musik';
 
   @override
-  String get on => 'On';
+  String get on => 'Aktif';
 
   @override
-  String get off => 'Off';
+  String get off => 'Nonaktif';
 
   @override
-  String get logout => 'Logout';
+  String get logout => 'Keluar';
 
   @override
-  String get confirmLogout => 'Are you sure you want to logout?';
+  String get confirmLogout => 'Apakah Anda yakin ingin keluar?';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'Batal';
 
   @override
-  String get confirm => 'Confirm';
+  String get confirm => 'Konfirmasi';
 
   @override
-  String get loading => 'Loading...';
+  String get loading => 'Memuat...';
 
   @override
-  String get error => 'Error';
+  String get error => 'Kesalahan';
 
   @override
-  String get networkError => 'Network connection failed';
+  String get networkError => 'Gagal koneksi jaringan';
 
   @override
-  String get unknownError => 'An unknown error occurred';
+  String get unknownError => 'Terjadi kesalahan yang tidak diketahui';
 
   @override
-  String get yourTurn => 'Your Turn';
+  String get yourTurn => 'Giliran Anda';
 
   @override
   String opponentTurn(Object name) {
-    return '$name\'s Turn';
+    return 'Giliran $name';
   }
 
   @override
-  String get bid => 'Bid';
+  String get bid => 'Bertaruh';
 
   @override
-  String get challenge => 'Challenge';
+  String get challenge => 'Tantang';
 
   @override
   String currentBid(Object dice, Object quantity) {
-    return 'Current Bid: $quantity × $dice';
+    return 'Taruhan Saat Ini: $quantity × $dice';
   }
 
   @override
-  String get selectBid => 'Select Your Bid';
+  String get selectBid => 'Pilih Taruhan Anda';
 
   @override
-  String get quantity => 'Quantity';
+  String get quantity => 'Jumlah';
 
   @override
-  String get diceValue => 'Dice Value';
+  String get diceValue => 'Nilai Dadu';
 
   @override
-  String get youWin => 'You Win!';
+  String get youWin => 'Anda Menang!';
 
   @override
-  String get youLose => 'You Lose!';
+  String get youLose => 'Anda Kalah!';
 
   @override
-  String get drink => 'Drink!';
+  String get drink => 'Minum!';
 
   @override
-  String get cheers => 'Cheers!';
+  String get cheers => 'Bersulang!';
 
   @override
-  String get drunkWarning => 'You\'re too drunk to continue!';
+  String get drunkWarning => 'Anda terlalu mabuk untuk melanjutkan!';
 
   @override
-  String get soberUp => 'Wait to sober up or watch an ad';
+  String get soberUp => 'Tunggu untuk sadar atau tonton iklan';
 
   @override
-  String get watchAd => 'Watch Ad';
+  String get watchAd => 'Tonton Iklan';
 
   @override
   String waitTime(Object minutes) {
-    return 'Wait $minutes minutes';
+    return 'Tunggu $minutes menit';
   }
 
   @override
-  String get unlockVIP => 'Unlock VIP';
+  String get unlockVIP => 'Buka VIP';
 
   @override
-  String get vipBenefits => 'VIP Benefits';
+  String get vipBenefits => 'Keuntungan VIP';
 
   @override
-  String get noAds => 'No Ads';
+  String get noAds => 'Tanpa Iklan';
 
   @override
-  String get exclusiveContent => 'Exclusive Characters';
+  String get exclusiveContent => 'Karakter Eksklusif';
 
   @override
-  String get bonusRewards => 'Bonus Rewards';
+  String get bonusRewards => 'Hadiah Bonus';
 
   @override
   String price(Object amount) {
-    return 'Price: $amount';
+    return 'Harga: $amount';
   }
 
   @override
-  String get purchase => 'Purchase';
+  String get purchase => 'Beli';
 
   @override
-  String get restorePurchases => 'Restore Purchases';
+  String get restorePurchases => 'Pulihkan Pembelian';
 
   @override
-  String get share => 'Share';
+  String get share => 'Bagikan';
 
   @override
-  String get shareMessage => 'I just won in Dice Girls! Can you beat me?';
+  String get shareMessage =>
+      'Saya baru saja menang di Dice Girls! Bisakah Anda mengalahkan saya?';
 
   @override
-  String get rateApp => 'Rate App';
+  String get rateApp => 'Nilai Aplikasi';
 
   @override
-  String get feedback => 'Feedback';
+  String get feedback => 'Umpan Balik';
 
   @override
   String version(Object version) {
-    return 'Version $version';
+    return 'Versi $version';
   }
 
   @override
-  String get allDiceValues => 'All dice';
+  String get allDiceValues => 'Semua dadu';
 
   @override
-  String get onesLoseWildcard => '1s are no longer wildcards!';
+  String get onesLoseWildcard => '1 tidak lagi wildcard!';
 
   @override
-  String get wildcardActive => '1s count as any number';
+  String get wildcardActive => '1 dihitung sebagai angka apa pun';
 
   @override
   String get tutorialTitle => 'Tutorial';
 
   @override
-  String get skipTutorial => 'Skip';
+  String get skipTutorial => 'Lewati';
 
   @override
-  String get next => 'Next';
+  String get next => 'Berikutnya';
 
   @override
-  String get previous => 'Previous';
+  String get previous => 'Sebelumnya';
 
   @override
-  String get done => 'Done';
+  String get done => 'Selesai';
 
   @override
-  String get connectionLost => 'Connection lost';
+  String get connectionLost => 'Koneksi terputus';
 
   @override
-  String get reconnecting => 'Reconnecting...';
+  String get reconnecting => 'Menghubungkan kembali...';
 
   @override
-  String get loginSuccess => 'Login successful';
+  String get loginSuccess => 'Login berhasil';
 
   @override
-  String get loginFailed => 'Login failed';
+  String get loginFailed => 'Login gagal';
 
   @override
-  String get guestMode => 'Guest Mode';
+  String get guestMode => 'Mode Tamu';
 
   @override
-  String get createAccount => 'Create Account';
+  String get createAccount => 'Buat Akun';
 
   @override
-  String get forgotPassword => 'Forgot Password?';
+  String get forgotPassword => 'Lupa Kata Sandi?';
 
   @override
-  String get rememberMe => 'Remember Me';
+  String get rememberMe => 'Ingat Saya';
 
   @override
-  String get termsOfService => 'Terms of Service';
+  String get termsOfService => 'Ketentuan Layanan';
 
   @override
-  String get privacyPolicy => 'Privacy Policy';
+  String get privacyPolicy => 'Kebijakan Privasi';
 
   @override
   String agreeToTerms(Object privacy, Object terms) {
-    return 'By continuing, you agree to our $terms and $privacy';
+    return 'Dengan melanjutkan, Anda menyetujui $terms dan $privacy kami';
   }
 
   @override
@@ -360,11 +361,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourDice => 'You rolled';
 
   @override
-  String get playerDiceLabel => 'Your dice';
+  String get playerDiceLabel => 'Dadu Anda';
 
   @override
   String aiDiceLabel(Object name) {
-    return '$name\'s dice';
+    return 'Dadu $name';
   }
 
   @override
@@ -374,7 +375,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String challengeSuccessRateDisplay(Object rate) {
-    return 'Challenge Success: $rate%';
+    return 'Tingkat sukses: $rate%';
   }
 
   @override
@@ -408,7 +409,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get watchAdSuccess => '✨ Watched ad, fully sober!';
 
   @override
-  String get usedSoberPotion => 'Used sober potion, sobered up 2 drinks!';
+  String get usedSoberPotion =>
+      'Menggunakan ramuan sadar, membersihkan 2 minuman!';
 
   @override
   String aiSoberSuccess(Object name) {
@@ -484,73 +486,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pleaseWaitThinking(Object name) {
-    return '$name is thinking...';
+    return '$name sedang berpikir...';
   }
 
   @override
-  String get pleaseBid => 'Please bid';
+  String get pleaseBid => 'Silakan bertaruh';
 
   @override
-  String get showDice => 'Show dice!';
+  String get showDice => 'Tunjukkan dadu!';
 
   @override
-  String get challengeOpponent => 'Challenge opponent\'s bid';
+  String get challengeOpponent => 'Tantang taruhan lawan';
 
   @override
   String challengePlayerBid(Object quantity, Object value) {
-    return 'Challenge player\'s bid: $quantity×$value';
+    return 'Tantang taruhan pemain: $quantity×$value';
   }
 
   @override
-  String get playerShowDice => 'Player shows dice!';
+  String get playerShowDice => 'Pemain menunjukkan dadu!';
 
   @override
   String aiShowDice(Object name) {
-    return '$name shows dice!';
+    return '$name menunjukkan dadu!';
   }
 
   @override
-  String get soberOptions => 'Sober options';
+  String get soberOptions => 'Opsi untuk sadar';
 
   @override
-  String get adLoadFailed => 'Ad failed to load';
+  String get adLoadFailed => 'Gagal memuat iklan';
 
   @override
-  String get adWatchedSober => '✨ Ad watched, fully sober!';
+  String get adWatchedSober => '✨ Iklan ditonton, sepenuhnya sadar!';
 
   @override
   String aiSoberedUp(Object name) {
-    return '✨ $name sobered up, continue the game!';
+    return '✨ $name sadar, lanjutkan permainan!';
   }
 
   @override
-  String get challengeProbability => 'Challenge probability';
+  String get challengeProbability => 'Probabilitas tantangan';
 
   @override
-  String get challengeWillSucceed => 'Challenge will succeed';
+  String get challengeWillSucceed => 'Tantangan akan berhasil';
 
   @override
-  String get challengeWillFail => 'Challenge will fail';
+  String get challengeWillFail => 'Tantangan akan gagal';
 
   @override
-  String get challengeSuccessRate => 'Challenge success rate';
+  String get challengeSuccessRate => 'Tingkat keberhasilan tantangan';
 
   @override
   String aiDecisionProcess(Object name) {
-    return '$name Decision Process';
+    return 'Proses keputusan $name';
   }
 
   @override
   String challengePlayerBidAction(Object quantity, Object value) {
-    return 'Challenge player\'s bid: $quantity×$value';
+    return 'Tantang taruhan pemain: $quantity×$value';
   }
 
   @override
-  String get challengeOpponentAction => 'Challenge opponent\'s bid';
+  String get challengeOpponentAction => 'Tantang taruhan lawan';
 
   @override
   String openingBidAction(Object quantity, Object value) {
-    return 'Opening bid: $quantity×$value';
+    return 'Taruhan pembuka: $quantity×$value';
   }
 
   @override
@@ -560,35 +562,34 @@ class AppLocalizationsEn extends AppLocalizations {
     Object playerQuantity,
     Object playerValue,
   ) {
-    return 'Respond to player\'s $playerQuantity×$playerValue, bid: $aiQuantity×$aiValue';
+    return 'Menanggapi $playerQuantity×$playerValue pemain, bertaruh: $aiQuantity×$aiValue';
   }
 
   @override
-  String get continueBiddingAction => 'Continue bidding';
+  String get continueBiddingAction => 'Lanjutkan bertaruh';
 
   @override
   String get challengeProbabilityLog =>
-      'Challenge probability calculation (Player\'s perspective)';
+      'Perhitungan probabilitas tantangan (Perspektif pemain)';
 
   @override
-  String get challengeWillDefinitelySucceed =>
-      'Challenge will definitely succeed';
+  String get challengeWillDefinitelySucceed => 'Tantangan pasti akan berhasil';
 
   @override
-  String get challengeWillDefinitelyFail => 'Challenge will definitely fail';
+  String get challengeWillDefinitelyFail => 'Tantangan pasti akan gagal';
 
   @override
-  String get challengeProbabilityResult => 'Challenge probability result';
+  String get challengeProbabilityResult => 'Hasil probabilitas tantangan';
 
   @override
-  String get challengeSuccessRateValue => 'Challenge success rate';
+  String get challengeSuccessRateValue => 'Tingkat keberhasilan tantangan';
 
   @override
-  String get challenger => 'Challenger';
+  String get challenger => 'Penantang';
 
   @override
-  String get intimacyTip => 'Get me drunk to increase intimacy~';
+  String get intimacyTip => 'Buat aku mabuk untuk meningkatkan keintiman~';
 
   @override
-  String get gameGreeting => 'Welcome! Let\'s play!';
+  String get gameGreeting => 'Selamat datang! Ayo bermain!';
 }

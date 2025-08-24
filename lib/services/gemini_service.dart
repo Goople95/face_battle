@@ -10,6 +10,7 @@ import '../utils/logger_utils.dart';
 import 'bid_options_calculator.dart';
 import 'elite_ai_engine.dart';
 import 'master_ai_engine.dart';
+import 'dialogue_service.dart';
 
 /// 精简版Gemini服务 - 只保留必要功能
 class GeminiService {
@@ -403,31 +404,34 @@ $optionsText
   
   /// 根据Elite策略生成对话
   String _generateEliteDialogue(Map<String, dynamic> eliteDecision) {
+    final dialogueService = DialogueService();
     String strategy = eliteDecision['strategy'] ?? '';
     String psychEffect = eliteDecision['psychEffect'] ?? '';
+    // 使用英文作为默认语言
+    String locale = 'en';
     
     // 心理效果对话（Master AI的新字段）
     if (psychEffect.isNotEmpty) {
       switch (psychEffect) {
         case 'intimidation':
-          return '压力来了！';
+          return dialogueService.getStrategyDialogue(personality.id, 'pressure_play', locale: locale);
         case 'fake_weakness':
-          return '我...不太确定';
+          return dialogueService.getStrategyDialogue(personality.id, '反向陷阱', locale: locale);
         case 'sudden_escalation':
-          return '玩大点！';
+          return dialogueService.getStrategyDialogue(personality.id, '壓力升級', locale: locale);
       }
     }
     
     // 策略对话（支持新的Master AI策略）
     switch (strategy) {
       case 'aggressive':
-        return '来真的！';
+        return dialogueService.getStrategyDialogue(personality.id, 'pressure_play', locale: locale);
       case 'conservative':
-        return '稳一点';
+        return dialogueService.getStrategyDialogue(personality.id, 'safe_play', locale: locale);
       case 'trap':
         return '嗯...';
       case 'pressure':
-        return '你跟吗？';
+        return dialogueService.getStrategyDialogue(personality.id, 'pressure_play', locale: locale);
       case 'probe':
         return '看看你';
       case 'balanced':
@@ -438,13 +442,13 @@ $optionsText
         return '必须的';
       // 兼容旧策略
       case 'value_bet':
-        return '稳稳的';
+        return dialogueService.getStrategyDialogue(personality.id, 'value_bet', locale: locale);
       case 'semi_bluff':
-        return '试试看';
+        return dialogueService.getStrategyDialogue(personality.id, 'semi_bluff', locale: locale);
       case 'bluff':
-        return '就这样';
+        return dialogueService.getStrategyDialogue(personality.id, 'bluff', locale: locale);
       case 'pure_bluff':
-        return '全押了';
+        return dialogueService.getStrategyDialogue(personality.id, 'bluff', locale: locale);
       case 'emergency':
         return '继续';
       default:

@@ -129,31 +129,31 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     int aiDiceCount = 5; // AI has 5 dice
     
     // 调试日志 - 修正显示信息
-    GameLogger.logGameState('质疑概率计算（玩家视角）', details: {
+    GameLogger.logGameState(AppLocalizations.of(context)!.challengeProbabilityLog, details: {
       '叫牌': bid.toString(),
       '叫牌值': bid.value,
       '叫牌量': bid.quantity,
       '玩家骰子': _currentRound!.playerDice.values.toString(),
-      '${widget.aiPersonality.name}骰子数': aiDiceCount,
+      '${widget.aiPersonality.localizedName}骰子数': aiDiceCount,
       '玩家有': ourCount,
-      '${widget.aiPersonality.name}需要': aiNeeded,
+      '${widget.aiPersonality.localizedName}需要': aiNeeded,
       '1是否被叫': _currentRound!.onesAreCalled,
     });
     
     // 如果AI需要的数量超过5个骰子，叫牌不可能成立
     if (aiNeeded > aiDiceCount) {
-      GameLogger.logGameState('质疑必定成功', details: {
-        '原因': '${widget.aiPersonality.name}需要$aiNeeded个，超过5个骰子',
+      GameLogger.logGameState(AppLocalizations.of(context)!.challengeWillDefinitelySucceed, details: {
+        '原因': '${widget.aiPersonality.localizedName}需要$aiNeeded个，超过5个骰子',
         '叫牌量': bid.quantity,
         '我们有': ourCount,
-        '${widget.aiPersonality.name}需要': aiNeeded,
+        '${widget.aiPersonality.localizedName}需要': aiNeeded,
       });
       return 1.0; // 100% chance challenge succeeds (bid is impossible)
     }
     
     // 如果AI需要的数量小于等于0，叫牌已经成立（我们已经有足够了）
     if (aiNeeded <= 0) {
-      GameLogger.logGameState('质疑必定失败', details: {
+      GameLogger.logGameState(AppLocalizations.of(context)!.challengeWillDefinitelyFail, details: {
         '原因': '玩家已有$ourCount个，叫牌已成立',
         '叫牌量': bid.quantity,
         '玩家有': ourCount,
@@ -179,10 +179,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       aiHasProbability += _binomialProbability(aiDiceCount, k, singleDieProbability);
     }
     
-    GameLogger.logGameState('质疑概率结果', details: {
+    GameLogger.logGameState(AppLocalizations.of(context)!.challengeProbabilityResult, details: {
       '单骰概率': singleDieProbability.toStringAsFixed(3),
-      '${widget.aiPersonality.name}有足够的概率': aiHasProbability.toStringAsFixed(3),
-      '质疑成功率': (1.0 - aiHasProbability).toStringAsFixed(3),
+      '${widget.aiPersonality.localizedName}有足够的概率': aiHasProbability.toStringAsFixed(3),
+      AppLocalizations.of(context)!.challengeSuccessRateValue: (1.0 - aiHasProbability).toStringAsFixed(3),
     });
     
     // Challenge succeeds if AI doesn't have enough
@@ -282,7 +282,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // int aiRerollCount = 0; // counting rerolls for stats
     while (needReroll(aiDice)) {
       // aiRerollCount++;
-      GameLogger.logGameState('${widget.aiPersonality.name}骰子自动重摇', details: {
+      GameLogger.logGameState('${widget.aiPersonality.localizedName}骰子自动重摇', details: {
         '原骰子': aiDice.values.toString(),
         '原因': '5个骰子都不相同',
       });
@@ -303,9 +303,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       );
       _showDice = false; // Don't show AI dice at start
       _aiExpression = isPlayerFirst ? 'thinking' : 'confident';
-      _aiDialogue = isPlayerFirst 
-        ? AppLocalizations.of(context)!.yourTurn
-        : '让我先来！';
+      
+      // 使用DialogueService获取问候语或轮到谁的提示
+      final dialogueService = DialogueService();
+      final locale = Localizations.localeOf(context);
+      final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+      
+      if (_currentRound!.bidHistory.isEmpty && _currentRound!.aiDecisions.isEmpty) {
+        // 游戏刚开始，显示问候语
+        _aiDialogue = dialogueService.getGreeting(widget.aiPersonality.id, locale: localeCode);
+      } else {
+        _aiDialogue = isPlayerFirst 
+          ? AppLocalizations.of(context)!.yourTurn
+          : dialogueService.getStrategyDialogue(widget.aiPersonality.id, 'pressure_play', locale: localeCode);
+      }
       _currentAIEmotion = _aiExpression;  // 同步更新视频表情
     });
     
@@ -347,7 +358,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _currentRound!.isPlayerTurn = false;
       // Reset AI expression when player bids
       _aiExpression = 'thinking';
-      _aiDialogue = '让我想想...';
+      // 使用个性化的思考对话
+      final dialogueService = DialogueService();
+      final locale = Localizations.localeOf(context);
+      final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+      _aiDialogue = dialogueService.getThinkingDialogue(widget.aiPersonality.id, locale: localeCode);
     });
     // 立即更新表情映射
     _applyAIEmotion('thinking', 0.5, false);
@@ -380,7 +395,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     bool wasBluffing = false;
     
     // 使用本地AI算法
-    GameLogger.logAIAction('使用本地算法', data: {'personality': widget.aiPersonality.name});
+    GameLogger.logAIAction('使用本地算法', data: {'personality': widget.aiPersonality.localizedName});
     decision = _aiService.decideAction(_currentRound!, null);
     if (decision.action == GameAction.bid) {
       final result = _aiService.generateBidWithAnalysis(_currentRound!);
@@ -439,7 +454,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       // AI makes a bid - 叫牌已经在上面的合并调用中生成
       if (aiBid == null) {
         // 如果没有生成叫牌（不应该发生），使用降级方法
-        GameLogger.logAIAction('生成降级叫牌', data: {'personality': widget.aiPersonality.name});
+        GameLogger.logAIAction('生成降级叫牌', data: {'personality': widget.aiPersonality.localizedName});
         final result = _aiService.generateBidWithAnalysis(_currentRound!);
         aiBid = result.$1;
         wasBluffing = result.$2;
@@ -514,7 +529,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (_currentRound == null || _currentRound!.currentBid == null) return;
     
     LoggerUtils.info('=== 游戏回合结束 ===');
-    LoggerUtils.info('  - 质疑方: ${playerChallenged ? "玩家" : "AI"}');
+    LoggerUtils.info('  - ${AppLocalizations.of(context)!.challenger}: ${playerChallenged ? "玩家" : "AI"}');
     
     final isBidTrue = _currentRound!.isBidTrue(_currentRound!.currentBid!);
     
@@ -567,7 +582,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             
             // 显示NPC输了的对话
             final dialogueService = DialogueService();
-            _aiDialogue = dialogueService.getLoseDialogue(widget.aiPersonality.id);
+            final locale = Localizations.localeOf(context);
+            final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+            _aiDialogue = dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
             _aiExpression = 'thinking';  // 设置思考的表情
             _currentAIEmotion = 'thinking';
             
@@ -584,7 +601,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             
             // 显示NPC赢了的对话
             final dialogueService = DialogueService();
-            _aiDialogue = dialogueService.getWinDialogue(widget.aiPersonality.id);
+            final locale = Localizations.localeOf(context);
+            final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+            _aiDialogue = dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
             _aiExpression = 'happy';  // 设置开心的表情
             _currentAIEmotion = 'happy';
             
@@ -673,7 +692,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      '${widget.aiPersonality.name}思考复盘',
+                      '${widget.aiPersonality.localizedName}思考复盘',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -693,7 +712,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     children: [
                       // AI Decisions
                       Text(
-                        '${widget.aiPersonality.name}决策过程',
+                        AppLocalizations.of(context)!.aiDecisionProcess(widget.aiPersonality.localizedName),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -747,13 +766,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                     child: Text(
                                       decision.action == GameAction.challenge 
                                         ? decision.playerBid != null
-                                          ? '质疑玩家叫牌：${decision.playerBid!.quantity}个${decision.playerBid!.value}'
-                                          : '质疑对手叫牌'
+                                          ? AppLocalizations.of(context)!.challengePlayerBidAction(decision.playerBid!.quantity.toString(), decision.playerBid!.value.toString())
+                                          : AppLocalizations.of(context)!.challengeOpponentAction
                                         : decision.aiBid != null
                                           ? decision.playerBid == null
-                                            ? '开局叫牌：${decision.aiBid!.quantity}个${decision.aiBid!.value}'
-                                            : '回应玩家${decision.playerBid!.quantity}个${decision.playerBid!.value}，叫牌：${decision.aiBid!.quantity}个${decision.aiBid!.value}'
-                                          : '继续叫牌',
+                                            ? AppLocalizations.of(context)!.openingBidAction(decision.aiBid!.quantity.toString(), decision.aiBid!.value.toString())
+                                            : AppLocalizations.of(context)!.respondToBidAction(decision.playerBid!.quantity.toString(), decision.playerBid!.value.toString(), decision.aiBid!.quantity.toString(), decision.aiBid!.value.toString())
+                                          : AppLocalizations.of(context)!.continueBiddingAction,
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
@@ -792,7 +811,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               if (decision.eliteOptions != null && decision.eliteOptions!.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  '${widget.aiPersonality.name}考虑的选项:',
+                                  '${widget.aiPersonality.localizedName}考虑的选项:',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.black54,
@@ -935,7 +954,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                '${widget.aiPersonality.name}的风格：${widget.aiPersonality.description}',
+                                '${widget.aiPersonality.localizedName}的风格：${widget.aiPersonality.localizedDescription}',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.amber.shade900,
@@ -1058,7 +1077,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // 获取NPC名字的颜色
   Color _getNPCColor() {
     // 根据不同的NPC设置不同的颜色
-    switch (widget.aiPersonality.name) {
+    switch (widget.aiPersonality.localizedName) {
       case '亚希':
         return Colors.pinkAccent;
       case '芳野':
@@ -1103,7 +1122,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('✨ ${widget.aiPersonality.name}醒酒了，继续对战！'),
+                    content: Text('✨ ${widget.aiPersonality.localizedName}醒酒了，继续对战！'),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -1185,7 +1204,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               const SizedBox(height: 15),
               // 暧昧的描述
               Text(
-                '${widget.aiPersonality.name}醉意朦胧地看着你',
+                '${widget.aiPersonality.localizedName}醉意朦胧地看着你',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 16,
@@ -1753,7 +1772,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   _showIntimacyTip = !_showIntimacyTip;
                                   if (_showIntimacyTip) {
                                     // 显示NPC对话
-                                    _aiDialogue = "只要你把我灌醉就可以提高亲密度哦～";
+                                    _aiDialogue = AppLocalizations.of(context)!.intimacyTip;
                                     // 3秒后自动隐藏
                                     Future.delayed(const Duration(seconds: 3), () {
                                       if (mounted) {
@@ -1896,8 +1915,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     children: [
                       // AI Dice (hidden or revealed)
                       _currentRound?.isRoundOver == true
-                        ? _buildResultDiceRow('${widget.aiPersonality.name}的骰子', _currentRound?.aiDice, _currentRound?.currentBid)
-                        : _buildDiceRow('${widget.aiPersonality.name}的骰子', _currentRound?.aiDice, !_showDice),
+                        ? _buildResultDiceRow(AppLocalizations.of(context)!.aiDiceLabel(widget.aiPersonality.localizedName), _currentRound?.aiDice, _currentRound?.currentBid)
+                        : _buildDiceRow(AppLocalizations.of(context)!.aiDiceLabel(widget.aiPersonality.localizedName), _currentRound?.aiDice, !_showDice),
                       
                       // Center Area - Show result or current bid
                       _currentRound?.isRoundOver == true
@@ -1974,7 +1993,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: widget.aiPersonality.name,
+                                                text: widget.aiPersonality.localizedName,
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: _getNPCColor(),
@@ -2009,7 +2028,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   ],
                                 )
                               : Text(
-                                  _currentRound?.isPlayerTurn == true ? '请叫牌' : '${widget.aiPersonality.name}思考中...',
+                                  _currentRound?.isPlayerTurn == true 
+                                    ? AppLocalizations.of(context)!.pleaseBid 
+                                    : AppLocalizations.of(context)!.pleaseWaitThinking(widget.aiPersonality.localizedName),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     color: Colors.white70,
@@ -2021,8 +2042,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       
                       // Player Dice
                       _currentRound?.isRoundOver == true
-                        ? _buildResultDiceRow('你的骰子', _currentRound?.playerDice, _currentRound?.currentBid)
-                        : _buildDiceRow('你的骰子', _currentRound?.playerDice, false),
+                        ? _buildResultDiceRow(AppLocalizations.of(context)!.playerDiceLabel, _currentRound?.playerDice, _currentRound?.currentBid)
+                        : _buildDiceRow(AppLocalizations.of(context)!.playerDiceLabel, _currentRound?.playerDice, false),
                     ],
                   ),
                       ),
@@ -2119,7 +2140,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     
     // Determine what value to highlight
     int? highlightValue;
-    if (!hidden && label.contains('你的骰子')) {
+    if (!hidden && label == AppLocalizations.of(context)!.playerDiceLabel) {
       if (_currentRound != null && !_currentRound!.isRoundOver) {
         if (_currentRound!.isPlayerTurn) {
           // During player's turn, highlight based on selected value for preview
@@ -2135,7 +2156,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
     
     // Check if this is AI or Player
-    bool isAI = label.contains(widget.aiPersonality.name);
+    bool isAI = label.contains(widget.aiPersonality.localizedName);
     
     return Column(
       children: [
@@ -2148,38 +2169,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               _buildCompactDrinks(isAI, true),
               const SizedBox(width: 8),
             ],
-            // Label text - with colored NPC name
-            isAI
-              ? RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: widget.aiPersonality.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _getNPCColor(),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '的骰子',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+            // Label text - using full localized label
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: isAI ? _getNPCColor() : Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             // Right side drinks (last 3)
             if (_drinkingState != null) ...[
               const SizedBox(width: 8),
@@ -2196,7 +2194,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             Color highlightColor = Colors.transparent;
             double borderWidth = 1;
             
-            if (!hidden && highlightValue != null && label.contains('你的骰子')) {
+            if (!hidden && highlightValue != null && label == AppLocalizations.of(context)!.playerDiceLabel) {
               // Highlight wild 1s (if they're still wild)
               if (value == 1 && !onesAreCalled && highlightValue != 1) {
                 shouldHighlight = true;
@@ -2267,7 +2265,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (dice == null || currentBid == null) return Container();
     
     // Check if this is AI or Player
-    bool isAI = label.contains(widget.aiPersonality.name);
+    bool isAI = label.contains(widget.aiPersonality.localizedName);
     
     return Column(
       children: [
@@ -2280,38 +2278,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               _buildCompactDrinks(isAI, true),
               const SizedBox(width: 8),
             ],
-            // Label text - with colored NPC name
-            isAI
-              ? RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: widget.aiPersonality.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _getNPCColor(),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '的骰子',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+            // Label text - using full localized label
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: isAI ? _getNPCColor() : Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             // Right side drinks (last 3)
             if (_drinkingState != null) ...[
               const SizedBox(width: 8),
@@ -2391,7 +2366,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                _playerChallenged ? '玩家开牌' : '${widget.aiPersonality.name}开牌',
+                _playerChallenged 
+                  ? AppLocalizations.of(context)!.playerShowDice 
+                  : AppLocalizations.of(context)!.aiShowDice(widget.aiPersonality.localizedName),
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.7),
@@ -2425,7 +2402,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: widget.aiPersonality.name,
+                          text: widget.aiPersonality.localizedName,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -2621,7 +2598,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           color: isPlayerBid ? Colors.blue.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                         ),
                         child: Text(
-                          isPlayerBid ? '玩家' : widget.aiPersonality.name,
+                          isPlayerBid ? '玩家' : widget.aiPersonality.localizedName,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -2850,7 +2827,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           color: isPlayerBid ? Colors.blue.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                         ),
                         child: Text(
-                          isPlayerBid ? '玩家' : widget.aiPersonality.name,
+                          isPlayerBid ? '玩家' : widget.aiPersonality.localizedName,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -3108,7 +3085,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '对战${widget.aiPersonality.name}：',
+                    '对战${widget.aiPersonality.localizedName}：',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white70,
@@ -3479,7 +3456,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '开牌',
+                          AppLocalizations.of(context)!.showDice,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -3489,7 +3466,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       ],
                     ),
                     Text(
-                      AppLocalizations.of(context)!.challengeSuccessRate(((_calculateChallengeProbability() * 100).toStringAsFixed(1))),
+                      AppLocalizations.of(context)!.challengeSuccessRateDisplay((_calculateChallengeProbability() * 100).toStringAsFixed(1)),
                       style: TextStyle(
                         fontSize: 11,
                         color: _calculateChallengeProbability() > 0.5

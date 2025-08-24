@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
 import '../models/ai_personality.dart';
 import '../utils/logger_utils.dart';
 
@@ -53,6 +54,25 @@ class NPCConfigService {
   AIPersonality get aki => getNPCById('1001') ?? _vipCharacters.first;  // Aki - 日本
   AIPersonality get isabella => getNPCById('1002') ?? (_vipCharacters.length > 1 ? _vipCharacters[1] : _vipCharacters.first);  // Isabella - 巴西
 
+  // 获取当前系统语言代码
+  String _getCurrentLocaleCode() {
+    // 使用PlatformDispatcher替代deprecated的window
+    final locale = ui.PlatformDispatcher.instance.locale;
+    final languageCode = locale.languageCode;
+    final countryCode = locale.countryCode;
+    
+    // 处理中文的特殊情况
+    if (languageCode == 'zh') {
+      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
+        return 'zh_TW';
+      }
+      return 'zh';
+    }
+    
+    // 对于其他语言，直接返回语言代码
+    return languageCode;
+  }
+
   // 初始化：加载JSON配置
   Future<void> initialize() async {
     if (_isLoaded) return;
@@ -74,11 +94,46 @@ class NPCConfigService {
         // 解析personality数据
         final personalityData = npcData['personality'] as Map<String, dynamic>;
         
+        // 解析多语言名称和描述
+        final namesMap = npcData['names'] as Map<String, dynamic>?;
+        final descriptionsMap = npcData['descriptions'] as Map<String, dynamic>?;
+        
+        // 获取默认名称和描述（用于向后兼容）
+        String name = '';
+        String description = '';
+        
+        if (namesMap != null) {
+          // 使用英文作为默认值
+          name = namesMap['en'] ?? 
+                 namesMap['zh'] ?? 
+                 npcData['name'] ?? '';
+        } else {
+          // 兼容旧格式
+          name = npcData['name'] ?? '';
+        }
+        
+        if (descriptionsMap != null) {
+          // 使用英文作为默认值
+          description = descriptionsMap['en'] ?? 
+                       descriptionsMap['zh'] ?? 
+                       npcData['description'] ?? '';
+        } else {
+          // 兼容旧格式
+          description = npcData['description'] ?? '';
+        }
+        
+        // 调试输出
+        LoggerUtils.info('Loading NPC $id:');
+        LoggerUtils.info('  namesMap: $namesMap');
+        LoggerUtils.info('  descriptionsMap: $descriptionsMap');
+        
         // 创建AIPersonality对象
         final personality = AIPersonality(
           id: id,
-          name: npcData['name'] ?? '',
-          description: npcData['description'] ?? '',
+          name: name,
+          description: description,
+          namesMap: namesMap?.cast<String, String>(),
+          descriptionsMap: descriptionsMap?.cast<String, String>(),
           avatarPath: npcData['avatarPath'] ?? '',
           bluffRatio: (personalityData['bluffRatio'] ?? 0.5).toDouble(),
           challengeThreshold: (personalityData['challengeThreshold'] ?? 0.5).toDouble(),

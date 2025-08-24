@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import '../services/npc_config_service.dart';
 
 /// AI personality configuration
@@ -5,6 +6,8 @@ class AIPersonality {
   final String id;
   final String name;
   final String description;
+  final Map<String, String>? namesMap;        // 多语言名称映射
+  final Map<String, String>? descriptionsMap; // 多语言描述映射
   final String avatarPath;        // 头像图片路径
   final double bluffRatio;        // 虚张声势的概率 (0-1)
   final double challengeThreshold; // 质疑的阈值 (0-1)
@@ -21,6 +24,8 @@ class AIPersonality {
     required this.id,
     required this.name,
     required this.description,
+    this.namesMap,
+    this.descriptionsMap,
     required this.avatarPath,
     required this.bluffRatio,
     required this.challengeThreshold,
@@ -33,6 +38,70 @@ class AIPersonality {
     this.country,
     this.drinkCapacity = 4,  // 默认4杯
   });
+  
+  // 根据指定的locale获取名称
+  String getLocalizedName(String localeCode) {
+    if (namesMap == null || namesMap!.isEmpty) {
+      return name;
+    }
+    return namesMap![localeCode] ?? namesMap!['en'] ?? name;
+  }
+  
+  // 根据指定的locale获取描述
+  String getLocalizedDescription(String localeCode) {
+    if (descriptionsMap == null || descriptionsMap!.isEmpty) {
+      return description;
+    }
+    return descriptionsMap![localeCode] ?? descriptionsMap!['en'] ?? description;
+  }
+  
+  // 保留旧的getter以保持兼容性（使用系统语言）
+  String get localizedName {
+    if (namesMap == null || namesMap!.isEmpty) {
+      return name;
+    }
+    
+    // 使用PlatformDispatcher替代deprecated的window
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final languageCode = locale.languageCode;
+    final countryCode = locale.countryCode;
+    
+    // 处理中文的特殊情况
+    String localeCode = languageCode;
+    if (languageCode == 'zh') {
+      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
+        localeCode = 'zh_TW';
+      } else {
+        localeCode = 'zh';
+      }
+    }
+    
+    // 尝试获取对应语言的名称，如果没有则使用英文或默认名称
+    return namesMap![localeCode] ?? namesMap!['en'] ?? name;
+  }
+  
+  // 保留旧的getter以保持兼容性（使用系统语言）
+  String get localizedDescription {
+    if (descriptionsMap == null || descriptionsMap!.isEmpty) return description;
+    
+    // 使用PlatformDispatcher替代deprecated的window
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final languageCode = locale.languageCode;
+    final countryCode = locale.countryCode;
+    
+    // 处理中文的特殊情况
+    String localeCode = languageCode;
+    if (languageCode == 'zh') {
+      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
+        localeCode = 'zh_TW';
+      } else {
+        localeCode = 'zh';
+      }
+    }
+    
+    // 尝试获取对应语言的描述，如果没有则使用英文或默认描述
+    return descriptionsMap![localeCode] ?? descriptionsMap!['en'] ?? description;
+  }
 }
 
 // AI角色配置现在从JSON文件加载

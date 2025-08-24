@@ -54,7 +54,7 @@
   "@instructionsContent": {
     "description": "Game instructions content"
   },
-  "instructionsContent": "Each player rolls 5 dice secretly. Take turns bidding on the total number of dice. Challenge if you think they're lying!",
+  "instructionsContent": "Each player rolls 5 dice secretly. Take turns bidding on the total number of dice. Challenge if you think they're lying! \n\n• 1s are wildcards and count as any number\n• Once someone bids on 1s, they lose wildcard status for that round",
   
   "@playerStats": {
     "description": "Player statistics title"
@@ -485,8 +485,10 @@
   "languageSwitched": "Language switched to {language}",
   "instructionsDetail": "• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they're lying",
   "yourDice": "You rolled",
+  "playerDiceLabel": "Your dice",
+  "aiDiceLabel": "{name}'s dice",
   "bidCall": "Bid: {quantity}×{value}",
-  "challengeSuccessRate": "Challenge Success: {rate}%",
+  "challengeSuccessRateDisplay": "Challenge Success: {rate}%",
   "bidMustBeHigher": "Bid must be higher than current",
   "roundEnd": "Round End",
   "backToHome": "Back to Home",
@@ -516,5 +518,36 @@
   "intimacyLevelShort": "Lv.{level}",
   "watchAdUnlock": "Watch Ad",
   "drunkAndWon": "{name} passed out, you won!",
-"copiedToClipboard": "Copied to clipboard"
+  "copiedToClipboard": "Copied to clipboard",
+  "pleaseWaitThinking": "{name} is thinking...",
+  "pleaseBid": "Please bid",
+  "showDice": "Show dice!",
+  "challenge": "Challenge",
+  "challengeOpponent": "Challenge opponent's bid",
+  "challengePlayerBid": "Challenge player's bid: {quantity}×{value}",
+  "playerShowDice": "Player shows dice!",
+  "aiShowDice": "{name} shows dice!",
+  "soberOptions": "Sober options",
+  "adLoadFailed": "Ad failed to load",
+  "adWatchedSober": "✨ Ad watched, fully sober!",
+  "usedSoberPotion": "Used sober potion, sobered up 2 drinks!",
+  "aiSoberedUp": "✨ {name} sobered up, continue the game!",
+  "challengeProbability": "Challenge probability",
+  "challengeWillSucceed": "Challenge will succeed",
+  "challengeWillFail": "Challenge will fail",
+  "challengeSuccessRate": "Challenge success rate",
+  "aiDecisionProcess": "{name} Decision Process",
+  "challengePlayerBidAction": "Challenge player's bid: {quantity}×{value}",
+  "challengeOpponentAction": "Challenge opponent's bid",
+  "openingBidAction": "Opening bid: {quantity}×{value}",
+  "respondToBidAction": "Respond to player's {playerQuantity}×{playerValue}, bid: {aiQuantity}×{aiValue}",
+  "continueBiddingAction": "Continue bidding",
+  "challengeProbabilityLog": "Challenge probability calculation (Player's perspective)",
+  "challengeWillDefinitelySucceed": "Challenge will definitely succeed",
+  "challengeWillDefinitelyFail": "Challenge will definitely fail",
+  "challengeProbabilityResult": "Challenge probability result",
+  "challengeSuccessRateValue": "Challenge success rate",
+  "challenger": "Challenger",
+  "intimacyTip": "Get me drunk to increase intimacy~",
+  "gameGreeting": "Welcome! Let's play!"
 }
