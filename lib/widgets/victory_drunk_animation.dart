@@ -339,18 +339,22 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                             // 胜利标题
                             ScaleTransition(
                               scale: _scaleAnimation,
-                              child: const Text(
-                                '🌙 夜深了...',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFFF8BBD0),  // 粉色
-                                  shadows: [
-                                    Shadow(
-                                      blurRadius: 15,
-                                      color: Color(0x66E91E63),  // 暗粉色阴影
-                                    ),
-                                  ],
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  AppLocalizations.of(context)!.nightFall,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFFF8BBD0),  // 粉色
+                                    shadows: [
+                                      Shadow(
+                                        blurRadius: 15,
+                                        color: Color(0x66E91E63),  // 暗粉色阴影
+                                      ),
+                                    ],
+                                  ),
+                                  maxLines: 1,
                                 ),
                               ),
                             ),
@@ -359,7 +363,17 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                             
                             // 副标题
                             Text(
-                              '${widget.defeatedAI.name} 醉了',
+                              AppLocalizations.of(context)!.aiGotDrunk(
+                                (() {
+                                  final locale = Localizations.localeOf(context);
+                                  final languageCode = locale.languageCode;
+                                  String localeCode = languageCode;
+                                  if (languageCode == 'zh') {
+                                    localeCode = 'zh_TW';
+                                  }
+                                  return widget.defeatedAI.getLocalizedName(localeCode);
+                                })(),
+                              ),
                               style: TextStyle(
                                 fontSize: 20,
                                 color: Color(0xFFF8BBD0).withValues(alpha: 0.7),
@@ -491,7 +505,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                             
                             // 暧昧的文字描述
                             Text(
-                              '时间悄然流逝',
+                              AppLocalizations.of(context)!.timePassesBy,
                               style: TextStyle(
                                 fontSize: 20,
                                 color: Colors.white.withValues(alpha: 0.5),
@@ -512,7 +526,17 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                                 borderRadius: BorderRadius.circular(30),
                               ),
                               child: Text(
-                                '${widget.defeatedAI.name}与你...',
+                                AppLocalizations.of(context)!.aiAndYou(
+                                  (() {
+                                    final locale = Localizations.localeOf(context);
+                                    final languageCode = locale.languageCode;
+                                    String localeCode = languageCode;
+                                    if (languageCode == 'zh') {
+                                      localeCode = 'zh_TW';
+                                    }
+                                    return widget.defeatedAI.getLocalizedName(localeCode);
+                                  })(),
+                                ),
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.white.withValues(alpha: 0.7),
@@ -534,7 +558,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
-                                  '关系更近了一步',
+                                  AppLocalizations.of(context)!.relationshipCloser,
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Color(0xFFE91E63).withValues(alpha: 0.7),
@@ -557,7 +581,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                       return Opacity(
                         opacity: 0.3 + 0.2 * _pulseController.value,
                         child: Text(
-                          '轻触继续',
+                          AppLocalizations.of(context)!.tapToContinue,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.5),
@@ -666,12 +690,16 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                       size: 24,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      '恭喜！亲密度升级了！',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber,
+                    Flexible(
+                      child: Text(
+                        AppLocalizations.of(context)!.congratsIntimacyUpgrade,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -694,7 +722,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                 return Column(
                   children: [
                     Text(
-                      '亲密度增加了 +$_displayedIntimacy',
+                      AppLocalizations.of(context)!.intimacyIncreased(_displayedIntimacy),
                       style: TextStyle(
                         fontSize: 22,
                         color: Color(0xFFE91E63),
@@ -705,7 +733,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                     // 显示增长进度的小提示
                     if (_displayedIntimacy < _intimacyMinutes)
                       Text(
-                        '增长中...',
+                        AppLocalizations.of(context)!.intimacyGrowing,
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFFE91E63).withValues(alpha: 0.6),
@@ -739,8 +767,11 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                         ),
                         Text(
                           currentLevel < 10 
-                            ? '${_getCurrentLevelProgress(animatedIntimacyPoints, currentLevel)} / ${_getLevelRange(currentLevel)}'
-                            : 'MAX',
+                            ? AppLocalizations.of(context)!.currentProgress(
+                                _getCurrentLevelProgress(animatedIntimacyPoints, currentLevel),
+                                _getLevelRange(currentLevel)
+                              )
+                            : AppLocalizations.of(context)!.maxLevel,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.6),
@@ -789,14 +820,19 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                     color: Colors.amber.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    currentLevel < 5 
-                      ? '升级就可以知道更多她的小秘密'
-                      : '你已经了解她的所有秘密',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.amber.withValues(alpha: 0.8),
-                      fontStyle: FontStyle.italic,
+                  Flexible(
+                    child: Text(
+                      currentLevel < 5 
+                        ? AppLocalizations.of(context)!.upgradeToKnowMore
+                        : AppLocalizations.of(context)!.youKnowAllSecrets,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.amber.withValues(alpha: 0.8),
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                     ),
                   ),
                 ],
@@ -887,7 +923,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             // 炫耀按钮
             Expanded(
               child: _buildSimpleButton(
-                label: '炫耀',
+                label: AppLocalizations.of(context)!.showOff,
                 color: Color(0xFFE91E63),
                 onTap: () {
                   if (widget.onShare != null) {
@@ -901,7 +937,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             // 继续按钮（返回主页）
             Expanded(
               child: _buildSimpleButton(
-                label: '继续',
+                label: AppLocalizations.of(context)!.continueButton,
                 color: Colors.white,
                 textColor: Colors.black87,
                 onTap: widget.onComplete,
@@ -922,13 +958,13 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
           if (widget.onRematch != null)
             _buildActionButton(
               icon: Icons.replay,
-              label: '再战',
+              label: AppLocalizations.of(context)!.rematch,
               color: Colors.green,
               onTap: widget.onRematch!,
             ),
           _buildActionButton(
             icon: Icons.arrow_forward,
-            label: '继续',
+            label: AppLocalizations.of(context)!.continueButton,
             color: Colors.amber,
             onTap: widget.onComplete,
             isPrimary: true,

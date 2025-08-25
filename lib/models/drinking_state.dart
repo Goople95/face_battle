@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import '../services/temp_state_service.dart';
 import '../models/temp_game_state.dart';
 import '../services/npc_config_service.dart';
 import '../utils/logger_utils.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 饮酒状态管理（支持动态酒量）
 class DrinkingState {
@@ -59,30 +61,14 @@ class DrinkingState {
     return (aiDrinks[aiId] ?? 0) >= capacity;
   }
   
-  /// 特定AI是否不能游戏（只有达到最大酒量才进入醉酒状态）
+  /// 特定AI是否不能游戏（达到最大酒量时不能游戏）
   bool isAIUnavailable(String aiId) {
-    // 正确的规则：只有当AI达到其最大酒量时才进入醉酒状态
-    // 醉酒状态下必须完全清醒（0杯）才能继续游戏
+    // 简单规则：只有当AI当前达到其最大酒量时才不能游戏
     int capacity = _getAICapacity(aiId);
     int currentDrinks = aiDrinks[aiId] ?? 0;
     
-    // 检查是否曾经醉酒（达到过最大酒量）
-    bool hasBeenDrunk = aiDrunkStates[aiId] ?? false;
-    
-    // 如果当前达到最大酒量，标记为醉酒状态
-    if (currentDrinks >= capacity) {
-      aiDrunkStates[aiId] = true;
-      hasBeenDrunk = true;
-    }
-    
-    // 如果完全清醒了（0杯），清除醉酒状态
-    if (currentDrinks == 0) {
-      aiDrunkStates[aiId] = false;
-      hasBeenDrunk = false;
-    }
-    
-    // 只有在醉酒状态下（曾经达到最大酒量且尚未完全清醒）才不能游戏
-    return hasBeenDrunk && currentDrinks > 0;
+    // 只有当前达到最大酒量时才不能游戏
+    return currentDrinks >= capacity;
   }
   
   /// 获取特定AI的酒杯数
@@ -148,7 +134,21 @@ class DrinkingState {
     return ((aiDrinks[aiId] ?? 0) / capacity).clamp(0.0, 1.0);
   }
   
-  /// 获取玩家状态描述
+  /// 获取玩家状态描述（需要传入context以获取本地化文本）
+  String getStatusDescription(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return statusDescription; // 如果没有context，返回默认值
+    
+    if (isDrunk) return l10n.drunkStatusDeadDrunk;
+    if (drinksConsumed >= 5) return l10n.drunkStatusDizzy;
+    if (drinksConsumed >= 4) return l10n.drunkStatusObvious;
+    if (drinksConsumed >= 3) return l10n.drunkStatusTipsy;
+    if (drinksConsumed >= 2) return l10n.drunkStatusSlightly;
+    if (drinksConsumed >= 1) return l10n.drunkStatusOneDrink;
+    return l10n.drunkStatusSober;
+  }
+  
+  /// 获取玩家状态描述（兼容旧代码）
   String get statusDescription {
     if (isDrunk) return '烂醉如泥';
     if (drinksConsumed >= 5) return '醉意朦胧';
@@ -307,6 +307,7 @@ class DrinkingState {
           aiDrinks[aiId] = ((aiDrinks[aiId] ?? 0) - soberingAmount).clamp(0, capacity);
           if (aiDrinks[aiId] == 0) {
             aiLastDrinkTimes[aiId] = null;
+            aiDrunkStates[aiId] = false;  // 清除醉酒状态
           } else {
             aiLastDrinkTimes[aiId] = now.subtract(Duration(minutes: minutesPassed % 10));
           }
@@ -354,12 +355,12 @@ class DrinkingState {
     soberPotions = state.soberPotions;
     
     // 加载AI状态
-    for (var aiId in aiDrinks.keys) {
-      if (state.aiStates.containsKey(aiId)) {
-        aiDrinks[aiId] = state.aiStates[aiId]!.currentDrinks;
-        aiLastDrinkTimes[aiId] = state.aiStates[aiId]!.lastDrinkTime;
-        aiDrunkStates[aiId] = state.aiStates[aiId]!.isDrunkState;
-      }
+    // 遍历保存的状态，而不是当前的aiDrinks（可能是空的）
+    for (var entry in state.aiStates.entries) {
+      aiDrinks[entry.key] = entry.value.currentDrinks;
+      aiLastDrinkTimes[entry.key] = entry.value.lastDrinkTime;
+      aiDrunkStates[entry.key] = entry.value.isDrunkState;
+      LoggerUtils.debug('加载AI状态 - ID: ${entry.key}, 饮酒数: ${entry.value.currentDrinks}, 醉酒状态: ${entry.value.isDrunkState}');
     }
     
     // 处理醒酒（TempStateService已经处理过）

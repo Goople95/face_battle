@@ -404,7 +404,7 @@ class AIService {
   }
   
   /// 生成对话和表情（使用保存的Master决策）
-  (String dialogue, String expression) generateDialogue(GameRound round, GameAction? lastAction, Bid? newBid) {
+  (String dialogue, String expression) generateDialogue(GameRound round, GameAction? lastAction, Bid? newBid, {String locale = 'en'}) {
     // 使用已保存的Master策略，确保决策和对话一致
     String strategy = _lastMasterStrategy;
     Map<String, dynamic>? masterDecision = _lastMasterDecision;
@@ -420,29 +420,34 @@ class AIService {
       dialogue = dialogueService.getStrategyDialogue(
         personality.id, 
         masterDecision['psychTactic'], 
-        locale: 'zh_TW'
+        locale: locale
       );
       
       // 根据心理战术设置表情
       switch (masterDecision['psychTactic']) {
-        case '反向陷阱':
+        case 'reverse_trap_alt':
           expression = 'nervous';
           break;
-        case '压力升級':
-        case '後期施壓':
+        case 'pressure_escalation':
+        case 'late_pressure':
           expression = 'confident';
           break;
-        case '模式破壞':
+        case 'pattern_break':
           expression = 'suspicious';
           break;
-        case '誘導激進':
+        case 'aggressive_bait':
           expression = 'happy';
           break;
         default:
           expression = 'thinking';
       }
     } else {
-      dialogue = _getStrategyDialogue(strategy, lastAction, newBid);
+      dialogue = _getStrategyDialogue(strategy, lastAction, newBid, locale: locale);
+      
+      // 如果是叫牌格式标记，保留它让game_screen处理
+      if (dialogue == '__USE_BID_FORMAT__' && newBid != null) {
+        // 保持标记不变
+      }
     }
     
     // 根据策略调整表情
@@ -484,11 +489,11 @@ class AIService {
   }
   
   /// 根据策略生成对话
-  String _getStrategyDialogue(String strategy, GameAction? lastAction, Bid? newBid) {
+  String _getStrategyDialogue(String strategy, GameAction? lastAction, Bid? newBid, {String locale = 'en'}) {
     final dialogueService = DialogueService();
     
     if (lastAction == GameAction.challenge) {
-      return dialogueService.getStrategyDialogue(personality.id, 'challenge_action', locale: 'zh_TW');
+      return dialogueService.getStrategyDialogue(personality.id, 'challenge_action', locale: locale);
     }
     
     // 对于bluff和pure_bluff，统一使用bluff策略对话
@@ -498,11 +503,12 @@ class AIService {
     }
     
     // 如果没有匹配的策略，使用默认对话
-    final dialogue = dialogueService.getStrategyDialogue(personality.id, dialogueStrategy, locale: 'zh_TW');
+    final dialogue = dialogueService.getStrategyDialogue(personality.id, dialogueStrategy, locale: locale);
     
-    // 如果返回默认值且有newBid，显示叫牌信息
+    // 如果返回默认值且有newBid，返回特殊标记让调用方使用ARB格式
     if (dialogue == '...' && newBid != null) {
-      return '我叫${newBid.quantity}個${newBid.value}';
+      // 返回特殊标记，让调用方使用本地化的叫牌格式
+      return '__USE_BID_FORMAT__';
     }
     
     return dialogue;

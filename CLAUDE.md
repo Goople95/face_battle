@@ -144,3 +144,4 @@ The project includes comprehensive logging:
 - Rive animations prepared but not integrated
 - Video expressions may have loading delays on first play
 - AI API calls have 60/minute rate limit (free tier)
+- 永远可以读取screen shots子目录和logs子目录，无需我每一次授权

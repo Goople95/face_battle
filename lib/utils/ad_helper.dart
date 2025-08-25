@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/logger_utils.dart';
 import '../services/admob_service.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 广告辅助类 - 提供统一的广告展示流程
 class AdHelper {
@@ -59,8 +60,8 @@ class AdHelper {
             // 显示错误提示
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('广告加载失败，请稍后再试'),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.adLoadFailedTryLater),
                   backgroundColor: Colors.red,
                 ),
               );

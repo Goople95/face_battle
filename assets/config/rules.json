@@ -1,0 +1,39 @@
+{
+  "rules": {
+    "en": [
+      "Each player rolls 5 dice in secret.",
+      "1s are wild and count as any number, until someone calls 1s directly.",
+      "Each new bid must be higher in quantity or face value.",
+      "If you think it’s a bluff, call it! The dice will decide who loses.",
+      "Dice ranking: 1 > 6 > 5 > 4 > 3 > 2."
+    ],
+    "zh_TW": [
+      "每位玩家各自秘密擲 5 顆骰子。",
+      "點數 1 為萬用，可當任意點數，直到有人直接叫「1」為止。",
+      "每次叫注必須提高數量或骰子點數。",
+      "若懷疑對手在吹牛，就揭穿！結果由骰子決定輸贏。",
+      "骰子大小順序：1 > 6 > 5 > 4 > 3 > 2。"
+    ],
+    "es": [
+      "Cada jugador lanza 5 dados en secreto.",
+      "Los unos son comodines y cuentan como cualquier número, hasta que alguien apueste por unos directamente.",
+      "Cada nueva apuesta debe subir en cantidad o valor de dado.",
+      "Si crees que es un farol, ¡desafía! Los dados decidirán quién pierde.",
+      "Jerarquía de los dados: 1 > 6 > 5 > 4 > 3 > 2."
+    ],
+    "pt": [
+      "Cada jogador lança 5 dados em segredo.",
+      "Os 1s são curingas e contam como qualquer número, até que alguém aposte em 1s diretamente.",
+      "Cada nova aposta deve aumentar em quantidade ou valor do dado.",
+      "Se achar que é blefe, desafie! Os dados decidem quem perde.",
+      "Hierarquia dos dados: 1 > 6 > 5 > 4 > 3 > 2."
+    ],
+    "id": [
+      "Setiap pemain melempar 5 dadu secara rahasia.",
+      "Angka 1 adalah wildcard, bisa menjadi angka apa saja, sampai ada yang menyebut angka 1 secara langsung.",
+      "Setiap bid baru harus naik dalam jumlah atau nilai dadu.",
+      "Jika curiga itu gertakan, panggil! Dadu yang akan menentukan siapa kalah.",
+      "Urutan kekuatan dadu: 1 > 6 > 5 > 4 > 3 > 2."
+    ]
+  }
+}

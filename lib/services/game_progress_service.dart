@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'storage/local_storage_service.dart';
 import 'storage/cloud_storage_service.dart';
 import '../models/game_state.dart';
 import '../utils/logger_utils.dart';
+import '../l10n/generated/app_localizations.dart';
 
 /// 游戏进度服务 - 专门处理GameProgress的双向同步
 /// 这是唯一需要本地和云端同步的数据
@@ -782,38 +784,40 @@ class GameProgressData {
     return result;
   }
   
-  /// 获取玩家风格描述
-  String getStyleDescription() {
-    if (totalGames == 0) return '新手玩家';
+  /// 获取玩家风格描述（本地化版本）
+  String getStyleDescription(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    if (totalGames == 0) return l10n.styleNovice;
     
     List<String> traits = [];
     
     // 基于虚张倾向
     if (bluffingTendency > 0.7) {
-      traits.add('虚张高手');
+      traits.add(l10n.styleBluffMaster);
     } else if (bluffingTendency > 0.5) {
-      traits.add('善于虚张');
+      traits.add(l10n.styleBluffer);
     } else if (bluffingTendency < 0.3) {
-      traits.add('诚实玩家');
+      traits.add(l10n.styleHonest);
     }
     
     // 基于激进程度
     if (aggressiveness > 0.7) {
-      traits.add('激进型');
+      traits.add(l10n.styleAggressive);
     } else if (aggressiveness > 0.5) {
-      traits.add('进攻型');
+      traits.add(l10n.styleOffensive);
     } else if (aggressiveness < 0.3) {
-      traits.add('保守型');
+      traits.add(l10n.styleConservative);
     }
     
     // 基于质疑率
     if (challengeRate > 0.5) {
-      traits.add('质疑狂魔');
+      traits.add(l10n.styleChallenger);
     } else if (challengeRate < 0.2) {
-      traits.add('谨慎质疑');
+      traits.add(l10n.styleCautious);
     }
     
-    return traits.isEmpty ? '均衡型玩家' : traits.join('、');
+    return traits.isEmpty ? l10n.styleBalanced : traits.join(' & ');
   }
   
   /// 获取胜率

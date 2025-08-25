@@ -4,19 +4,17 @@
       "id": "0001",
       "names": {
         "en": "Lena",
-        "zh": "莱娜",
         "zh_TW": "萊娜",
         "es": "Lena",
         "pt": "Lena",
         "id": "Lena"
       },
       "descriptions": {
-        "en": "Rigorous and rational, precise calculations",
-        "zh": "严谨理性，精确计算",
-        "zh_TW": "嚴謹理性，精確計算",
-        "es": "Rigurosa y racional, cálculos precisos",
-        "pt": "Rigorosa e racional, cálculos precisos",
-        "id": "Teliti dan rasional, perhitungan tepat"
+        "en": "Her calm gaze hides a quiet allure.",
+        "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
+        "es": "Su mirada serena esconde un encanto silencioso.",
+        "pt": "Seu olhar calmo esconde um charme discreto.",
+        "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
       },
       "avatarPath": "assets/people/0001/",
       "videosPath": "assets/people/0001/videos/",
@@ -31,26 +29,24 @@
         "reverseActingProb": 0.25,
         "bidPreferenceThreshold": 0.1
       },
-      "drinkCapacity": 4,
+      "drinkCapacity": 2,
       "country": "Germany"
     },
     "0002": {
       "id": "0002",
       "names": {
         "en": "Katerina",
-        "zh": "卡捷琳娜",
         "zh_TW": "卡捷琳娜",
         "es": "Katerina",
         "pt": "Katerina",
         "id": "Katerina"
       },
       "descriptions": {
-        "en": "Cold and noble, strategic mastermind",
-        "zh": "冷艳高贵，算无遗策",
-        "zh_TW": "冷豔高貴，算無遺策",
-        "es": "Fría y noble, estratega maestra",
-        "pt": "Fria e nobre, estrategista mestre",
-        "id": "Dingin dan mulia, ahli strategi"
+        "en": "Graceful and distant, she draws you closer without a word.",
+        "zh_TW": "高貴而疏離，她無聲地吸引著你靠近。",
+        "es": "Elegante y distante, te atrae sin decir una palabra.",
+        "pt": "Elegante e distante, ela te atrai sem dizer uma palavra.",
+        "id": "Anggun dan berjarak, ia menarikmu tanpa sepatah kata pun."
       },
       "avatarPath": "assets/people/0002/",
       "videosPath": "assets/people/0002/videos/",
@@ -65,26 +61,24 @@
         "reverseActingProb": 0.35,
         "bidPreferenceThreshold": 0.12
       },
-      "drinkCapacity": 4,
+      "drinkCapacity": 2,
       "country": "Russia"
     },
     "1001": {
       "id": "1001",
       "names": {
         "en": "Aki",
-        "zh": "亚希",
         "zh_TW": "亞希",
         "es": "Aki",
         "pt": "Aki",
         "id": "Aki"
       },
       "descriptions": {
-        "en": "Gentle and cute, secretly cunning",
-        "zh": "温柔可爱，暗藏心机",
-        "zh_TW": "溫柔可愛，暗藏心機",
-        "es": "Dulce y adorable, astuta en secreto",
-        "pt": "Doce e adorável, secretamente astuta",
-        "id": "Lembut dan imut, diam-diam licik"
+        "en": "Her sweet smile makes you wonder what she’s truly thinking.",
+        "zh_TW": "甜美的笑容，讓人忍不住猜想她真正的心思。",
+        "es": "Su dulce sonrisa te hace preguntarte qué piensa en realidad.",
+        "pt": "Seu doce sorriso faz você imaginar o que ela realmente pensa.",
+        "id": "Senyum manisnya membuatmu bertanya-tanya apa yang sebenarnya ia pikirkan."
       },
       "avatarPath": "assets/people/1001/",
       "videosPath": "assets/people/1001/videos/",
@@ -101,26 +95,24 @@
         "reverseActingProb": 0.35,
         "bidPreferenceThreshold": 0.08
       },
-      "drinkCapacity": 6,
+      "drinkCapacity": 2,
       "country": "Japan"
     },
     "1002": {
       "id": "1002",
       "names": {
         "en": "Isabella",
-        "zh": "伊莎贝拉",
         "zh_TW": "伊莎貝拉",
         "es": "Isabella",
         "pt": "Isabella",
         "id": "Isabella"
       },
       "descriptions": {
-        "en": "Passionate and eloquent, silver-tongued",
-        "zh": "热情奔放，巧言如簧",
-        "zh_TW": "熱情奔放，巧言如簧",
-        "es": "Apasionada y elocuente, lengua de plata",
-        "pt": "Apaixonada e eloquente, língua de prata",
-        "id": "Bersemangat dan fasih, pandai bicara"
+        "en": "Her words flow like music, impossible to resist.",
+        "zh_TW": "她的話語像音樂般流淌，令人難以抗拒。",
+        "es": "Sus palabras fluyen como música, imposibles de resistir.",
+        "pt": "Suas palavras fluem como música, impossíveis de resistir.",
+        "id": "Kata-katanya mengalir seperti musik, mustahil untuk ditolak."
       },
       "avatarPath": "assets/people/1002/",
       "videosPath": "assets/people/1002/videos/",
@@ -137,7 +129,7 @@
         "reverseActingProb": 0.4,
         "bidPreferenceThreshold": 0.09
       },
-      "drinkCapacity": 6,
+      "drinkCapacity": 2,
       "country": "Brazil"
     }
   },
@@ -151,12 +143,6 @@
         "Unique dialogues and expressions",
         "Higher game difficulty",
         "Exclusive achievements"
-      ],
-      "zh": [
-        "无需观看广告",
-        "独特的对话和表情",
-        "更高的游戏难度",
-        "专属成就奖励"
       ],
       "zh_TW": [
         "無需觀看廣告",

@@ -195,6 +195,12 @@ abstract class AppLocalizations {
   /// **'Win Rate'**
   String get winRate;
 
+  /// Total wins label
+  ///
+  /// In en, this message translates to:
+  /// **'Wins'**
+  String get totalWins;
+
   /// Level label
   ///
   /// In en, this message translates to:
@@ -384,14 +390,20 @@ abstract class AppLocalizations {
   /// You win message
   ///
   /// In en, this message translates to:
-  /// **'You Win!'**
+  /// **'You win!'**
   String get youWin;
 
   /// You lose message
   ///
   /// In en, this message translates to:
-  /// **'You Lose!'**
+  /// **'You lose!'**
   String get youLose;
+
+  /// No description provided for @aiWins.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wins!'**
+  String aiWins(Object name);
 
   /// Drink action
   ///
@@ -410,6 +422,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re too drunk to continue!'**
   String get drunkWarning;
+
+  /// No description provided for @drunkWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🥴 Drunk Warning!'**
+  String get drunkWarningTitle;
+
+  /// No description provided for @drinksConsumedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve had {count} drinks'**
+  String drinksConsumedMessage(int count);
+
+  /// No description provided for @soberPotionRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} bottles left'**
+  String soberPotionRemaining(int count);
+
+  /// No description provided for @drunkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} looks at you drunkenly'**
+  String drunkDescription(String name);
+
+  /// No description provided for @soberOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sober options'**
+  String get soberOptions;
+
+  /// No description provided for @drunkStatusDeadDrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Dead drunk'**
+  String get drunkStatusDeadDrunk;
+
+  /// No description provided for @drunkStatusDizzy.
+  ///
+  /// In en, this message translates to:
+  /// **'Dizzy drunk'**
+  String get drunkStatusDizzy;
+
+  /// No description provided for @drunkStatusObvious.
+  ///
+  /// In en, this message translates to:
+  /// **'Obviously drunk'**
+  String get drunkStatusObvious;
+
+  /// No description provided for @drunkStatusTipsy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tipsy'**
+  String get drunkStatusTipsy;
+
+  /// No description provided for @drunkStatusSlightly.
+  ///
+  /// In en, this message translates to:
+  /// **'Slightly drunk'**
+  String get drunkStatusSlightly;
+
+  /// No description provided for @drunkStatusOneDrink.
+  ///
+  /// In en, this message translates to:
+  /// **'Had one drink'**
+  String get drunkStatusOneDrink;
+
+  /// No description provided for @drunkStatusSober.
+  ///
+  /// In en, this message translates to:
+  /// **'Sober'**
+  String get drunkStatusSober;
 
   /// Sober up message
   ///
@@ -434,6 +518,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock VIP'**
   String get unlockVIP;
+
+  /// Unlock VIP character title
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock VIP Character'**
+  String get unlockVIPCharacter;
+
+  /// Choose unlock method subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a method to unlock this VIP character'**
+  String get chooseUnlockMethod;
+
+  /// Free play for one hour
+  ///
+  /// In en, this message translates to:
+  /// **'Free play for 1 hour'**
+  String get freePlayOneHour;
+
+  /// Permanent unlock
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent Unlock'**
+  String get permanentUnlock;
+
+  /// Gems required for unlock
+  ///
+  /// In en, this message translates to:
+  /// **'{required} gems (you have {current} gems)'**
+  String gemsRequired(Object required, Object current);
+
+  /// Later decide button
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe Later'**
+  String get laterDecide;
 
   /// VIP benefits title
   ///
@@ -488,6 +608,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I just won in Dice Girls! Can you beat me?'**
   String get shareMessage;
+
+  /// No description provided for @shareSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Dice Girls - Perfect Victory!'**
+  String get shareSubject;
+
+  /// No description provided for @shareTemplate1.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 I got {name} drunk in Dice Girls! {drinks} drinks total, {minutes} minutes of private time~ #DiceGirls #PerfectVictory'**
+  String shareTemplate1(String name, int drinks, int minutes);
+
+  /// No description provided for @shareTemplate2.
+  ///
+  /// In en, this message translates to:
+  /// **'🏆 Victory Report: {name} is down! {drinks} drinks consumed, intimacy +{minutes}! Who dares to challenge? #DiceGirls'**
+  String shareTemplate2(String name, int drinks, int minutes);
+
+  /// No description provided for @shareTemplate3.
+  ///
+  /// In en, this message translates to:
+  /// **'😎 Easy win against {name}! Only {drinks} drinks and they\'re out, we chatted for {minutes} minutes~ #DiceGirls'**
+  String shareTemplate3(String name, int drinks, int minutes);
+
+  /// No description provided for @shareTemplate4.
+  ///
+  /// In en, this message translates to:
+  /// **'🍺 Tonight\'s MVP is me! {name} passed out after {drinks} drinks, the next {minutes} minutes... you know 😏 #DiceGirls'**
+  String shareTemplate4(String name, int drinks, int minutes);
+
+  /// No description provided for @shareCardDrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Drunk'**
+  String get shareCardDrunk;
+
+  /// No description provided for @shareCardIntimacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy'**
+  String get shareCardIntimacy;
+
+  /// No description provided for @shareCardPrivateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Private time: {minutes} minutes'**
+  String shareCardPrivateTime(int minutes);
+
+  /// No description provided for @shareCardDrinkCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} drinks to pass out'**
+  String shareCardDrinkCount(int count);
+
+  /// No description provided for @shareCardGameName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dice Girls'**
+  String get shareCardGameName;
 
   /// Rate app button
   ///
@@ -624,7 +804,7 @@ abstract class AppLocalizations {
   /// No description provided for @playerDataAnalysis.
   ///
   /// In en, this message translates to:
-  /// **'Your Data Analysis'**
+  /// **'Your Stats'**
   String get playerDataAnalysis;
 
   /// No description provided for @vsRecord.
@@ -636,19 +816,19 @@ abstract class AppLocalizations {
   /// No description provided for @gameStyle.
   ///
   /// In en, this message translates to:
-  /// **'Game Style'**
+  /// **'Play Style'**
   String get gameStyle;
 
   /// No description provided for @bluffingTendency.
   ///
   /// In en, this message translates to:
-  /// **'Bluffing Tendency'**
+  /// **'Bluff Rate'**
   String get bluffingTendency;
 
   /// No description provided for @aggressiveness.
   ///
   /// In en, this message translates to:
-  /// **'Aggressiveness'**
+  /// **'Aggression'**
   String get aggressiveness;
 
   /// No description provided for @challengeRate.
@@ -656,6 +836,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Challenge Rate'**
   String get challengeRate;
+
+  /// No description provided for @styleNovice.
+  ///
+  /// In en, this message translates to:
+  /// **'Novice'**
+  String get styleNovice;
+
+  /// No description provided for @styleBluffMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluff Master'**
+  String get styleBluffMaster;
+
+  /// No description provided for @styleBluffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluffer'**
+  String get styleBluffer;
+
+  /// No description provided for @styleHonest.
+  ///
+  /// In en, this message translates to:
+  /// **'Honest'**
+  String get styleHonest;
+
+  /// No description provided for @styleAggressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Aggressive'**
+  String get styleAggressive;
+
+  /// No description provided for @styleOffensive.
+  ///
+  /// In en, this message translates to:
+  /// **'Offensive'**
+  String get styleOffensive;
+
+  /// No description provided for @styleConservative.
+  ///
+  /// In en, this message translates to:
+  /// **'Conservative'**
+  String get styleConservative;
+
+  /// No description provided for @styleChallenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenger'**
+  String get styleChallenger;
+
+  /// No description provided for @styleCautious.
+  ///
+  /// In en, this message translates to:
+  /// **'Cautious'**
+  String get styleCautious;
+
+  /// No description provided for @styleBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get styleBalanced;
 
   /// No description provided for @totalGames.
   ///
@@ -768,7 +1008,7 @@ abstract class AppLocalizations {
   /// No description provided for @challengeSuccessRateDisplay.
   ///
   /// In en, this message translates to:
-  /// **'Challenge Success: {rate}%'**
+  /// **'Success chance: {rate}%'**
   String challengeSuccessRateDisplay(Object rate);
 
   /// No description provided for @bidMustBeHigher.
@@ -782,6 +1022,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Round End'**
   String get roundEnd;
+
+  /// No description provided for @roundNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Round {number}'**
+  String roundNumber(int number);
+
+  /// No description provided for @nextBidHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Next bid: qty > {quantity} or value > {value}'**
+  String nextBidHint(int quantity, int value);
 
   /// No description provided for @backToHome.
   ///
@@ -805,7 +1057,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'AI is thinking...'**
-  String get aiThinking;
+  String aiThinking(Object name);
 
   /// No description provided for @bidHistory.
   ///
@@ -816,7 +1068,7 @@ abstract class AppLocalizations {
   /// No description provided for @completeBidHistory.
   ///
   /// In en, this message translates to:
-  /// **'Complete Bid History'**
+  /// **'Bid History'**
   String get completeBidHistory;
 
   /// No description provided for @totalGamesCount.
@@ -960,13 +1212,13 @@ abstract class AppLocalizations {
   /// No description provided for @pleaseBid.
   ///
   /// In en, this message translates to:
-  /// **'Please bid'**
+  /// **'Make your bid'**
   String get pleaseBid;
 
   /// No description provided for @showDice.
   ///
   /// In en, this message translates to:
-  /// **'Show dice!'**
+  /// **'Call the bluff!'**
   String get showDice;
 
   /// No description provided for @challengeOpponent.
@@ -984,26 +1236,26 @@ abstract class AppLocalizations {
   /// No description provided for @playerShowDice.
   ///
   /// In en, this message translates to:
-  /// **'Player shows dice!'**
+  /// **'Player reveals the dice!'**
   String get playerShowDice;
 
   /// No description provided for @aiShowDice.
   ///
   /// In en, this message translates to:
-  /// **'{name} shows dice!'**
+  /// **'{name} reveals the dice!'**
   String aiShowDice(Object name);
-
-  /// No description provided for @soberOptions.
-  ///
-  /// In en, this message translates to:
-  /// **'Sober options'**
-  String get soberOptions;
 
   /// No description provided for @adLoadFailed.
   ///
   /// In en, this message translates to:
   /// **'Ad failed to load'**
   String get adLoadFailed;
+
+  /// No description provided for @adLoadFailedTryLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad failed to load, please try again later'**
+  String get adLoadFailedTryLater;
 
   /// No description provided for @adWatchedSober.
   ///
@@ -1016,6 +1268,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'✨ {name} sobered up, continue the game!'**
   String aiSoberedUp(Object name);
+
+  /// No description provided for @minimumBidTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum bid is 2'**
+  String get minimumBidTwo;
+
+  /// No description provided for @languageChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed to {language}'**
+  String languageChanged(Object language);
+
+  /// No description provided for @tempUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ Temporarily unlocked {name} for 1 hour'**
+  String tempUnlocked(Object name);
+
+  /// No description provided for @permanentUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Successfully unlocked {name} permanently'**
+  String permanentUnlocked(Object name);
+
+  /// No description provided for @screenshotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot saved!'**
+  String get screenshotSaved;
 
   /// No description provided for @challengeProbability.
   ///
@@ -1129,6 +1411,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Welcome! Let\'s play!'**
   String get gameGreeting;
+
+  /// Format for AI bid announcement
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} {value}\'s'**
+  String aiBidFormat(int quantity, int value);
+
+  /// No description provided for @defaultChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'I don\'t believe you'**
+  String get defaultChallenge;
+
+  /// No description provided for @defaultValueBet.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady'**
+  String get defaultValueBet;
+
+  /// No description provided for @defaultSemiBluff.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s try'**
+  String get defaultSemiBluff;
+
+  /// No description provided for @defaultBluff.
+  ///
+  /// In en, this message translates to:
+  /// **'Just like that'**
+  String get defaultBluff;
+
+  /// No description provided for @defaultReverseTrap.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m... not sure'**
+  String get defaultReverseTrap;
+
+  /// No description provided for @defaultPressurePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to decide'**
+  String get defaultPressurePlay;
+
+  /// No description provided for @defaultSafePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing safe'**
+  String get defaultSafePlay;
+
+  /// No description provided for @defaultPatternBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Change it up'**
+  String get defaultPatternBreak;
+
+  /// No description provided for @defaultInduceAggressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Come on'**
+  String get defaultInduceAggressive;
+
+  /// No description provided for @wildcard.
+  ///
+  /// In en, this message translates to:
+  /// **'Wild'**
+  String get wildcard;
+
+  /// No description provided for @notWildcard.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Wild'**
+  String get notWildcard;
+
+  /// No description provided for @wildcardWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'(incl. {count}×1)'**
+  String wildcardWithCount(int count);
+
+  /// No description provided for @noWildcard.
+  ///
+  /// In en, this message translates to:
+  /// **' (no wild)'**
+  String get noWildcard;
+
+  /// No description provided for @currentBidDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} {value}\'s'**
+  String currentBidDisplay(int quantity, int value);
+
+  /// No description provided for @bidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bid: {quantity}×{value}s'**
+  String bidLabel(int quantity, int value);
+
+  /// No description provided for @actualLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual: {count}×{value}s'**
+  String actualLabel(int count, int value);
+
+  /// No description provided for @quantityDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity}'**
+  String quantityDisplay(int quantity);
+
+  /// No description provided for @nightFall.
+  ///
+  /// In en, this message translates to:
+  /// **'🌙 It\'s late...'**
+  String get nightFall;
+
+  /// No description provided for @aiGotDrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is drunk'**
+  String aiGotDrunk(String name);
+
+  /// No description provided for @timePassesBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Time passes quietly'**
+  String get timePassesBy;
+
+  /// No description provided for @aiAndYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} and you...'**
+  String aiAndYou(String name);
+
+  /// No description provided for @relationshipCloser.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting closer'**
+  String get relationshipCloser;
+
+  /// No description provided for @tapToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to continue'**
+  String get tapToContinue;
+
+  /// No description provided for @intimacyIncreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy +{points}'**
+  String intimacyIncreased(int points);
+
+  /// No description provided for @intimacyGrowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Growing...'**
+  String get intimacyGrowing;
+
+  /// No description provided for @currentProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {total}'**
+  String currentProgress(int current, int total);
+
+  /// No description provided for @maxLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'MAX'**
+  String get maxLevel;
+
+  /// No description provided for @upgradeToKnowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Level up to know more of her secrets'**
+  String get upgradeToKnowMore;
+
+  /// No description provided for @youKnowAllSecrets.
+  ///
+  /// In en, this message translates to:
+  /// **'You know all her secrets'**
+  String get youKnowAllSecrets;
+
+  /// No description provided for @congratsIntimacyUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy +1 level!'**
+  String get congratsIntimacyUpgrade;
+
+  /// No description provided for @showOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Off'**
+  String get showOff;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @rematch.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch'**
+  String get rematch;
+
+  /// No description provided for @perfectVictory.
+  ///
+  /// In en, this message translates to:
+  /// **'🏆 Perfect Victory!'**
+  String get perfectVictory;
+
+  /// No description provided for @sharingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing image'**
+  String get sharingImage;
+
+  /// No description provided for @loadingAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading avatar...'**
+  String get loadingAvatar;
+
+  /// No description provided for @generatingShareImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating share image...'**
+  String get generatingShareImage;
+
+  /// No description provided for @challengeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge Now'**
+  String get challengeNow;
+
+  /// No description provided for @gameSlogan.
+  ///
+  /// In en, this message translates to:
+  /// **'100+ waiting for your challenge'**
+  String get gameSlogan;
 }
 
 class _AppLocalizationsDelegate

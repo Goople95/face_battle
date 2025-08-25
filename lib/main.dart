@@ -115,10 +115,10 @@ class MyApp extends StatelessWidget {
                 ],
                 supportedLocales: const [
                   Locale('en'),
-                  Locale('zh', 'CN'),
                   Locale('zh', 'TW'),
                   Locale('es'),
                   Locale('pt'),
+                  Locale('id'),
                 ],
                 home: Consumer<AuthService>(
           builder: (context, auth, _) {

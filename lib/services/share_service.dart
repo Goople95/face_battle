@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
 import '../utils/logger_utils.dart';
@@ -24,6 +25,7 @@ class ShareService {
     try {
       // 生成分享文本
       final shareText = _generateShareText(
+        context: context,
         defeatedAI: defeatedAI,
         drinkingState: drinkingState,
         intimacyMinutes: intimacyMinutes,
@@ -38,15 +40,17 @@ class ShareService {
       );
       
       // 暂时只分享文字，不生成图片
+      final l10n = AppLocalizations.of(context)!;
       await Share.share(
         shareText,
-        subject: '表情博弈 - 完美胜利！',
+        subject: l10n.shareSubject,
       );
       
     } catch (e) {
       LoggerUtils.error('分享失败: $e');
       // 如果图片分享失败，至少分享文字
       _shareTextOnly(
+        context: context,
         defeatedAI: defeatedAI,
         drinkingState: drinkingState,
         intimacyMinutes: intimacyMinutes,
@@ -56,36 +60,50 @@ class ShareService {
   
   /// 仅分享文字
   static Future<void> _shareTextOnly({
+    required BuildContext context,
     required AIPersonality defeatedAI,
     required DrinkingState drinkingState,
     required int intimacyMinutes,
   }) async {
     final shareText = _generateShareText(
+      context: context,
       defeatedAI: defeatedAI,
       drinkingState: drinkingState,
       intimacyMinutes: intimacyMinutes,
     );
+    final l10n = AppLocalizations.of(context)!;
     
     await Share.share(
       shareText,
-      subject: '表情博弈 - 完美胜利！',
+      subject: l10n.shareSubject,
     );
   }
   
   /// 生成分享文本
   static String _generateShareText({
+    required BuildContext context,
     required AIPersonality defeatedAI,
     required DrinkingState drinkingState,
     required int intimacyMinutes,
   }) {
     final drinks = drinkingState.getAIDrinks(defeatedAI.id);
+    final l10n = AppLocalizations.of(context)!;
     
-    // 根据不同情况生成有趣的分享文本
+    // 获取本地化的AI名称
+    final locale = Localizations.localeOf(context);
+    final languageCode = locale.languageCode;
+    String localeCode = languageCode;
+    if (languageCode == 'zh') {
+      localeCode = 'zh_TW';
+    }
+    final aiName = defeatedAI.getLocalizedName(localeCode);
+    
+    // 使用本地化的分享模板
     List<String> templates = [
-      '🎉 我在表情博弈中把${defeatedAI.name}灌醉了！喝了整整$drinks杯，独处了$intimacyMinutes分钟～ #表情博弈 #完美胜利',
-      '🏆 战绩播报：${defeatedAI.name}已倒！$drinks杯下肚，亲密度+$intimacyMinutes！谁敢来挑战？ #表情博弈',
-      '😎 轻松拿下${defeatedAI.name}！$drinks杯酒就不行了，我们还聊了$intimacyMinutes分钟的小秘密～ #表情博弈',
-      '🍺 今晚的MVP是我！${defeatedAI.name}醉倒在第$drinks杯，接下来的$intimacyMinutes分钟...你懂的😏 #表情博弈',
+      l10n.shareTemplate1(aiName, drinks, intimacyMinutes),
+      l10n.shareTemplate2(aiName, drinks, intimacyMinutes),
+      l10n.shareTemplate3(aiName, drinks, intimacyMinutes),
+      l10n.shareTemplate4(aiName, drinks, intimacyMinutes),
     ];
     
     // 随机选择一个模板
@@ -106,15 +124,17 @@ class ShareService {
         width: 400,
         height: 600,
       decoration: BoxDecoration(
-        // 深色背景，营造夜晚氛围
+        // 黑色和暗红色的过渡
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
             Colors.black,
-            Colors.pink.shade900.withValues(alpha: 0.8),
+            Color.fromRGBO(139, 0, 0, 0.8), // 暗红色
+            Colors.black87,
             Colors.black,
           ],
+          stops: const [0.0, 0.35, 0.65, 1.0],
         ),
       ),
       child: Stack(
@@ -219,7 +239,15 @@ class ShareService {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        defeatedAI.name,
+                                        (() {
+                                          final locale = Localizations.localeOf(context);
+                                          final languageCode = locale.languageCode;
+                                          String localeCode = languageCode;
+                                          if (languageCode == 'zh') {
+                                            localeCode = 'zh_TW';
+                                          }
+                                          return defeatedAI.getLocalizedName(localeCode);
+                                        })(),
                                         style: TextStyle(
                                           color: Colors.white.withValues(alpha: 0.8),
                                           fontSize: 14,
@@ -260,7 +288,15 @@ class ShareService {
               
               // AI名字
               Text(
-                defeatedAI.name,
+                (() {
+                  final locale = Localizations.localeOf(context);
+                  final languageCode = locale.languageCode;
+                  String localeCode = languageCode;
+                  if (languageCode == 'zh') {
+                    localeCode = 'zh_TW';
+                  }
+                  return defeatedAI.getLocalizedName(localeCode);
+                })(),
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -271,20 +307,38 @@ class ShareService {
               
               const SizedBox(height: 8),
               
-              // 醉倒状态
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
-                ),
-                child: const Text(
-                  '已醉倒',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+              // 醉倒状态 - 直接显示在底图上
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.red.shade400,
+                    Colors.red.shade700,
+                  ],
+                ).createShader(bounds),
+                child: Text(
+                  '${(() {
+                    final locale = Localizations.localeOf(context);
+                    final languageCode = locale.languageCode;
+                    String localeCode = languageCode;
+                    if (languageCode == 'zh') {
+                      localeCode = 'zh_TW';
+                    }
+                    return defeatedAI.getLocalizedName(localeCode);
+                  })()} ${AppLocalizations.of(context)!.shareCardDrunk}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8,
+                        color: Colors.black54,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -319,9 +373,9 @@ class ShareService {
                           size: 28,
                         ),
                         const SizedBox(width: 10),
-                        const Text(
-                          '亲密度',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context)!.shareCardIntimacy,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
@@ -347,7 +401,7 @@ class ShareService {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '独处了 $intimacyMinutes 分钟',
+                      AppLocalizations.of(context)!.shareCardPrivateTime(intimacyMinutes),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 14,
@@ -370,7 +424,7 @@ class ShareService {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${drinkingState.getAIDrinks(defeatedAI.id)} 杯醉倒',
+                    AppLocalizations.of(context)!.shareCardDrinkCount(drinkingState.getAIDrinks(defeatedAI.id)),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 16,
@@ -399,7 +453,7 @@ class ShareService {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '表情博弈',
+                      AppLocalizations.of(context)!.shareCardGameName,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 15,
@@ -491,8 +545,8 @@ class ShareService {
       // 显示保存成功提示
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('截图已保存！'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.screenshotSaved),
             backgroundColor: Colors.green,
           ),
         );

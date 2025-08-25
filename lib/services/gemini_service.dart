@@ -416,9 +416,9 @@ $optionsText
         case 'intimidation':
           return dialogueService.getStrategyDialogue(personality.id, 'pressure_play', locale: locale);
         case 'fake_weakness':
-          return dialogueService.getStrategyDialogue(personality.id, '反向陷阱', locale: locale);
+          return dialogueService.getStrategyDialogue(personality.id, 'reverse_trap_alt', locale: locale);
         case 'sudden_escalation':
-          return dialogueService.getStrategyDialogue(personality.id, '壓力升級', locale: locale);
+          return dialogueService.getStrategyDialogue(personality.id, 'pressure_escalation', locale: locale);
       }
     }
     

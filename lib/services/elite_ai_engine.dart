@@ -353,7 +353,7 @@ class EliteAIEngine {
     // 1. 模式破坏机会
     if (strategyState.hasEstablishedPattern) {
       tactics.add({
-        'name': '模式破坏',
+        'name': 'pattern_break',
         'bonus': 8.0,
         'condition': 'break_pattern',
       });
@@ -362,7 +362,7 @@ class EliteAIEngine {
     // 2. 后期压力
     if (round.bidHistory.length > 5) {
       tactics.add({
-        'name': '后期施压',
+        'name': 'late_pressure',
         'bonus': 5.0,
         'condition': 'endgame_pressure',
       });
@@ -371,7 +371,7 @@ class EliteAIEngine {
     // 3. 反向心理
     if (opponentModel.isAggressive) {
       tactics.add({
-        'name': '诱导激进',
+        'name': 'aggressive_bait',
         'bonus': 6.0,
         'condition': 'induce_aggression',
       });
@@ -415,7 +415,7 @@ class EliteAIEngine {
           'expectedValue': 25.0, // 陷阱成功价值很高
           'confidence': 0.85,
           'strategy': 'reverse_trap',
-          'psychTactic': '反向陷阱',
+          'psychTactic': 'reverse_trap_alt',
           'reasoning': '示弱诱敌',
         };
       }
@@ -448,7 +448,7 @@ class EliteAIEngine {
             'expectedValue': 12.0,
             'confidence': 0.6,
             'strategy': 'pressure_play',
-            'psychTactic': '压力升级',
+            'psychTactic': 'pressure_escalation',
             'reasoning': '心理压迫',
           };
         }

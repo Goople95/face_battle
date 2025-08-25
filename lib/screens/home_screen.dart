@@ -25,6 +25,7 @@ import '../utils/local_storage_debug_tool.dart';
 import '../services/npc_config_service.dart';
 import '../services/storage/local_storage_service.dart';
 import '../utils/logger_utils.dart';
+import '../widgets/rules_display.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,10 +47,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     
     // 处理中文的特殊情况
     if (languageCode == 'zh') {
-      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
-        return 'zh_TW';
-      }
-      return 'zh';
+      // 只支持繁体中文
+      return 'zh_TW';
     }
     
     return languageCode;
@@ -353,13 +352,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        AppLocalizations.of(context)!.instructionsDetail,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
+                      const RulesDisplay(),
                     ],
                   ),
                 ),
@@ -516,8 +509,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   // 记录看广告醒酒次数（玩家自己）
                                   GameProgressService.instance.recordAdSober();
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('✨ 看完广告，完全清醒了！'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.adWatchedSober),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -753,7 +746,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _gameProgress!.getStyleDescription(),
+                  _gameProgress!.getStyleDescription(context),
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.9),
@@ -805,7 +798,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('语言已切换为 $label'),
+                content: Text(AppLocalizations.of(context)!.languageChanged(label)),
                 duration: const Duration(seconds: 1),
               ),
             );
@@ -1080,7 +1073,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${intimacy.intimacyPoints}',
+                              '${intimacy.currentLevelPoints}',
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.white.withValues(alpha: 0.7),
@@ -1297,21 +1290,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isLocked
-                  ? [Colors.grey.shade700, Colors.grey.shade800]
-                  : [
-                      color.withValues(alpha: 0.8),
-                      color.withValues(alpha: 0.4),
-                    ],
+                colors: [
+                  color.withValues(alpha: 0.8),
+                  color.withValues(alpha: 0.4),
+                ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isLocked ? Colors.grey : Colors.amber,
+                color: Colors.amber,
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isLocked ? Colors.black26 : Colors.amber.withValues(alpha: 0.3),
+                  color: Colors.amber.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -1345,10 +1336,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: Icon(
-                      Icons.lock,
-                      color: Colors.white.withValues(alpha: 0.7),
-                      size: 20,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   )
                 else if (vipStatus == VIPStatus.tempUnlocked)
@@ -1367,7 +1365,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '$minutes分钟',
+                              AppLocalizations.of(context)!.tempUnlockTime(minutes),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -1396,15 +1394,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isLocked 
-                                  ? Colors.grey 
-                                  : (isUnavailable ? Colors.red : Colors.amber), 
+                                color: isUnavailable ? Colors.red : Colors.amber, 
                                 width: 2,
                               ),
                               image: DecorationImage(
                                 image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
                                 fit: BoxFit.cover,
-                                colorFilter: (isLocked || isUnavailable)
+                                colorFilter: isUnavailable
                                   ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
                                   : null,
                               ),
@@ -1435,10 +1431,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       // 名字
                       Text(
                         _getLocalizedName(context, personality),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isLocked ? Colors.grey.shade300 : Colors.white,
+                          color: Colors.white,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
@@ -1459,29 +1455,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   Icon(
                                     Icons.favorite,
                                     size: 10,
-                                    color: isLocked 
-                                      ? Colors.grey.shade400
-                                      : Colors.pink.shade400,
+                                    color: Colors.pink.shade400,
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
                                     'Lv.${intimacy.intimacyLevel}',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: isLocked 
-                                        ? Colors.grey.shade400
-                                        : Colors.pink.shade400,
+                                      color: Colors.pink.shade400,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   const SizedBox(width: 3),
                                   Text(
-                                    '${intimacy.intimacyPoints}',
+                                    '${intimacy.currentLevelPoints}',
                                     style: TextStyle(
                                       fontSize: 9,
-                                      color: isLocked 
-                                        ? Colors.grey.shade500
-                                        : Colors.white.withValues(alpha: 0.6),
+                                      color: Colors.white.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
@@ -1502,9 +1492,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       height: 2.5,
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
-                                          colors: isLocked
-                                            ? [Colors.grey.shade500, Colors.grey.shade600]
-                                            : [Colors.pink.shade300, Colors.pink.shade500],
+                                          colors: [Colors.pink.shade300, Colors.pink.shade500],
                                         ),
                                         borderRadius: BorderRadius.circular(1.5),
                                       ),
@@ -1526,13 +1514,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             return Icon(
                               Icons.local_bar,
                               size: 10,
-                              color: isLocked
-                                ? (index < aiDrinks 
-                                    ? Colors.grey.shade500 
-                                    : Colors.grey.withValues(alpha: 0.7))
-                                : (index < aiDrinks
-                                    ? Colors.red.shade300
-                                    : Colors.grey.withValues(alpha: 0.8)),
+                              color: index < aiDrinks
+                                ? Colors.red.shade300
+                                : Colors.grey.withValues(alpha: 0.8),
                             );
                           }),
                         ],
@@ -1546,9 +1530,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           child: Text(
                             _getLocalizedDescription(context, personality),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
-                              color: isLocked ? Colors.grey.shade500 : Colors.white70,
+                              color: Colors.white70,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -1576,14 +1560,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isLocked ? Colors.grey.shade400 : Colors.green.shade300,
+                                color: Colors.green.shade300,
                               ),
                             ),
                             Text(
                               AppLocalizations.of(context)!.win,
                               style: TextStyle(
                                 fontSize: 9,
-                                color: isLocked ? Colors.grey.shade500 : Colors.white60,
+                                color: Colors.white60,
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -1592,14 +1576,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isLocked ? Colors.grey.shade400 : Colors.red.shade300,
+                                color: Colors.red.shade300,
                               ),
                             ),
                             Text(
                               AppLocalizations.of(context)!.lose,
                               style: TextStyle(
                                 fontSize: 9,
-                                color: isLocked ? Colors.grey.shade500 : Colors.white60,
+                                color: Colors.white60,
                               ),
                             ),
                           ],
@@ -1918,7 +1902,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildStatItem(
-                            '胜率',
+                            AppLocalizations.of(context)!.winRate,
                             '${(userService.winRate * 100).toStringAsFixed(1)}%',
                             Colors.green,
                           ),
@@ -1928,7 +1912,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Colors.blue,
                           ),
                           _buildStatItem(
-                            '胜场',
+                            AppLocalizations.of(context)!.totalWins,
                             '${userService.playerProfile!.totalWins}',
                             Colors.amber,
                           ),
@@ -1974,7 +1958,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildLanguageChip('简体中文', 'zh_CN', context),
                         _buildLanguageChip('English', 'en', context),
                         _buildLanguageChip('中文繁體', 'zh_TW', context),
                         _buildLanguageChip('Español', 'es', context),
@@ -2021,9 +2004,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               // 关闭按钮
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  '关闭',
-                  style: TextStyle(color: Colors.white70),
+                child: Text(
+                  AppLocalizations.of(context)!.close,
+                  style: const TextStyle(color: Colors.white70),
                 ),
               ),
             ],

@@ -115,7 +115,7 @@ class NPCConfigService {
         if (descriptionsMap != null) {
           // 使用英文作为默认值
           description = descriptionsMap['en'] ?? 
-                       descriptionsMap['zh'] ?? 
+                       descriptionsMap['zh_TW'] ?? 
                        npcData['description'] ?? '';
         } else {
           // 兼容旧格式

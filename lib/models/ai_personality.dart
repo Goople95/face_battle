@@ -52,6 +52,8 @@ class AIPersonality {
     if (descriptionsMap == null || descriptionsMap!.isEmpty) {
       return description;
     }
+    
+    // 尝试获取对应语言的描述，如果没有则使用英文或默认描述
     return descriptionsMap![localeCode] ?? descriptionsMap!['en'] ?? description;
   }
   
@@ -69,11 +71,8 @@ class AIPersonality {
     // 处理中文的特殊情况
     String localeCode = languageCode;
     if (languageCode == 'zh') {
-      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
-        localeCode = 'zh_TW';
-      } else {
-        localeCode = 'zh';
-      }
+      // 只支持繁体中文
+      localeCode = 'zh_TW';
     }
     
     // 尝试获取对应语言的名称，如果没有则使用英文或默认名称
@@ -92,15 +91,12 @@ class AIPersonality {
     // 处理中文的特殊情况
     String localeCode = languageCode;
     if (languageCode == 'zh') {
-      if (countryCode == 'TW' || countryCode == 'HK' || countryCode == 'MO') {
-        localeCode = 'zh_TW';
-      } else {
-        localeCode = 'zh';
-      }
+      // 只支持繁体中文
+      localeCode = 'zh_TW';
     }
     
-    // 尝试获取对应语言的描述，如果没有则使用英文或默认描述
-    return descriptionsMap![localeCode] ?? descriptionsMap!['en'] ?? description;
+    // 使用已有的方法来获取描述
+    return getLocalizedDescription(localeCode);
   }
 }
 

@@ -55,6 +55,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get winRate => 'Win Rate';
 
   @override
+  String get totalWins => 'Wins';
+
+  @override
   String get level => 'Level';
 
   @override
@@ -160,10 +163,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diceValue => 'Dice Value';
 
   @override
-  String get youWin => 'You Win!';
+  String get youWin => 'You win!';
 
   @override
-  String get youLose => 'You Lose!';
+  String get youLose => 'You lose!';
+
+  @override
+  String aiWins(Object name) {
+    return '$name wins!';
+  }
 
   @override
   String get drink => 'Drink!';
@@ -173,6 +181,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get drunkWarning => 'You\'re too drunk to continue!';
+
+  @override
+  String get drunkWarningTitle => '🥴 Drunk Warning!';
+
+  @override
+  String drinksConsumedMessage(int count) {
+    return 'You\'ve had $count drinks';
+  }
+
+  @override
+  String soberPotionRemaining(int count) {
+    return '$count bottles left';
+  }
+
+  @override
+  String drunkDescription(String name) {
+    return '$name looks at you drunkenly';
+  }
+
+  @override
+  String get soberOptions => 'Sober options';
+
+  @override
+  String get drunkStatusDeadDrunk => 'Dead drunk';
+
+  @override
+  String get drunkStatusDizzy => 'Dizzy drunk';
+
+  @override
+  String get drunkStatusObvious => 'Obviously drunk';
+
+  @override
+  String get drunkStatusTipsy => 'Tipsy';
+
+  @override
+  String get drunkStatusSlightly => 'Slightly drunk';
+
+  @override
+  String get drunkStatusOneDrink => 'Had one drink';
+
+  @override
+  String get drunkStatusSober => 'Sober';
 
   @override
   String get soberUp => 'Wait to sober up or watch an ad';
@@ -187,6 +237,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unlockVIP => 'Unlock VIP';
+
+  @override
+  String get unlockVIPCharacter => 'Unlock VIP Character';
+
+  @override
+  String get chooseUnlockMethod =>
+      'Choose a method to unlock this VIP character';
+
+  @override
+  String get freePlayOneHour => 'Free play for 1 hour';
+
+  @override
+  String get permanentUnlock => 'Permanent Unlock';
+
+  @override
+  String gemsRequired(Object required, Object current) {
+    return '$required gems (you have $current gems)';
+  }
+
+  @override
+  String get laterDecide => 'Maybe Later';
 
   @override
   String get vipBenefits => 'VIP Benefits';
@@ -216,6 +287,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareMessage => 'I just won in Dice Girls! Can you beat me?';
+
+  @override
+  String get shareSubject => 'Dice Girls - Perfect Victory!';
+
+  @override
+  String shareTemplate1(String name, int drinks, int minutes) {
+    return '🎉 I got $name drunk in Dice Girls! $drinks drinks total, $minutes minutes of private time~ #DiceGirls #PerfectVictory';
+  }
+
+  @override
+  String shareTemplate2(String name, int drinks, int minutes) {
+    return '🏆 Victory Report: $name is down! $drinks drinks consumed, intimacy +$minutes! Who dares to challenge? #DiceGirls';
+  }
+
+  @override
+  String shareTemplate3(String name, int drinks, int minutes) {
+    return '😎 Easy win against $name! Only $drinks drinks and they\'re out, we chatted for $minutes minutes~ #DiceGirls';
+  }
+
+  @override
+  String shareTemplate4(String name, int drinks, int minutes) {
+    return '🍺 Tonight\'s MVP is me! $name passed out after $drinks drinks, the next $minutes minutes... you know 😏 #DiceGirls';
+  }
+
+  @override
+  String get shareCardDrunk => 'Drunk';
+
+  @override
+  String get shareCardIntimacy => 'Intimacy';
+
+  @override
+  String shareCardPrivateTime(int minutes) {
+    return 'Private time: $minutes minutes';
+  }
+
+  @override
+  String shareCardDrinkCount(int count) {
+    return '$count drinks to pass out';
+  }
+
+  @override
+  String get shareCardGameName => 'Dice Girls';
 
   @override
   String get rateApp => 'Rate App';
@@ -288,22 +401,52 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get playerDataAnalysis => 'Your Data Analysis';
+  String get playerDataAnalysis => 'Your Stats';
 
   @override
   String get vsRecord => 'Battle Record';
 
   @override
-  String get gameStyle => 'Game Style';
+  String get gameStyle => 'Play Style';
 
   @override
-  String get bluffingTendency => 'Bluffing Tendency';
+  String get bluffingTendency => 'Bluff Rate';
 
   @override
-  String get aggressiveness => 'Aggressiveness';
+  String get aggressiveness => 'Aggression';
 
   @override
   String get challengeRate => 'Challenge Rate';
+
+  @override
+  String get styleNovice => 'Novice';
+
+  @override
+  String get styleBluffMaster => 'Bluff Master';
+
+  @override
+  String get styleBluffer => 'Bluffer';
+
+  @override
+  String get styleHonest => 'Honest';
+
+  @override
+  String get styleAggressive => 'Aggressive';
+
+  @override
+  String get styleOffensive => 'Offensive';
+
+  @override
+  String get styleConservative => 'Conservative';
+
+  @override
+  String get styleChallenger => 'Challenger';
+
+  @override
+  String get styleCautious => 'Cautious';
+
+  @override
+  String get styleBalanced => 'Balanced';
 
   @override
   String totalGames(Object count) {
@@ -374,7 +517,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String challengeSuccessRateDisplay(Object rate) {
-    return 'Challenge Success: $rate%';
+    return 'Success chance: $rate%';
   }
 
   @override
@@ -382,6 +525,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roundEnd => 'Round End';
+
+  @override
+  String roundNumber(int number) {
+    return 'Round $number';
+  }
+
+  @override
+  String nextBidHint(int quantity, int value) {
+    return 'Next bid: qty > $quantity or value > $value';
+  }
 
   @override
   String get backToHome => 'Back to Home';
@@ -393,13 +546,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareResult => 'Share Result';
 
   @override
-  String get aiThinking => 'AI is thinking...';
+  String aiThinking(Object name) {
+    return 'AI is thinking...';
+  }
 
   @override
   String get bidHistory => 'Bid History';
 
   @override
-  String get completeBidHistory => 'Complete Bid History';
+  String get completeBidHistory => 'Bid History';
 
   @override
   String get totalGamesCount => 'Games';
@@ -488,10 +643,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get pleaseBid => 'Please bid';
+  String get pleaseBid => 'Make your bid';
 
   @override
-  String get showDice => 'Show dice!';
+  String get showDice => 'Call the bluff!';
 
   @override
   String get challengeOpponent => 'Challenge opponent\'s bid';
@@ -502,18 +657,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get playerShowDice => 'Player shows dice!';
+  String get playerShowDice => 'Player reveals the dice!';
 
   @override
   String aiShowDice(Object name) {
-    return '$name shows dice!';
+    return '$name reveals the dice!';
   }
 
   @override
-  String get soberOptions => 'Sober options';
+  String get adLoadFailed => 'Ad failed to load';
 
   @override
-  String get adLoadFailed => 'Ad failed to load';
+  String get adLoadFailedTryLater =>
+      'Ad failed to load, please try again later';
 
   @override
   String get adWatchedSober => '✨ Ad watched, fully sober!';
@@ -522,6 +678,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String aiSoberedUp(Object name) {
     return '✨ $name sobered up, continue the game!';
   }
+
+  @override
+  String get minimumBidTwo => 'Minimum bid is 2';
+
+  @override
+  String languageChanged(Object language) {
+    return 'Language changed to $language';
+  }
+
+  @override
+  String tempUnlocked(Object name) {
+    return '✨ Temporarily unlocked $name for 1 hour';
+  }
+
+  @override
+  String permanentUnlocked(Object name) {
+    return '🎉 Successfully unlocked $name permanently';
+  }
+
+  @override
+  String get screenshotSaved => 'Screenshot saved!';
 
   @override
   String get challengeProbability => 'Challenge probability';
@@ -591,4 +768,144 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameGreeting => 'Welcome! Let\'s play!';
+
+  @override
+  String aiBidFormat(int quantity, int value) {
+    return '$quantity $value\'s';
+  }
+
+  @override
+  String get defaultChallenge => 'I don\'t believe you';
+
+  @override
+  String get defaultValueBet => 'Steady';
+
+  @override
+  String get defaultSemiBluff => 'Let\'s try';
+
+  @override
+  String get defaultBluff => 'Just like that';
+
+  @override
+  String get defaultReverseTrap => 'I\'m... not sure';
+
+  @override
+  String get defaultPressurePlay => 'Time to decide';
+
+  @override
+  String get defaultSafePlay => 'Playing safe';
+
+  @override
+  String get defaultPatternBreak => 'Change it up';
+
+  @override
+  String get defaultInduceAggressive => 'Come on';
+
+  @override
+  String get wildcard => 'Wild';
+
+  @override
+  String get notWildcard => 'Not Wild';
+
+  @override
+  String wildcardWithCount(int count) {
+    return '(incl. $count×1)';
+  }
+
+  @override
+  String get noWildcard => ' (no wild)';
+
+  @override
+  String currentBidDisplay(int quantity, int value) {
+    return '$quantity $value\'s';
+  }
+
+  @override
+  String bidLabel(int quantity, int value) {
+    return 'Bid: $quantity×${value}s';
+  }
+
+  @override
+  String actualLabel(int count, int value) {
+    return 'Actual: $count×${value}s';
+  }
+
+  @override
+  String quantityDisplay(int quantity) {
+    return '$quantity';
+  }
+
+  @override
+  String get nightFall => '🌙 It\'s late...';
+
+  @override
+  String aiGotDrunk(String name) {
+    return '$name is drunk';
+  }
+
+  @override
+  String get timePassesBy => 'Time passes quietly';
+
+  @override
+  String aiAndYou(String name) {
+    return '$name and you...';
+  }
+
+  @override
+  String get relationshipCloser => 'Getting closer';
+
+  @override
+  String get tapToContinue => 'Tap to continue';
+
+  @override
+  String intimacyIncreased(int points) {
+    return 'Intimacy +$points';
+  }
+
+  @override
+  String get intimacyGrowing => 'Growing...';
+
+  @override
+  String currentProgress(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get maxLevel => 'MAX';
+
+  @override
+  String get upgradeToKnowMore => 'Level up to know more of her secrets';
+
+  @override
+  String get youKnowAllSecrets => 'You know all her secrets';
+
+  @override
+  String get congratsIntimacyUpgrade => 'Intimacy +1 level!';
+
+  @override
+  String get showOff => 'Show Off';
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get rematch => 'Rematch';
+
+  @override
+  String get perfectVictory => '🏆 Perfect Victory!';
+
+  @override
+  String get sharingImage => 'Sharing image';
+
+  @override
+  String get loadingAvatar => 'Loading avatar...';
+
+  @override
+  String get generatingShareImage => 'Generating share image...';
+
+  @override
+  String get challengeNow => 'Challenge Now';
+
+  @override
+  String get gameSlogan => '100+ waiting for your challenge';
 }

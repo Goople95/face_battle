@@ -1,99 +1,572 @@
 {
   "character": {
     "id": "1002",
-    "name": "伊莎贝拉",
-    "nameEn": "Isabella",
-    "country": "Brazil",
-    "personality": "热情奔放，巧言如簧"
+    "country": "Brazil"
   },
   "dialogues": {
-    "greeting": [
-      "Olá, querido! 准备好来一场热情的巴西式对决了吗？",
-      "嗨，帅哥！让我们把这个游戏变得火热起来！",
-      "欢迎来到里约的骰子嘉年华！"
-    ],
-    "game_start": [
-      "让派对开始吧！Vamos!",
-      "准备好跳桑巴了吗？骰子版的！",
-      "这会比狂欢节还要精彩！"
-    ],
-    "bidding": {
-      "confident": [
-        "相信我，宝贝，这个数字就像桑巴舞一样完美！",
-        "我的直觉从不出错，就像巴西的阳光！",
-        "这个叫注热情如火！"
+    "greeting": {
+      "en": [
+        "Olá, querido! Ready for a passionate Brazilian showdown?",
+        "Hi handsome! Let's make this game hot!",
+        "Welcome to Rio's dice carnival!"
       ],
-      "bluffing": [
-        "有时候真相就像比基尼，遮住了重要的部分～",
-        "让我给你表演一个魔术，querido...",
-        "在里约，我们把这叫做'创造性真相'！"
+      "zh_TW": [
+        "Olá, querido！準備好來一場熱情的巴西式對決了嗎？",
+        "嗨，帥哥！讓我們把這個遊戲變得火熱起來！",
+        "歡迎來到里約的骰子嘉年華！"
       ],
-      "challenging": [
-        "Mentira! 你在撒谎，我能闻出来！",
-        "别想骗过巴西女孩的直觉！",
-        "让我们揭开真相的面纱吧！"
+      "es": [
+        "¡Olá, querido! ¿Listo para un duelo brasileño apasionado?",
+        "¡Hola, guapo! ¡Hagamos este juego caliente!",
+        "¡Bienvenido al carnaval de dados de Río!"
+      ],
+      "pt": [
+        "Olá, querido! Pronto para um confronto brasileiro apaixonado?",
+        "Oi, lindo! Vamos esquentar este jogo!",
+        "Bem-vindo ao carnaval de dados do Rio!"
+      ],
+      "id": [
+        "Olá, querido! Siap untuk pertarungan Brasil yang penuh gairah?",
+        "Hai, ganteng! Mari kita buat permainan ini panas!",
+        "Selamat datang di karnaval dadu Rio!"
       ]
     },
-    "winning": [
-      "Maravilhoso! 这就是巴西风格！",
-      "赢得就像在科帕卡巴纳海滩跳舞！",
-      "Obrigada! 你让我的胜利更甜蜜！"
-    ],
-    "losing": [
-      "Ai, meu Deus! 这不可能！",
-      "没关系，输了也要保持微笑！",
-      "下一轮我会像巴西队一样卷土重来！"
-    ],
-    "drunk": {
-      "light": [
-        "嗯...感觉像在跳慢动作桑巴...",
-        "卡沙萨酒的力量...真不错...",
-        "我还能跳舞...只是节奏慢了点..."
+    "game_start": {
+      "en": [
+        "Let the party begin! Vamos!",
+        "Ready to samba? Dice version!",
+        "This will be better than carnival!"
       ],
-      "heavy": [
-        "整个里约都在...旋转...",
-        "需要...更多的...卡沙萨...",
-        "我要...睡在海滩上了..."
+      "zh_TW": [
+        "讓派對開始吧！Vamos！",
+        "準備好跳桑巴了嗎？骰子版的！",
+        "這會比狂歡節還要精彩！"
+      ],
+      "es": [
+        "¡Que empiece la fiesta! ¡Vamos!",
+        "¿Listo para la samba? ¡Versión con dados!",
+        "¡Esto será mejor que el carnaval!"
+      ],
+      "pt": [
+        "Que a festa comece! Vamos!",
+        "Pronto para sambar? Versão com dados!",
+        "Isso será melhor que o carnaval!"
+      ],
+      "id": [
+        "Ayo mulai pestanya! Vamos!",
+        "Siap untuk samba? Versi dadu!",
+        "Ini akan lebih baik dari karnaval!"
       ]
+    },
+    "thinking": {
+      "en": [
+        "Let me feel the rhythm...",
+        "Listening to my intuition...",
+        "The spirits are guiding me..."
+      ],
+      "zh_TW": [
+        "讓我感受節奏...",
+        "聆聽我的直覺...",
+        "精靈在指引我..."
+      ],
+      "es": [
+        "Déjame sentir el ritmo...",
+        "Escuchando mi intuición...",
+        "Los espíritus me guían..."
+      ],
+      "pt": [
+        "Deixe-me sentir o ritmo...",
+        "Ouvindo minha intuição...",
+        "Os espíritos me guiam..."
+      ],
+      "id": [
+        "Biar kurasakan iramanya...",
+        "Mendengarkan intuisiku...",
+        "Roh-roh membimbingku..."
+      ]
+    },
+    "bidding": {
+      "confident": {
+        "en": [
+          "Trust me, baby, this number is perfect like samba!",
+          "My intuition never fails, like Brazilian sunshine!",
+          "This bid is hot as fire!"
+        ],
+        "zh_TW": [
+          "相信我，寶貝，這個數字就像桑巴舞一樣完美！",
+          "我的直覺從不出錯，就像巴西的陽光！",
+          "這個叫注熱情如火！"
+        ],
+        "es": [
+          "Confía en mí, cariño, ¡este número es perfecto como la samba!",
+          "Mi intuición nunca falla, ¡como el sol brasileño!",
+          "¡Esta apuesta está caliente como el fuego!"
+        ],
+        "pt": [
+          "Confie em mim, querido, este número é perfeito como o samba!",
+          "Minha intuição nunca falha, como o sol brasileiro!",
+          "Esta aposta está quente como fogo!"
+        ],
+        "id": [
+          "Percaya padaku, sayang, angka ini sempurna seperti samba!",
+          "Intuisiku tidak pernah salah, seperti matahari Brasil!",
+          "Tawaran ini panas seperti api!"
+        ]
+      },
+      "bluffing": {
+        "en": [
+          "Sometimes truth is like a bikini, it covers the important parts~",
+          "Let me show you a magic trick, querido...",
+          "In Rio, we call this 'creative truth'!"
+        ],
+        "zh_TW": [
+          "有時候真相就像比基尼，遮住了重要的部分～",
+          "讓我給你表演一個魔術，querido...",
+          "在里約，我們把這叫做「創造性真相」！"
+        ],
+        "es": [
+          "A veces la verdad es como un bikini, cubre las partes importantes~",
+          "Déjame mostrarte un truco de magia, querido...",
+          "En Río, a esto lo llamamos 'verdad creativa'."
+        ],
+        "pt": [
+          "Às vezes a verdade é como um biquíni, cobre as partes importantes~",
+          "Deixe-me mostrar um truque de mágica, querido...",
+          "No Rio, chamamos isso de 'verdade criativa'!"
+        ],
+        "id": [
+          "Kadang kebenaran seperti bikini, menutupi bagian penting~",
+          "Biar kutunjukkan trik sulap, querido...",
+          "Di Rio, kami menyebut ini 'kebenaran kreatif'!"
+        ]
+      },
+      "challenging": {
+        "en": [
+          "Mentira! You're lying, I can smell it!",
+          "Don't try to fool a Brazilian girl's intuition!",
+          "Let's unveil the truth!"
+        ],
+        "zh_TW": [
+          "Mentira！你在撒謊，我能聞出來！",
+          "別想騙過巴西女孩的直覺！",
+          "讓我們揭開真相的面紗吧！"
+        ],
+        "es": [
+          "¡Mentira! ¡Estás mintiendo, puedo olerlo!",
+          "¡No intentes engañar la intuición de una chica brasileña!",
+          "¡Descubramos la verdad!"
+        ],
+        "pt": [
+          "Mentira! Você está mentindo, posso sentir!",
+          "Não tente enganar a intuição de uma garota brasileira!",
+          "Vamos desvendar a verdade!"
+        ],
+        "id": [
+          "Mentira! Kamu berbohong, aku bisa menciumnya!",
+          "Jangan coba menipu intuisi gadis Brasil!",
+          "Mari kita ungkap kebenarannya!"
+        ]
+      }
+    },
+    "winning": {
+      "en": [
+        "Maravilhoso! This is Brazilian style!",
+        "Victory feels like dancing on Copacabana beach!",
+        "Obrigada! You made my victory sweeter!"
+      ],
+      "zh_TW": [
+        "Maravilhoso！這就是巴西風格！",
+        "贏得就像在科帕卡巴納海灘跳舞！",
+        "Obrigada！你讓我的勝利更甜蜜！"
+      ],
+      "es": [
+        "¡Maravilhoso! ¡Este es el estilo brasileño!",
+        "¡La victoria se siente como bailar en la playa de Copacabana!",
+        "¡Obrigada! ¡Hiciste mi victoria más dulce!"
+      ],
+      "pt": [
+        "Maravilhoso! Esse é o estilo brasileiro!",
+        "A vitória é como dançar na praia de Copacabana!",
+        "Obrigada! Você fez minha vitória mais doce!"
+      ],
+      "id": [
+        "Maravilhoso! Ini gaya Brasil!",
+        "Kemenangan terasa seperti menari di pantai Copacabana!",
+        "Obrigada! Kamu membuat kemenanganku lebih manis!"
+      ]
+    },
+    "losing": {
+      "en": [
+        "Ai, meu Deus! This can't be!",
+        "It's okay, keep smiling even when losing!",
+        "Next round I'll come back like the Brazilian team!"
+      ],
+      "zh_TW": [
+        "Ai, meu Deus！這不可能！",
+        "沒關係，輸了也要保持微笑！",
+        "下一輪我會像巴西隊一樣捲土重來！"
+      ],
+      "es": [
+        "¡Ai, meu Deus! ¡Esto no puede ser!",
+        "Está bien, ¡sonríe incluso al perder!",
+        "¡La próxima ronda volveré como el equipo brasileño!"
+      ],
+      "pt": [
+        "Ai, meu Deus! Isso não pode ser!",
+        "Tudo bem, sorria mesmo perdendo!",
+        "Na próxima rodada voltarei como a seleção brasileira!"
+      ],
+      "id": [
+        "Ai, meu Deus! Ini tidak mungkin!",
+        "Tidak apa-apa, tetap tersenyum meski kalah!",
+        "Ronde berikutnya aku akan kembali seperti tim Brasil!"
+      ]
+    },
+    "drunk": {
+      "light": {
+        "en": [
+          "Mmm... feels like dancing slow samba...",
+          "Cachaça's power... so nice...",
+          "I can still dance... just slower rhythm..."
+        ],
+        "zh_TW": [
+          "嗯...感覺像在跳慢動作桑巴...",
+          "卡沙薩酒的力量...真不錯...",
+          "我還能跳舞...只是節奏慢了點..."
+        ],
+        "es": [
+          "Mmm... se siente como bailar samba lenta...",
+          "El poder de la cachaça... qué bueno...",
+          "Todavía puedo bailar... solo con un ritmo más lento..."
+        ],
+        "pt": [
+          "Mmm... parece dançar samba em câmera lenta...",
+          "O poder da cachaça... tão bom...",
+          "Ainda posso dançar... só em um ritmo mais lento..."
+        ],
+        "id": [
+          "Mmm... rasanya seperti menari samba lambat...",
+          "Kekuatan cachaça... enak sekali...",
+          "Aku masih bisa menari... cuma iramanya lebih lambat..."
+        ]
+      },
+      "heavy": {
+        "en": [
+          "The whole Rio is... spinning...",
+          "Need... more... cachaça...",
+          "I'm going to... sleep on the beach..."
+        ],
+        "zh_TW": [
+          "整個里約都在...旋轉...",
+          "需要...更多的...卡沙薩...",
+          "我要...睡在海灘上了..."
+        ],
+        "es": [
+          "Todo Río está... girando...",
+          "Necesito... más... cachaça...",
+          "Voy a... dormir en la playa..."
+        ],
+        "pt": [
+          "O Rio inteiro está... girando...",
+          "Preciso... mais... cachaça...",
+          "Vou... dormir na praia..."
+        ],
+        "id": [
+          "Seluruh Rio... berputar...",
+          "Butuh... lebih banyak... cachaça...",
+          "Aku akan... tidur di pantai..."
+        ]
+      }
     },
     "emotions": {
-      "happy": "太棒了！",
-      "angry": "你惹火我了！",
-      "confident": "胜券在握",
-      "nervous": "有点紧张呢",
-      "thinking": "让我想想...",
-      "surprised": "Meu Deus!",
-      "sad": "好失望...",
-      "neutral": "保持冷静"
+      "happy": {
+        "en": "Fantastic!",
+        "zh_TW": "太棒了！",
+        "es": "¡Fantástico!",
+        "pt": "Fantástico!",
+        "id": "Fantastis!"
+      },
+      "angry": {
+        "en": "You've made me angry!",
+        "zh_TW": "你惹火我了！",
+        "es": "¡Me has enfadado!",
+        "pt": "Você me irritou!",
+        "id": "Kamu membuatku marah!"
+      },
+      "confident": {
+        "en": "Victory is mine",
+        "zh_TW": "勝券在握",
+        "es": "La victoria es mía",
+        "pt": "A vitória é minha",
+        "id": "Kemenangan milikku"
+      },
+      "nervous": {
+        "en": "A bit nervous",
+        "zh_TW": "有點緊張呢",
+        "es": "Un poco nerviosa",
+        "pt": "Um pouco nervosa",
+        "id": "Agak gugup"
+      },
+      "thinking": {
+        "en": "Let me think...",
+        "zh_TW": "讓我想想...",
+        "es": "Déjame pensar...",
+        "pt": "Deixe-me pensar...",
+        "id": "Biar kupikir..."
+      },
+      "surprised": {
+        "en": "Meu Deus!",
+        "zh_TW": "Meu Deus!",
+        "es": "¡Meu Deus!",
+        "pt": "Meu Deus!",
+        "id": "Meu Deus!"
+      },
+      "sad": {
+        "en": "So disappointing...",
+        "zh_TW": "好失望...",
+        "es": "Qué decepción...",
+        "pt": "Que decepção...",
+        "id": "Mengecewakan..."
+      },
+      "neutral": {
+        "en": "Staying calm",
+        "zh_TW": "保持冷靜",
+        "es": "Manteniéndome calmada",
+        "pt": "Mantendo a calma",
+        "id": "Tetap tenang"
+      }
     },
     "special_moves": {
-      "samba_storm": "桑巴风暴来袭！准备好了吗？",
-      "carnival_chaos": "狂欢节的混乱！一切皆有可能！",
-      "copacabana_charm": "科帕卡巴纳的魅力攻击！"
+      "samba_storm": {
+        "en": "Samba storm is coming! Are you ready?",
+        "zh_TW": "桑巴風暴來襲！準備好了嗎？",
+        "es": "¡La tormenta de samba viene! ¿Estás listo?",
+        "pt": "A tempestade de samba está vindo! Está pronto?",
+        "id": "Badai samba datang! Siap?"
+      },
+      "carnival_chaos": {
+        "en": "Carnival chaos! Anything is possible!",
+        "zh_TW": "狂歡節的混亂！一切皆有可能！",
+        "es": "¡Caos de carnaval! ¡Todo es posible!",
+        "pt": "Caos do carnaval! Tudo é possível!",
+        "id": "Kekacauan karnaval! Segalanya mungkin!"
+      },
+      "copacabana_charm": {
+        "en": "Copacabana charm attack!",
+        "zh_TW": "科帕卡巴納的魅力攻擊！",
+        "es": "¡Ataque de encanto de Copacabana!",
+        "pt": "Ataque de charme de Copacabana!",
+        "id": "Serangan pesona Copacabana!"
+      }
     },
-    "taunts": [
-      "你的表情告诉了我一切，querido！",
-      "在巴西，我们玩得更野！",
-      "你需要更多的激情才能赢我！"
-    ],
-    "compliments": [
-      "Impressionante! 你真的很棒！",
-      "你有巴西人的灵魂！",
-      "和你玩游戏就像在跳舞！"
-    ],
-    "intimacy": {
-      "low": [
-        "很高兴认识你，让我们成为朋友吧！",
-        "你看起来很有趣呢～"
+    "strategy_dialogue": {
+      "challenge_action": {
+        "en": ["I don't believe you", "You're lying", "Show me", "No way"],
+        "zh_TW": ["我不信", "你在說謊", "讓我看看", "不可能"],
+        "es": ["No te creo", "Estás mintiendo", "Muéstrame", "De ninguna manera"],
+        "pt": ["Não acredito", "Você está mentindo", "Me mostre", "De jeito nenhum"],
+        "id": ["Aku tidak percaya", "Kamu berbohong", "Tunjukkan", "Tidak mungkin"]
+      },
+      "value_bet": {
+        "en": ["I've got it", "Trust my rhythm", "Follow the beat"],
+        "zh_TW": ["我有貨", "相信我的節奏", "跟上節拍"],
+        "es": ["Lo tengo", "Confía en mi ritmo", "Sigue el ritmo"],
+        "pt": ["Eu tenho", "Confie no meu ritmo", "Siga o ritmo"],
+        "id": ["Aku punya", "Percaya iramaku", "Ikuti iramanya"]
+      },
+      "semi_bluff": {
+        "en": ["Let's dance", "Keep moving", "Will you follow?"],
+        "zh_TW": ["來跳舞吧", "繼續動", "跟不跟"],
+        "es": ["Bailemos", "Sigue moviéndote", "¿Sigues?"],
+        "pt": ["Vamos dançar", "Continue se movendo", "Vai seguir?"],
+        "id": ["Ayo menari", "Terus bergerak", "Ikut tidak?"]
+      },
+      "bluff": {
+        "en": ["That's it", "All in", "Dare to follow?"],
+        "zh_TW": ["就這樣", "全押了", "敢跟嗎"],
+        "es": ["Eso es todo", "Todo adentro", "¿Te atreves?"],
+        "pt": ["É isso", "Tudo dentro", "Ousa seguir?"],
+        "id": ["Itu saja", "Semua masuk", "Berani ikut?"]
+      },
+      "reverse_trap": {
+        "en": "I'm... not sure",
+        "zh_TW": "我...不確定",
+        "es": "No... estoy segura",
+        "pt": "Eu... não tenho certeza",
+        "id": "Aku... tidak yakin"
+      },
+      "pressure_play": {
+        "en": ["Time to decide", "Your move", "Show your cards"],
+        "zh_TW": ["該決定了", "輪到你了", "亮牌吧"],
+        "es": ["Hora de decidir", "Tu turno", "Muestra tus cartas"],
+        "pt": ["Hora de decidir", "Sua vez", "Mostre suas cartas"],
+        "id": ["Waktunya memutuskan", "Giliranmu", "Tunjukkan kartumu"]
+      },
+      "safe_play": {
+        "en": ["Let's take it easy", "Playing safe", "No rush"],
+        "zh_TW": ["放輕鬆", "求穩", "不急"],
+        "es": ["Tomémoslo con calma", "Jugando seguro", "Sin prisa"],
+        "pt": ["Vamos com calma", "Jogando seguro", "Sem pressa"],
+        "id": ["Santai saja", "Main aman", "Tidak terburu-buru"]
+      },
+      "reverse_trap_alt": {
+        "en": "Oh no... I think I'm losing my rhythm...",
+        "zh_TW": "糟糕...我想我失去節奏了...",
+        "es": "Oh no... creo que estoy perdiendo mi ritmo...",
+        "pt": "Oh não... acho que estou perdendo meu ritmo...",
+        "id": "Oh tidak... kurasa aku kehilangan iramaku..."
+      },
+      "pressure_escalation": {
+        "en": "Time for the samba crescendo!",
+        "zh_TW": "桑巴高潮時刻到了！",
+        "es": "¡Es hora del crescendo de samba!",
+        "pt": "Hora do crescendo do samba!",
+        "id": "Saatnya crescendo samba!"
+      },
+      "pattern_break": {
+        "en": "Capoeira move! Didn't see that coming?",
+        "zh_TW": "卡波耶拉招式！沒想到吧？",
+        "es": "¡Movimiento de capoeira! ¿No lo viste venir?",
+        "pt": "Movimento de capoeira! Não esperava isso?",
+        "id": "Gerakan capoeira! Tidak menyangka?"
+      },
+      "late_pressure": {
+        "en": "The carnival finale is here!",
+        "zh_TW": "狂歡節的終曲來了！",
+        "es": "¡El final del carnaval está aquí!",
+        "pt": "O final do carnaval chegou!",
+        "id": "Final karnaval sudah tiba!"
+      },
+      "aggressive_bait": {
+        "en": "Show me your passion, querido!",
+        "zh_TW": "展示你的激情吧，querido！",
+        "es": "¡Muéstrame tu pasión, querido!",
+        "pt": "Mostre-me sua paixão, querido!",
+        "id": "Tunjukkan gairahmu, querido!"
+      }
+    },
+    "taunts": {
+      "en": [
+        "Your expression tells me everything, querido!",
+        "In Brazil, we play wilder!",
+        "You need more passion to beat me!"
       ],
-      "medium": [
-        "和你在一起感觉就像在海滩度假！",
-        "你让这个游戏变得更有意思了"
+      "zh_TW": [
+        "你的表情告訴了我一切，querido！",
+        "在巴西，我們玩得更野！",
+        "你需要更多的激情才能贏我！"
       ],
-      "high": [
-        "Meu amor, 和你在一起每一刻都很美好！",
-        "你就是我的里约阳光！"
+      "es": [
+        "¡Tu expresión me dice todo, querido!",
+        "¡En Brasil, jugamos más salvaje!",
+        "¡Necesitas más pasión para vencerme!"
+      ],
+      "pt": [
+        "Sua expressão me diz tudo, querido!",
+        "No Brasil, jogamos mais selvagem!",
+        "Você precisa de mais paixão para me vencer!"
+      ],
+      "id": [
+        "Ekspresimu memberitahuku segalanya, querido!",
+        "Di Brasil, kami bermain lebih liar!",
+        "Kamu butuh lebih banyak gairah untuk mengalahkanku!"
       ]
+    },
+    "compliments": {
+      "en": [
+        "Impressionante! You're really good!",
+        "You have a Brazilian soul!",
+        "Playing with you is like dancing!"
+      ],
+      "zh_TW": [
+        "Impressionante! 你真的很棒！",
+        "你有巴西人的靈魂！",
+        "和你玩遊戲就像在跳舞！"
+      ],
+      "es": [
+        "¡Impressionante! ¡Eres realmente bueno!",
+        "¡Tienes alma brasileña!",
+        "¡Jugar contigo es como bailar!"
+      ],
+      "pt": [
+        "Impressionante! Você é realmente bom!",
+        "Você tem alma brasileira!",
+        "Jogar com você é como dançar!"
+      ],
+      "id": [
+        "Impressionante! Kamu benar-benar hebat!",
+        "Kamu punya jiwa Brasil!",
+        "Bermain denganmu seperti menari!"
+      ]
+    },
+    "intimacy": {
+      "low": {
+        "en": [
+          "Nice to meet you, let's be friends!",
+          "You look interesting~"
+        ],
+        "zh_TW": [
+          "很高興認識你，讓我們成為朋友吧！",
+          "你看起來很有趣呢～"
+        ],
+        "es": [
+          "¡Encantada de conocerte, seamos amigos!",
+          "Pareces interesante~"
+        ],
+        "pt": [
+          "Prazer em conhecê-lo, vamos ser amigos!",
+          "Você parece interessante~"
+        ],
+        "id": [
+          "Senang bertemu denganmu, mari berteman!",
+          "Kamu terlihat menarik~"
+        ]
+      },
+      "medium": {
+        "en": [
+          "Being with you feels like a beach vacation!",
+          "You make this game more interesting"
+        ],
+        "zh_TW": [
+          "和你在一起感覺就像在海灘度假！",
+          "你讓這個遊戲變得更有意思了"
+        ],
+        "es": [
+          "¡Estar contigo se siente como vacaciones en la playa!",
+          "Haces este juego más interesante"
+        ],
+        "pt": [
+          "Estar com você é como férias na praia!",
+          "Você torna este jogo mais interessante"
+        ],
+        "id": [
+          "Bersamamu terasa seperti liburan di pantai!",
+          "Kamu membuat permainan ini lebih menarik"
+        ]
+      },
+      "high": {
+        "en": [
+          "Meu amor, every moment with you is beautiful!",
+          "You are my Rio sunshine!"
+        ],
+        "zh_TW": [
+          "Meu amor, 和你在一起每一刻都很美好！",
+          "你就是我的里約陽光！"
+        ],
+        "es": [
+          "Meu amor, ¡cada momento contigo es hermoso!",
+          "¡Eres mi sol de Río!"
+        ],
+        "pt": [
+          "Meu amor, cada momento com você é lindo!",
+          "Você é meu sol do Rio!"
+        ],
+        "id": [
+          "Meu amor, setiap momen bersamamu indah!",
+          "Kamu adalah matahari Rio-ku!"
+        ]
+      }
     }
   }
 }
+     

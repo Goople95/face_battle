@@ -40,9 +40,9 @@ class SoberDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 标题
-            const Text(
-              '🥴 醉酒警告！',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.drunkWarningTitle,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -52,14 +52,14 @@ class SoberDialog extends StatelessWidget {
             
             // 状态说明
             Text(
-              '你已经喝了${drinkingState.drinksConsumed}杯酒',
+              AppLocalizations.of(context)!.drinksConsumedMessage(drinkingState.drinksConsumed),
               style: const TextStyle(
                 fontSize: 18,
                 color: Colors.white,
               ),
             ),
             Text(
-              drinkingState.statusDescription,
+              drinkingState.getStatusDescription(context),
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.yellow.shade300,
@@ -107,7 +107,7 @@ class SoberDialog extends StatelessWidget {
                   _buildOption(
                     icon: Icons.medication_liquid,
                     title: AppLocalizations.of(context)!.useSoberPotion,
-                    subtitle: '剩余 ${drinkingState.soberPotions} 瓶',
+                    subtitle: AppLocalizations.of(context)!.soberPotionRemaining(drinkingState.soberPotions),
                     color: Colors.green,
                     onTap: () {
                       Navigator.of(context).pop();

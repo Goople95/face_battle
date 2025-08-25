@@ -168,16 +168,9 @@ class DialogueService {
   String _normalizeLocale(String locale) {
     LoggerUtils.info('Normalizing locale: $locale');
     
-    // 将zh或zh_CN统一转换为zh_TW
-    if (locale == 'zh' || locale == 'zh_CN') {
-      return 'zh_TW';
-    }
-    // 处理其他变体
+    // 所有中文都使用繁体中文
     if (locale.startsWith('zh')) {
-      if (locale.contains('TW') || locale.contains('HK') || locale.contains('MO')) {
-        return 'zh_TW';
-      }
-      return 'zh_TW'; // 默认使用繁体
+      return 'zh_TW';
     }
     // 其他语言直接返回
     if (locale.contains('_')) {
@@ -320,26 +313,40 @@ class DialogueService {
       }
     }
     
-    return _getDefaultStrategyDialogue(strategy);
+    return _getDefaultStrategyDialogue(strategy, locale: locale);
   }
   
-  String _getDefaultStrategyDialogue(String strategy) {
+  String _getDefaultStrategyDialogue(String strategy, {String locale = 'en'}) {
+    // 返回特殊标记，让调用方使用ARB本地化
+    // 这些会在game_screen中被处理
     switch (strategy) {
       case 'challenge_action':
-        return '我不信';
+        return '__DEFAULT_CHALLENGE__';
       case 'value_bet':
-        return '稳稳的';
+        return '__DEFAULT_VALUE_BET__';
       case 'semi_bluff':
-        return '试试看';
+        return '__DEFAULT_SEMI_BLUFF__';
       case 'bluff':
       case 'pure_bluff':
-        return '就这样';
+        return '__DEFAULT_BLUFF__';
       case 'reverse_trap':
-        return '我...不太确定';
+        return '__DEFAULT_REVERSE_TRAP__';
       case 'pressure_play':
-        return '该决定了';
+        return '__DEFAULT_PRESSURE_PLAY__';
       case 'safe_play':
-        return '求稳';
+        return '__DEFAULT_SAFE_PLAY__';
+      case 'pattern_break':
+        return '__DEFAULT_PATTERN_BREAK__';
+      case 'reverse_trap_alt':
+        return '__DEFAULT_REVERSE_TRAP__';  // 使用相同的默認值
+      case 'pressure_escalation':
+        return '__DEFAULT_PRESSURE_PLAY__';  // 使用相似的默認值
+      case 'late_pressure':
+        return '__DEFAULT_PRESSURE_PLAY__';  // 使用相似的默認值
+      case 'aggressive_bait':
+        return '__DEFAULT_BLUFF__';  // 使用相似的默認值
+      case 'induce_aggressive':
+        return '__DEFAULT_INDUCE_AGGRESSIVE__';
       default:
         return '...';
     }

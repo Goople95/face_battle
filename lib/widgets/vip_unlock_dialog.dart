@@ -81,23 +81,52 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
             const SizedBox(height: 10),
             
             // 角色名称
-            Text(
-              widget.character.localizedName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Builder(
+              builder: (context) {
+                final locale = Localizations.localeOf(context);
+                final languageCode = locale.languageCode;
+                
+                // 处理中文的特殊情况
+                String localeCode = languageCode;
+                if (languageCode == 'zh') {
+                  // 只支持繁体中文
+                  localeCode = 'zh_TW';
+                }
+                
+                return Text(
+                  widget.character.getLocalizedName(localeCode),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
             ),
             
             // 角色描述
-            Text(
-              widget.character.localizedDescription,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
+            Builder(
+              builder: (context) {
+                final locale = Localizations.localeOf(context);
+                final languageCode = locale.languageCode;
+                final countryCode = locale.countryCode;
+                
+                // 处理中文的特殊情况
+                String localeCode = languageCode;
+                if (languageCode == 'zh') {
+                  // 只支持繁体中文
+                  localeCode = 'zh_TW';
+                }
+                
+                return Text(
+                  widget.character.getLocalizedDescription(localeCode),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                );
+              },
             ),
             const SizedBox(height: 15),
             
@@ -110,11 +139,11 @@ const SizedBox(height: 20),
                 color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Column(
+              child: Column(
                 children: [
                   Text(
-                    '解锁VIP角色',
-                    style: TextStyle(
+                    AppLocalizations.of(context)!.unlockVIPCharacter,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -122,8 +151,8 @@ const SizedBox(height: 20),
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '选择以下方式解锁此VIP角色',
-                    style: TextStyle(
+                    AppLocalizations.of(context)!.chooseUnlockMethod,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                     ),
@@ -140,7 +169,7 @@ const SizedBox(height: 20),
                 _buildUnlockOption(
                   icon: Icons.play_circle_outline,
                   title: AppLocalizations.of(context)!.watchAdUnlock,
-                  subtitle: '免费游玩1小时',
+                  subtitle: AppLocalizations.of(context)!.freePlayOneHour,
                   color: Colors.blue,
                   onTap: () async {
                     Navigator.of(context).pop(false);
@@ -154,9 +183,17 @@ const SizedBox(height: 20),
                         // 记录看广告解锁VIP的次数
                         await GameProgressService.instance.recordAdUnlockVIP(widget.character.id);
                         if (context.mounted) {
+                          final locale = Localizations.localeOf(context);
+                          final languageCode = locale.languageCode;
+                          String localeCode = languageCode;
+                          if (languageCode == 'zh') {
+                            localeCode = 'zh_TW';
+                          }
+                          final localizedName = widget.character.getLocalizedName(localeCode);
+                          
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('✨ 已临时解锁${widget.character.localizedName}，有效期1小时'),
+                              content: Text(AppLocalizations.of(context)!.tempUnlocked(localizedName)),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -173,8 +210,8 @@ const SizedBox(height: 20),
                 // 永久解锁
                 _buildUnlockOption(
                   icon: Icons.diamond,
-                  title: '永久解锁',
-                  subtitle: '${VIPUnlockService.vipUnlockPrice}宝石 (你有$_userGems宝石)',
+                  title: AppLocalizations.of(context)!.permanentUnlock,
+                  subtitle: AppLocalizations.of(context)!.gemsRequired(VIPUnlockService.vipUnlockPrice, _userGems),
                   color: _userGems >= VIPUnlockService.vipUnlockPrice
                       ? Colors.amber
                       : Colors.grey,
@@ -183,10 +220,18 @@ const SizedBox(height: 20),
                     if (_userGems >= VIPUnlockService.vipUnlockPrice) {
                       bool success = await _vipService.permanentUnlock(widget.character.id);
                       if (success && context.mounted) {
+                        final locale = Localizations.localeOf(context);
+                        final languageCode = locale.languageCode;
+                        String localeCode = languageCode;
+                        if (languageCode == 'zh') {
+                          localeCode = 'zh_TW';
+                        }
+                        final localizedName = widget.character.getLocalizedName(localeCode);
+                        
                         Navigator.of(context).pop(true);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('🎉 成功永久解锁${widget.character.localizedName}'),
+                            content: Text(AppLocalizations.of(context)!.permanentUnlocked(localizedName)),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -202,7 +247,7 @@ const SizedBox(height: 20),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(
-                '稍后再说',
+                AppLocalizations.of(context)!.laterDecide,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,

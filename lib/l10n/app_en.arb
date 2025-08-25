@@ -76,6 +76,11 @@
   },
   "winRate": "Win Rate",
   
+  "@totalWins": {
+    "description": "Total wins label"
+  },
+  "totalWins": "Wins",
+  
   "@level": {
     "description": "Level label"
   },
@@ -254,12 +259,13 @@
   "@youWin": {
     "description": "You win message"
   },
-  "youWin": "You Win!",
+  "youWin": "You win!",
   
   "@youLose": {
     "description": "You lose message"
   },
-  "youLose": "You Lose!",
+  "youLose": "You lose!",
+  "aiWins": "{name} wins!",
   
   "@drink": {
     "description": "Drink action"
@@ -275,6 +281,39 @@
     "description": "Drunk warning message"
   },
   "drunkWarning": "You're too drunk to continue!",
+  "drunkWarningTitle": "🥴 Drunk Warning!",
+  "drinksConsumedMessage": "You've had {count} drinks",
+  "@drinksConsumedMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "soberPotionRemaining": "{count} bottles left",
+  "@soberPotionRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "drunkDescription": "{name} looks at you drunkenly",
+  "@drunkDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "soberOptions": "Sober Options",
+  "drunkStatusDeadDrunk": "Dead drunk",
+  "drunkStatusDizzy": "Dizzy drunk",
+  "drunkStatusObvious": "Obviously drunk",
+  "drunkStatusTipsy": "Tipsy",
+  "drunkStatusSlightly": "Slightly drunk",
+  "drunkStatusOneDrink": "Had one drink",
+  "drunkStatusSober": "Sober",
   
   "@soberUp": {
     "description": "Sober up message"
@@ -298,6 +337,40 @@
     "description": "Unlock VIP button"
   },
   "unlockVIP": "Unlock VIP",
+  
+  "@unlockVIPCharacter": {
+    "description": "Unlock VIP character title"
+  },
+  "unlockVIPCharacter": "Unlock VIP Character",
+  
+  "@chooseUnlockMethod": {
+    "description": "Choose unlock method subtitle"
+  },
+  "chooseUnlockMethod": "Choose a method to unlock this VIP character",
+  
+  "@freePlayOneHour": {
+    "description": "Free play for one hour"
+  },
+  "freePlayOneHour": "Free play for 1 hour",
+  
+  "@permanentUnlock": {
+    "description": "Permanent unlock"
+  },
+  "permanentUnlock": "Permanent Unlock",
+  
+  "@gemsRequired": {
+    "description": "Gems required for unlock",
+    "placeholders": {
+      "required": {},
+      "current": {}
+    }
+  },
+  "gemsRequired": "{required} gems (you have {current} gems)",
+  
+  "@laterDecide": {
+    "description": "Later decide button"
+  },
+  "laterDecide": "Maybe Later",
   
   "@vipBenefits": {
     "description": "VIP benefits title"
@@ -346,6 +419,54 @@
     "description": "Share message template"
   },
   "shareMessage": "I just won in Dice Girls! Can you beat me?",
+  "shareSubject": "Dice Girls - Perfect Victory!",
+  "shareTemplate1": "🎉 I got {name} drunk in Dice Girls! {drinks} drinks total, {minutes} minutes of private time~ #DiceGirls #PerfectVictory",
+  "@shareTemplate1": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "drinks": {"type": "int"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "shareTemplate2": "🏆 Victory Report: {name} is down! {drinks} drinks consumed, intimacy +{minutes}! Who dares to challenge? #DiceGirls",
+  "@shareTemplate2": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "drinks": {"type": "int"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "shareTemplate3": "😎 Easy win against {name}! Only {drinks} drinks and they're out, we chatted for {minutes} minutes~ #DiceGirls",
+  "@shareTemplate3": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "drinks": {"type": "int"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "shareTemplate4": "🍺 Tonight's MVP is me! {name} passed out after {drinks} drinks, the next {minutes} minutes... you know 😏 #DiceGirls",
+  "@shareTemplate4": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "drinks": {"type": "int"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "shareCardDrunk": "Drunk",
+  "shareCardIntimacy": "Intimacy",
+  "shareCardPrivateTime": "Private time: {minutes} minutes",
+  "@shareCardPrivateTime": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "shareCardDrinkCount": "{count} drinks to pass out",
+  "@shareCardDrinkCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "shareCardGameName": "Dice Girls",
   
   "@rateApp": {
     "description": "Rate app button"
@@ -464,12 +585,22 @@
     "privacy": "Privacy Policy"
   },
   
-  "playerDataAnalysis": "Your Data Analysis",
+  "playerDataAnalysis": "Your Stats",
   "vsRecord": "Battle Record",
-  "gameStyle": "Game Style",
-  "bluffingTendency": "Bluffing Tendency",
-  "aggressiveness": "Aggressiveness",
+  "gameStyle": "Play Style",
+  "bluffingTendency": "Bluff Rate",
+  "aggressiveness": "Aggression",
   "challengeRate": "Challenge Rate",
+  "styleNovice": "Novice",
+  "styleBluffMaster": "Bluff Master",
+  "styleBluffer": "Bluffer",
+  "styleHonest": "Honest",
+  "styleAggressive": "Aggressive",
+  "styleOffensive": "Offensive",
+  "styleConservative": "Conservative",
+  "styleChallenger": "Challenger",
+  "styleCautious": "Cautious",
+  "styleBalanced": "Balanced",
   "totalGames": "{count} games",
   "win": "W",
   "lose": "L",
@@ -488,15 +619,34 @@
   "playerDiceLabel": "Your dice",
   "aiDiceLabel": "{name}'s dice",
   "bidCall": "Bid: {quantity}×{value}",
-  "challengeSuccessRateDisplay": "Challenge Success: {rate}%",
+  "challengeSuccessRateDisplay": "Success chance: {rate}%",
   "bidMustBeHigher": "Bid must be higher than current",
   "roundEnd": "Round End",
+  "roundNumber": "Round {number}",
+  "@roundNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "nextBidHint": "Next bid: qty > {quantity} or value > {value}",
+  "@nextBidHint": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
   "backToHome": "Back to Home",
   "playAgain": "Play Again",
   "shareResult": "Share Result",
   "aiThinking": "AI is thinking...",
   "bidHistory": "Bid History",
-  "completeBidHistory": "Complete Bid History",
+  "completeBidHistory": "Bid History",
   "totalGamesCount": "Games",
   "watchAdSuccess": "✨ Watched ad, fully sober!",
   "usedSoberPotion": "Used sober potion, -2 drinks!",
@@ -520,18 +670,24 @@
   "drunkAndWon": "{name} passed out, you won!",
   "copiedToClipboard": "Copied to clipboard",
   "pleaseWaitThinking": "{name} is thinking...",
-  "pleaseBid": "Please bid",
-  "showDice": "Show dice!",
+  "pleaseBid": "Make your bid",
+  "showDice": "Call the bluff!",
   "challenge": "Challenge",
   "challengeOpponent": "Challenge opponent's bid",
   "challengePlayerBid": "Challenge player's bid: {quantity}×{value}",
-  "playerShowDice": "Player shows dice!",
-  "aiShowDice": "{name} shows dice!",
+  "playerShowDice": "Player reveals the dice!",
+  "aiShowDice": "{name} reveals the dice!",
   "soberOptions": "Sober options",
   "adLoadFailed": "Ad failed to load",
+  "adLoadFailedTryLater": "Ad failed to load, please try again later",
   "adWatchedSober": "✨ Ad watched, fully sober!",
   "usedSoberPotion": "Used sober potion, sobered up 2 drinks!",
   "aiSoberedUp": "✨ {name} sobered up, continue the game!",
+  "minimumBidTwo": "Minimum bid is 2",
+  "languageChanged": "Language changed to {language}",
+  "tempUnlocked": "✨ Temporarily unlocked {name} for 1 hour",
+  "permanentUnlocked": "🎉 Successfully unlocked {name} permanently",
+  "screenshotSaved": "Screenshot saved!",
   "challengeProbability": "Challenge probability",
   "challengeWillSucceed": "Challenge will succeed",
   "challengeWillFail": "Challenge will fail",
@@ -549,5 +705,127 @@
   "challengeSuccessRateValue": "Challenge success rate",
   "challenger": "Challenger",
   "intimacyTip": "Get me drunk to increase intimacy~",
-  "gameGreeting": "Welcome! Let's play!"
+  "gameGreeting": "Welcome! Let's play!",
+  
+  "aiBidFormat": "{quantity} {value}'s",
+  "@aiBidFormat": {
+    "description": "Format for AI bid announcement",
+    "placeholders": {
+      "quantity": {
+        "type": "int",
+        "example": "3"
+      },
+      "value": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  
+  "defaultChallenge": "I don't believe you",
+  "defaultValueBet": "Steady",
+  "defaultSemiBluff": "Let's try",
+  "defaultBluff": "Just like that",
+  "defaultReverseTrap": "I'm... not sure",
+  "defaultPressurePlay": "Time to decide",
+  "defaultSafePlay": "Playing safe",
+  "defaultPatternBreak": "Change it up",
+  "defaultInduceAggressive": "Come on",
+  
+  "wildcard": "Wild",
+  "notWildcard": "Not Wild",
+  "wildcardWithCount": "(incl. {count}×1)",
+  "@wildcardWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noWildcard": " (no wild)",
+  "currentBidDisplay": "{quantity} {value}'s",
+  "@currentBidDisplay": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "bidLabel": "Bid: {quantity}×{value}s",
+  "@bidLabel": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "actualLabel": "Actual: {count}×{value}s",
+  "@actualLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "quantityDisplay": "{quantity}",
+  "@quantityDisplay": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "nightFall": "🌙 It's late...",
+  "aiGotDrunk": "{name} is drunk",
+  "@aiGotDrunk": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "timePassesBy": "Time passes quietly",
+  "aiAndYou": "{name} and you...",
+  "@aiAndYou": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "relationshipCloser": "Getting closer",
+  "tapToContinue": "Tap to continue",
+  "intimacyIncreased": "Intimacy +{points}",
+  "@intimacyIncreased": {
+    "placeholders": {
+      "points": {"type": "int"}
+    }
+  },
+  "intimacyGrowing": "Growing...",
+  "currentProgress": "{current} / {total}",
+  "@currentProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "maxLevel": "MAX",
+  "upgradeToKnowMore": "Level up to know more of her secrets",
+  "youKnowAllSecrets": "You know all her secrets",
+  "congratsIntimacyUpgrade": "Intimacy +1 level!",
+  "showOff": "Show Off",
+  "continueButton": "Continue",
+  "rematch": "Rematch",
+  "perfectVictory": "🏆 Perfect Victory!",
+  "sharingImage": "Sharing image",
+  "loadingAvatar": "Loading avatar...",
+  "generatingShareImage": "Generating share image...",
+  "challengeNow": "Challenge Now",
+  "gameSlogan": "100+ waiting for your challenge"
 }

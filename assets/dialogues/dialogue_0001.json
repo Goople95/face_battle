@@ -409,35 +409,35 @@
         "pt": ["Sejamos razoáveis", "Jogando seguro", "Sem pressa"],
         "id": ["Mari bersikap wajar", "Bermain aman", "Tidak terburu-buru"]
       },
-      "反向陷阱": {
+      "reverse_trap_alt": {
         "en": "I'm... not so sure",
         "zh_TW": "我...不太確定",
         "es": "No... estoy muy seguro",
         "pt": "Eu... não tenho certeza",
         "id": "Saya... tidak begitu yakin"
       },
-      "壓力升級": {
+      "pressure_escalation": {
         "en": "Let's get serious!",
         "zh_TW": "來真的吧！",
         "es": "¡Pongámonos serios!",
         "pt": "Vamos ficar sérios!",
         "id": "Mari serius!"
       },
-      "模式破壞": {
+      "pattern_break": {
         "en": "Let's change the game",
         "zh_TW": "換個玩法",
         "es": "Cambiemos el juego",
         "pt": "Vamos mudar o jogo",
         "id": "Mari ubah permainannya"
       },
-      "後期施壓": {
+      "late_pressure": {
         "en": "Time to end this",
         "zh_TW": "該結束了",
         "es": "Hora de terminar esto",
         "pt": "Hora de terminar isso",
         "id": "Waktunya mengakhiri ini"
       },
-      "誘導激進": {
+      "aggressive_bait": {
         "en": "Dare to follow?",
         "zh_TW": "你敢跟嗎？",
         "es": "¿Te atreves a seguir?",

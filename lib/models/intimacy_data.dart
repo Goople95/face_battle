@@ -60,6 +60,22 @@ class IntimacyData {
     
     return (intimacyPoints - currentThreshold) / (nextThreshold - currentThreshold);
   }
+  
+  /// 获取当前等级内的进度点数（不是总点数）
+  int get currentLevelPoints {
+    if (intimacyLevel >= 10) {
+      // 等级10显示当前等级内的点数
+      const level10Threshold = 4500;
+      return intimacyPoints - level10Threshold;
+    }
+    
+    // 各等级的起始阈值
+    final thresholds = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500];
+    final currentThreshold = thresholds[intimacyLevel - 1];
+    
+    // 返回当前等级内的进度
+    return intimacyPoints - currentThreshold;
+  }
 
   double get winRate => totalGames > 0 ? wins / totalGames : 0.0;
 

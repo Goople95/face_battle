@@ -55,6 +55,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get winRate => 'Tasa de Victoria';
 
   @override
+  String get totalWins => 'Victorias';
+
+  @override
   String get level => 'Nivel';
 
   @override
@@ -166,6 +169,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get youLose => '¡Perdiste!';
 
   @override
+  String aiWins(Object name) {
+    return '¡$name gana!';
+  }
+
+  @override
   String get drink => '¡Bebe!';
 
   @override
@@ -173,6 +181,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get drunkWarning => '¡Estás demasiado borracho para continuar!';
+
+  @override
+  String get drunkWarningTitle => '🥴 ¡Advertencia de borrachera!';
+
+  @override
+  String drinksConsumedMessage(int count) {
+    return 'Has tomado $count bebidas';
+  }
+
+  @override
+  String soberPotionRemaining(int count) {
+    return 'Quedan $count botellas';
+  }
+
+  @override
+  String drunkDescription(String name) {
+    return '$name te mira con ojos ebrios';
+  }
+
+  @override
+  String get soberOptions => 'Opciones para desembriagar';
+
+  @override
+  String get drunkStatusDeadDrunk => 'Borracho perdido';
+
+  @override
+  String get drunkStatusDizzy => 'Mareado';
+
+  @override
+  String get drunkStatusObvious => 'Obviamente borracho';
+
+  @override
+  String get drunkStatusTipsy => 'Achispado';
+
+  @override
+  String get drunkStatusSlightly => 'Ligeramente ebrio';
+
+  @override
+  String get drunkStatusOneDrink => 'Una copa';
+
+  @override
+  String get drunkStatusSober => 'Sobrio';
 
   @override
   String get soberUp => 'Espera para estar sobrio o mira un anuncio';
@@ -187,6 +237,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get unlockVIP => 'Desbloquear VIP';
+
+  @override
+  String get unlockVIPCharacter => 'Desbloquear Personaje VIP';
+
+  @override
+  String get chooseUnlockMethod =>
+      'Elige un método para desbloquear este personaje VIP';
+
+  @override
+  String get freePlayOneHour => 'Juega gratis por 1 hora';
+
+  @override
+  String get permanentUnlock => 'Desbloqueo Permanente';
+
+  @override
+  String gemsRequired(Object required, Object current) {
+    return '$required gemas (tienes $current gemas)';
+  }
+
+  @override
+  String get laterDecide => 'Tal vez más tarde';
 
   @override
   String get vipBenefits => 'Beneficios VIP';
@@ -216,6 +287,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shareMessage => '¡Acabo de ganar en Dice Girls! ¿Puedes vencerme?';
+
+  @override
+  String get shareSubject => 'Dice Girls - ¡Victoria Perfecta!';
+
+  @override
+  String shareTemplate1(String name, int drinks, int minutes) {
+    return '🎉 ¡Emborraché a $name en Dice Girls! $drinks bebidas en total, $minutes minutos a solas~ #DiceGirls #VictoriaPerfecta';
+  }
+
+  @override
+  String shareTemplate2(String name, int drinks, int minutes) {
+    return '🏆 Reporte de Victoria: ¡$name cayó! $drinks bebidas consumidas, intimidad +$minutes! ¿Quién se atreve? #DiceGirls';
+  }
+
+  @override
+  String shareTemplate3(String name, int drinks, int minutes) {
+    return '😎 Fácil victoria contra $name! Solo $drinks bebidas y quedó fuera, charlamos $minutes minutos~ #DiceGirls';
+  }
+
+  @override
+  String shareTemplate4(String name, int drinks, int minutes) {
+    return '🍺 ¡El MVP de esta noche soy yo! $name se desmayó después de $drinks bebidas, los siguientes $minutes minutos... ya sabes 😏 #DiceGirls';
+  }
+
+  @override
+  String get shareCardDrunk => 'Borracho';
+
+  @override
+  String get shareCardIntimacy => 'Intimidad';
+
+  @override
+  String shareCardPrivateTime(int minutes) {
+    return 'Tiempo a solas: $minutes minutos';
+  }
+
+  @override
+  String shareCardDrinkCount(int count) {
+    return '$count bebidas para desmayarse';
+  }
+
+  @override
+  String get shareCardGameName => 'Dice Girls';
 
   @override
   String get rateApp => 'Calificar App';
@@ -288,76 +401,106 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get playerDataAnalysis => 'Your Data Analysis';
+  String get playerDataAnalysis => 'Tus Estadísticas';
 
   @override
-  String get vsRecord => 'Battle Record';
+  String get vsRecord => 'Registro de Batallas';
 
   @override
-  String get gameStyle => 'Game Style';
+  String get gameStyle => 'Estilo de Juego';
 
   @override
-  String get bluffingTendency => 'Bluffing Tendency';
+  String get bluffingTendency => 'Tasa de Farol';
 
   @override
-  String get aggressiveness => 'Aggressiveness';
+  String get aggressiveness => 'Agresión';
 
   @override
-  String get challengeRate => 'Challenge Rate';
+  String get challengeRate => 'Tasa de Desafío';
+
+  @override
+  String get styleNovice => 'Novice';
+
+  @override
+  String get styleBluffMaster => 'Bluff Master';
+
+  @override
+  String get styleBluffer => 'Bluffer';
+
+  @override
+  String get styleHonest => 'Honest';
+
+  @override
+  String get styleAggressive => 'Aggressive';
+
+  @override
+  String get styleOffensive => 'Offensive';
+
+  @override
+  String get styleConservative => 'Conservative';
+
+  @override
+  String get styleChallenger => 'Challenger';
+
+  @override
+  String get styleCautious => 'Cautious';
+
+  @override
+  String get styleBalanced => 'Balanced';
 
   @override
   String totalGames(Object count) {
-    return '$count games';
+    return '$count juegos';
   }
 
   @override
-  String get win => 'W';
+  String get win => 'V';
 
   @override
-  String get lose => 'L';
+  String get lose => 'D';
 
   @override
-  String get debugTool => 'Debug Tool';
+  String get debugTool => 'Herramienta de Depuración';
 
   @override
-  String get noVIPCharacters => 'No VIP Characters';
+  String get noVIPCharacters => 'Sin Personajes VIP';
 
   @override
   String minutes(Object count) {
-    return '$count minutes';
+    return '$count minutos';
   }
 
   @override
-  String get sober => 'Sober Up';
+  String get sober => 'Despejar';
 
   @override
-  String get useSoberPotion => 'Use Sober Potion';
+  String get useSoberPotion => 'Usar Poción de Sobriedad';
 
   @override
-  String get close => 'Close';
+  String get close => 'Cerrar';
 
   @override
   String aiIsDrunk(Object name) {
-    return '$name is drunk!';
+    return '$name está borracha';
   }
 
   @override
-  String get aiDrunkMessage => 'She\'s too drunk to play\nHelp her sober up';
+  String get aiDrunkMessage =>
+      'Está demasiado borracha para jugar\nAyúdala a despejarse';
 
   @override
-  String get watchAdToSober => 'Watch Ad';
+  String get watchAdToSober => 'Ver Anuncio';
 
   @override
   String languageSwitched(Object language) {
-    return 'Language switched to $language';
+    return 'Idioma cambiado';
   }
 
   @override
-  String get instructionsDetail =>
-      '• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they\'re lying';
+  String get instructionsDetail => 'Instrucciones detalladas';
 
   @override
-  String get yourDice => 'You rolled';
+  String get yourDice => 'Tus Dados';
 
   @override
   String get playerDiceLabel => 'Tus dados';
@@ -369,43 +512,55 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String bidCall(Object quantity, Object value) {
-    return 'Bid: $quantity×$value';
+    return 'Apuesta';
   }
 
   @override
   String challengeSuccessRateDisplay(Object rate) {
-    return 'Tasa de éxito: $rate%';
+    return 'Probabilidad de éxito: $rate%';
   }
 
   @override
-  String get bidMustBeHigher => 'Bid must be higher than current';
+  String get bidMustBeHigher => 'La apuesta debe ser mayor';
 
   @override
-  String get roundEnd => 'Round End';
+  String get roundEnd => 'Fin de Ronda';
 
   @override
-  String get backToHome => 'Back to Home';
+  String roundNumber(int number) {
+    return 'Ronda $number';
+  }
 
   @override
-  String get playAgain => 'Play Again';
+  String nextBidHint(int quantity, int value) {
+    return 'Siguiente: cant > $quantity o valor > $value';
+  }
 
   @override
-  String get shareResult => 'Share Result';
+  String get backToHome => 'Volver al Inicio';
 
   @override
-  String get aiThinking => 'AI is thinking...';
+  String get playAgain => 'Jugar de Nuevo';
 
   @override
-  String get bidHistory => 'Bid History';
+  String get shareResult => 'Compartir Resultado';
 
   @override
-  String get completeBidHistory => 'Complete Bid History';
+  String aiThinking(Object name) {
+    return '$name está pensando...';
+  }
 
   @override
-  String get totalGamesCount => 'Games';
+  String get bidHistory => 'Historial de Apuestas';
 
   @override
-  String get watchAdSuccess => '✨ Watched ad, fully sober!';
+  String get completeBidHistory => 'Historial Completo';
+
+  @override
+  String get totalGamesCount => 'Total de Juegos';
+
+  @override
+  String get watchAdSuccess => '✨ Anuncio visto, completamente sobrio!';
 
   @override
   String get usedSoberPotion =>
@@ -413,42 +568,42 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String aiSoberSuccess(Object name) {
-    return '✨ $name is sober!';
+    return '✨ ¡$name está sobria!';
   }
 
   @override
-  String get drunkStatus => 'You\'re too drunk to continue!\nNeed to sober up';
+  String get drunkStatus =>
+      '¡Estás demasiado borracho para continuar!\nNecesitas despejarte';
 
   @override
-  String get soberTip =>
-      '💡 Tip: Naturally sober 1 drink per 10 min, fully recover in 1 hour';
+  String get soberTip => '💡 Consejo: Naturalmente sobrio 1 bebida cada 10 min';
 
   @override
-  String get watchAdToSoberTitle => 'Watch Ad to Sober';
+  String get watchAdToSoberTitle => 'Ver Anuncio para Despejar';
 
   @override
-  String get returnToHome => 'Return home, naturally sober';
+  String get returnToHome => 'Volver a casa, naturalmente sobrio';
 
   @override
-  String get youRolled => 'Your Dice';
+  String get youRolled => 'Sacaste';
 
   @override
   String aiRolled(Object name) {
-    return '$name\'s Dice';
+    return '$name sacó';
   }
 
   @override
-  String get myDice => 'My Dice';
+  String get myDice => 'Mis Dados';
 
   @override
-  String get challenging => 'Challenging';
+  String get challenging => 'Desafiando';
 
   @override
-  String get gameTips => 'Game Tips';
+  String get gameTips => 'Consejos del Juego';
 
   @override
   String userIdPrefix(Object id) {
-    return 'ID: $id';
+    return 'ID:';
   }
 
   @override
@@ -461,27 +616,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String privateTime(Object minutes) {
-    return 'Private time: $minutes minutes';
+    return 'Tiempo privado: $minutes minutos';
   }
 
   @override
-  String get victory => 'Victory';
+  String get victory => 'Victoria';
 
   @override
   String intimacyLevelShort(Object level) {
-    return 'Lv.$level';
+    return 'Nv.$level';
   }
 
   @override
-  String get watchAdUnlock => 'Watch Ad';
+  String get watchAdUnlock => 'Ver Anuncio';
 
   @override
   String drunkAndWon(Object name) {
-    return '$name passed out, you won!';
+    return '$name se desmayó, ¡ganaste!';
   }
 
   @override
-  String get copiedToClipboard => 'Copied to clipboard';
+  String get copiedToClipboard => 'Copiado al portapapeles';
 
   @override
   String pleaseWaitThinking(Object name) {
@@ -489,7 +644,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get pleaseBid => 'Por favor apuesta';
+  String get pleaseBid => 'Haz tu apuesta';
 
   @override
   String get showDice => '¡Mostrar dados!';
@@ -511,10 +666,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get soberOptions => 'Opciones para desembriagar';
+  String get adLoadFailed => 'Error al cargar el anuncio';
 
   @override
-  String get adLoadFailed => 'Error al cargar el anuncio';
+  String get adLoadFailedTryLater =>
+      'Error al cargar el anuncio, inténtalo de nuevo';
 
   @override
   String get adWatchedSober => '✨ ¡Anuncio visto, completamente sobrio!';
@@ -523,6 +679,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String aiSoberedUp(Object name) {
     return '✨ ¡$name se desembriagó, continúa el juego!';
   }
+
+  @override
+  String get minimumBidTwo => 'La apuesta mínima es 2';
+
+  @override
+  String languageChanged(Object language) {
+    return 'Idioma cambiado a $language';
+  }
+
+  @override
+  String tempUnlocked(Object name) {
+    return '✨ $name desbloqueado temporalmente por 1 hora';
+  }
+
+  @override
+  String permanentUnlocked(Object name) {
+    return '🎉 $name desbloqueado permanentemente';
+  }
+
+  @override
+  String get screenshotSaved => '¡Captura guardada!';
 
   @override
   String get challengeProbability => 'Probabilidad de desafío';
@@ -594,4 +771,145 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get gameGreeting => '¡Bienvenido! ¡Juguemos!';
+
+  @override
+  String aiBidFormat(int quantity, int value) {
+    return '$quantity $value';
+  }
+
+  @override
+  String get defaultChallenge => 'No te creo';
+
+  @override
+  String get defaultValueBet => 'Seguro';
+
+  @override
+  String get defaultSemiBluff => 'Probemos';
+
+  @override
+  String get defaultBluff => 'Así es';
+
+  @override
+  String get defaultReverseTrap => 'No... estoy seguro';
+
+  @override
+  String get defaultPressurePlay => 'Hora de decidir';
+
+  @override
+  String get defaultSafePlay => 'Jugando seguro';
+
+  @override
+  String get defaultPatternBreak => 'Cambiemos';
+
+  @override
+  String get defaultInduceAggressive => 'Vamos';
+
+  @override
+  String get wildcard => 'Comodín';
+
+  @override
+  String get notWildcard => 'No comodín';
+
+  @override
+  String wildcardWithCount(int count) {
+    return '(+$count×1)';
+  }
+
+  @override
+  String get noWildcard => '(sin comodines)';
+
+  @override
+  String currentBidDisplay(int quantity, int value) {
+    return '$quantity $value';
+  }
+
+  @override
+  String bidLabel(int quantity, int value) {
+    return 'Apuesta: $quantity $value';
+  }
+
+  @override
+  String actualLabel(int count, int value) {
+    return 'Real: $count $value';
+  }
+
+  @override
+  String quantityDisplay(int quantity) {
+    return '$quantity';
+  }
+
+  @override
+  String get nightFall => '🌙 Es tarde...';
+
+  @override
+  String aiGotDrunk(String name) {
+    return '$name está borracha';
+  }
+
+  @override
+  String get timePassesBy => 'El tiempo pasa silenciosamente';
+
+  @override
+  String aiAndYou(String name) {
+    return '$name y tú...';
+  }
+
+  @override
+  String get relationshipCloser => 'Más cerca';
+
+  @override
+  String get tapToContinue => 'Toca para continuar';
+
+  @override
+  String intimacyIncreased(int points) {
+    return 'Intimidad +$points';
+  }
+
+  @override
+  String get intimacyGrowing => 'Creciendo...';
+
+  @override
+  String currentProgress(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get maxLevel => 'MÁX';
+
+  @override
+  String get upgradeToKnowMore =>
+      'Sube de nivel para conocer más de sus secretos';
+
+  @override
+  String get youKnowAllSecrets => 'Ya conoces todos sus secretos';
+
+  @override
+  String get congratsIntimacyUpgrade => '¡Intimidad +1 nivel!';
+
+  @override
+  String get showOff => 'Presumir';
+
+  @override
+  String get continueButton => 'Continuar';
+
+  @override
+  String get rematch => 'Revancha';
+
+  @override
+  String get perfectVictory => '🏆 ¡Victoria Perfecta!';
+
+  @override
+  String get sharingImage => 'Compartiendo imagen';
+
+  @override
+  String get loadingAvatar => 'Cargando avatar...';
+
+  @override
+  String get generatingShareImage => 'Generando imagen para compartir...';
+
+  @override
+  String get challengeNow => 'Desafiar Ahora';
+
+  @override
+  String get gameSlogan => '100+ esperando tu desafío';
 }

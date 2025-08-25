@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "733677362915",
+    "project_id": "liarsdice-fd930",
+    "storage_bucket": "liarsdice-fd930.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:733677362915:android:9e4e0b4ac1c285b67cafd6",
+        "android_client_info": {
+          "package_name": "com.example.face_battle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "733677362915-7p7vgmkqqvi6u4kg8g037i113vumpj9e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIMvfLWOrdBtcB5CQpEmEoQISVyBY_-uk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "733677362915-7p7vgmkqqvi6u4kg8g037i113vumpj9e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "733677362915-ffh5n0lp4eqbkjuonsjuvlkpvj278udp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.faceBattle"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:733677362915:android:19ca66556c94abf17cafd6",
+        "android_client_info": {
+          "package_name": "com.odt.liarsdice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "733677362915-66l7774pngnr8d4gspnp9unqspbrbn9b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.odt.liarsdice",
+            "certificate_hash": "86ec3f7140235d720746c00a47e9cb0c1dc18713"
+          }
+        },
+        {
+          "client_id": "733677362915-emsklvgtb1cd0uie4n65d0e5i447j9im.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.odt.liarsdice",
+            "certificate_hash": "92eaabf2c1490aa1b0bb57000c4ae7d0ee536e08"
+          }
+        },
+        {
+          "client_id": "733677362915-7p7vgmkqqvi6u4kg8g037i113vumpj9e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIMvfLWOrdBtcB5CQpEmEoQISVyBY_-uk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "733677362915-7p7vgmkqqvi6u4kg8g037i113vumpj9e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "733677362915-ffh5n0lp4eqbkjuonsjuvlkpvj278udp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.faceBattle"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

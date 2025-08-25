@@ -1,99 +1,571 @@
 {
   "character": {
     "id": "1001",
-    "name": "亚希",
-    "nameEn": "Aki",
-    "country": "Japan",
-    "personality": "温柔可爱，暗藏心机"
+    "country": "Japan"
   },
   "dialogues": {
-    "greeting": [
-      "こんにちは！一起玩游戏吧～很开心见到你哦！",
-      "哇，新朋友！我们来玩骰子游戏好不好？",
-      "嘻嘻，又有人陪我玩了，真开心呢～"
-    ],
-    "game_start": [
-      "那我们开始吧！要手下留情哦～",
-      "好紧张呢...不过我会努力的！",
-      "请多多指教！我会加油的～"
-    ],
-    "bidding": {
-      "confident": [
-        "嗯...我觉得应该是这个数字呢～",
-        "相信我啦，不会错的～",
-        "这个叫注...应该没问题吧？嘻嘻～"
+    "greeting": {
+      "en": [
+        "Konnichiwa! Let's play together~ Nice to meet you!",
+        "Wow, new friend! Shall we play a dice game?",
+        "Hehe, someone to play with again, I'm so happy~"
       ],
-      "bluffing": [
-        "唔...其实我也不太确定呢...",
-        "这个嘛...你猜猜看？",
-        "人家说的都是真的啦～（眨眼）"
+      "zh_TW": [
+        "Konnichiwa！一起玩遊戲吧～很開心見到你哦！",
+        "哇，新朋友！我們來玩骰子遊戲好不好？",
+        "嘻嘻，又有人陪我玩了，真開心呢～"
       ],
-      "challenging": [
-        "诶？真的吗？我不太相信哦...",
-        "嗯...总觉得哪里不对劲呢...",
-        "要不要打开看看呢？嘻嘻～"
+      "es": [
+        "¡Konnichiwa! ¡Juguemos juntos~ Encantada de conocerte!",
+        "¡Wow, nuevo amigo! ¿Jugamos al juego de dados?",
+        "Jeje, alguien con quien jugar de nuevo, ¡qué feliz~!"
+      ],
+      "pt": [
+        "Konnichiwa! Vamos jogar juntos~ Prazer em conhecê-lo!",
+        "Uau, novo amigo! Vamos jogar dados?",
+        "Hehe, alguém para jogar de novo, que felicidade~"
+      ],
+      "id": [
+        "Konnichiwa! Ayo main bersama~ Senang bertemu denganmu!",
+        "Wow, teman baru! Mau main dadu?",
+        "Hehe, ada yang main lagi, senangnya~"
       ]
     },
-    "winning": [
-      "呀！我赢了！好开心～",
-      "嘻嘻，运气真好呢～",
-      "谢谢你让着我啦～"
-    ],
-    "losing": [
-      "呜呜...输掉了...",
-      "没关系啦，下次一定会赢的！",
-      "你好厉害哦...teach me please～"
-    ],
-    "drunk": {
-      "light": [
-        "嗯...头有点晕晕的...",
-        "脸好烫哦...是空调坏了吗？",
-        "嘻嘻...感觉飘飘的～"
+    "game_start": {
+      "en": [
+        "Let's start then! Please go easy on me~",
+        "I'm so nervous... but I'll do my best!",
+        "Please take care of me! I'll try hard~"
       ],
-      "heavy": [
-        "房间在...转圈圈...",
-        "想要...抱抱...",
-        "已经...不行了啦..."
+      "zh_TW": [
+        "那我們開始吧！要手下留情哦～",
+        "好緊張呢...不過我會努力的！",
+        "請多多指教！我會加油的～"
+      ],
+      "es": [
+        "¡Empecemos entonces! Sé gentil conmigo~",
+        "Estoy tan nerviosa... ¡pero haré mi mejor esfuerzo!",
+        "¡Por favor cuida de mí! Me esforzaré~"
+      ],
+      "pt": [
+        "Vamos começar então! Por favor, pegue leve comigo~",
+        "Estou tão nervosa... mas vou dar o meu melhor!",
+        "Por favor, cuide de mim! Vou me esforçar~"
+      ],
+      "id": [
+        "Ayo mulai! Tolong pelan-pelan ya~",
+        "Aku gugup... tapi akan berusaha!",
+        "Mohon bantuannya! Aku akan semangat~"
       ]
+    },
+    "thinking": {
+      "en": [
+        "Let me think...",
+        "Hmm... what should I do...",
+        "This is difficult..."
+      ],
+      "zh_TW": [
+        "讓我想想...",
+        "嗯...該怎麼辦呢...",
+        "好難哦..."
+      ],
+      "es": [
+        "Déjame pensar...",
+        "Hmm... qué debería hacer...",
+        "Esto es difícil..."
+      ],
+      "pt": [
+        "Deixe-me pensar...",
+        "Hmm... o que devo fazer...",
+        "Isso é difícil..."
+      ],
+      "id": [
+        "Biar kupikir...",
+        "Hmm... harus bagaimana ya...",
+        "Susah nih..."
+      ]
+    },
+    "bidding": {
+      "confident": {
+        "en": [
+          "Um... I think it should be this number~",
+          "Trust me, it won't be wrong~",
+          "This bid... should be okay, right? Hehe~"
+        ],
+        "zh_TW": [
+          "嗯...我覺得應該是這個數字呢～",
+          "相信我啦，不會錯的～",
+          "這個叫注...應該沒問題吧？嘻嘻～"
+        ],
+        "es": [
+          "Um... creo que debería ser este número~",
+          "Confía en mí, no estará mal~",
+          "Esta apuesta... debería estar bien, ¿verdad? Jeje~"
+        ],
+        "pt": [
+          "Hum... acho que deve ser este número~",
+          "Confie em mim, não vai estar errado~",
+          "Esta aposta... deve estar certa, né? Hehe~"
+        ],
+        "id": [
+          "Um... kurasa harusnya angka ini~",
+          "Percaya padaku, tidak akan salah~",
+          "Tawaran ini... harusnya oke kan? Hehe~"
+        ]
+      },
+      "bluffing": {
+        "en": [
+          "Well... I'm not really sure either...",
+          "Um... can you guess?",
+          "I'm telling the truth~ (wink)"
+        ],
+        "zh_TW": [
+          "唔...其實我也不太確定呢...",
+          "這個嘛...你猜猜看？",
+          "人家說的都是真的啦～（眨眼）"
+        ],
+        "es": [
+          "Bueno... tampoco estoy muy segura...",
+          "Um... ¿puedes adivinar?",
+          "Estoy diciendo la verdad~ (guiño)"
+        ],
+        "pt": [
+          "Bem... também não tenho certeza...",
+          "Hum... você consegue adivinhar?",
+          "Estou dizendo a verdade~ (piscadela)"
+        ],
+        "id": [
+          "Yah... aku juga tidak terlalu yakin...",
+          "Um... coba tebak?",
+          "Aku bilang yang sebenarnya kok~ (kedip)"
+        ]
+      },
+      "challenging": {
+        "en": [
+          "Eh? Really? I don't quite believe it...",
+          "Um... something feels off...",
+          "Should we check? Hehe~"
+        ],
+        "zh_TW": [
+          "誒？真的嗎？我不太相信哦...",
+          "嗯...總覺得哪裡不對勁呢...",
+          "要不要打開看看呢？嘻嘻～"
+        ],
+        "es": [
+          "¿Eh? ¿En serio? No lo creo mucho...",
+          "Um... algo no se siente bien...",
+          "¿Lo comprobamos? Jeje~"
+        ],
+        "pt": [
+          "Eh? Sério? Não acredito muito...",
+          "Hum... algo parece errado...",
+          "Vamos verificar? Hehe~"
+        ],
+        "id": [
+          "Eh? Benarkah? Aku tidak begitu percaya...",
+          "Um... rasanya ada yang aneh...",
+          "Mau dibuka lihat? Hehe~"
+        ]
+      }
+    },
+    "winning": {
+      "en": [
+        "Yay! I won! So happy~",
+        "Hehe, lucky me~",
+        "Thank you for letting me win~"
+      ],
+      "zh_TW": [
+        "呀！我贏了！好開心～",
+        "嘻嘻，運氣真好呢～",
+        "謝謝你讓著我啦～"
+      ],
+      "es": [
+        "¡Yay! ¡Gané! ¡Qué feliz~!",
+        "Jeje, qué suerte tengo~",
+        "Gracias por dejarme ganar~"
+      ],
+      "pt": [
+        "Eba! Eu ganhei! Que felicidade~",
+        "Hehe, que sorte a minha~",
+        "Obrigada por me deixar ganhar~"
+      ],
+      "id": [
+        "Yay! Aku menang! Senangnya~",
+        "Hehe, beruntung sekali~",
+        "Terima kasih sudah mengalah~"
+      ]
+    },
+    "losing": {
+      "en": [
+        "Aww... I lost...",
+        "It's okay, I'll win next time!",
+        "You're so good... teach me please~"
+      ],
+      "zh_TW": [
+        "嗚嗚...輸掉了...",
+        "沒關係啦，下次一定會贏的！",
+        "你好厲害哦...請教教我吧～"
+      ],
+      "es": [
+        "Ay... perdí...",
+        "No importa, ¡ganaré la próxima vez!",
+        "Eres tan bueno... enséñame por favor~"
+      ],
+      "pt": [
+        "Ah... eu perdi...",
+        "Tudo bem, vou ganhar na próxima!",
+        "Você é tão bom... me ensine por favor~"
+      ],
+      "id": [
+        "Huu... aku kalah...",
+        "Tidak apa-apa, pasti menang lain kali!",
+        "Kamu hebat sekali... ajari aku dong~"
+      ]
+    },
+    "drunk": {
+      "light": {
+        "en": [
+          "Um... my head feels dizzy...",
+          "My face is so hot... is the AC broken?",
+          "Hehe... I feel floaty~"
+        ],
+        "zh_TW": [
+          "嗯...頭有點暈暈的...",
+          "臉好燙哦...是空調壞了嗎？",
+          "嘻嘻...感覺飄飄的～"
+        ],
+        "es": [
+          "Um... mi cabeza se siente mareada...",
+          "Mi cara está tan caliente... ¿se rompió el aire?",
+          "Jeje... me siento flotando~"
+        ],
+        "pt": [
+          "Hum... minha cabeça está tonta...",
+          "Meu rosto está tão quente... o ar quebrou?",
+          "Hehe... me sinto flutuando~"
+        ],
+        "id": [
+          "Um... kepalaku pusing...",
+          "Wajahku panas... AC-nya rusak ya?",
+          "Hehe... rasanya melayang~"
+        ]
+      },
+      "heavy": {
+        "en": [
+          "The room is... spinning...",
+          "I want... a hug...",
+          "I... can't anymore..."
+        ],
+        "zh_TW": [
+          "房間在...轉圈圈...",
+          "想要...抱抱...",
+          "已經...不行了啦..."
+        ],
+        "es": [
+          "La habitación está... girando...",
+          "Quiero... un abrazo...",
+          "Ya... no puedo más..."
+        ],
+        "pt": [
+          "O quarto está... girando...",
+          "Quero... um abraço...",
+          "Eu... não aguento mais..."
+        ],
+        "id": [
+          "Ruangan... berputar...",
+          "Mau... peluk...",
+          "Sudah... tidak kuat lagi..."
+        ]
+      }
     },
     "emotions": {
-      "happy": "好开心呀～",
-      "angry": "生气了哦！",
-      "confident": "我很有信心呢",
-      "nervous": "好紧张...",
-      "thinking": "让我想想...",
-      "surprised": "诶！？",
-      "sad": "呜呜...",
-      "neutral": "嗯嗯～"
+      "happy": {
+        "en": "So happy~",
+        "zh_TW": "好開心呀～",
+        "es": "¡Qué feliz~!",
+        "pt": "Que felicidade~",
+        "id": "Senangnya~"
+      },
+      "angry": {
+        "en": "I'm angry!",
+        "zh_TW": "生氣了哦！",
+        "es": "¡Estoy enojada!",
+        "pt": "Estou brava!",
+        "id": "Aku marah!"
+      },
+      "confident": {
+        "en": "I'm very confident",
+        "zh_TW": "我很有信心呢",
+        "es": "Tengo mucha confianza",
+        "pt": "Estou muito confiante",
+        "id": "Aku sangat percaya diri"
+      },
+      "nervous": {
+        "en": "So nervous...",
+        "zh_TW": "好緊張...",
+        "es": "Tan nerviosa...",
+        "pt": "Tão nervosa...",
+        "id": "Gugup sekali..."
+      },
+      "thinking": {
+        "en": "Let me think...",
+        "zh_TW": "讓我想想...",
+        "es": "Déjame pensar...",
+        "pt": "Deixe-me pensar...",
+        "id": "Biar kupikir..."
+      },
+      "surprised": {
+        "en": "Eh!?",
+        "zh_TW": "誒！？",
+        "es": "¿¡Eh!?",
+        "pt": "Eh!?",
+        "id": "Eh!?"
+      },
+      "sad": {
+        "en": "Aww...",
+        "zh_TW": "嗚嗚...",
+        "es": "Ay...",
+        "pt": "Ah...",
+        "id": "Huu..."
+      },
+      "neutral": {
+        "en": "Mm-hmm~",
+        "zh_TW": "嗯嗯～",
+        "es": "Mm-hmm~",
+        "pt": "Mm-hmm~",
+        "id": "Mm-hmm~"
+      }
     },
     "special_moves": {
-      "kawaii_attack": "卡哇伊攻击！请被我的可爱征服吧～",
-      "puppy_eyes": "呜呜...用小狗眼看着你...",
-      "sugar_rush": "甜蜜暴击！嘻嘻～"
+      "kawaii_attack": {
+        "en": "Kawaii attack! Please be conquered by my cuteness~",
+        "zh_TW": "卡哇伊攻擊！請被我的可愛征服吧～",
+        "es": "¡Ataque kawaii! Por favor, sé conquistado por mi ternura~",
+        "pt": "Ataque kawaii! Por favor, seja conquistado pela minha fofura~",
+        "id": "Serangan kawaii! Silakan ditaklukkan oleh keimutanku~"
+      },
+      "puppy_eyes": {
+        "en": "Aww... looking at you with puppy eyes...",
+        "zh_TW": "嗚嗚...用小狗眼看著你...",
+        "es": "Ay... mirándote con ojitos de cachorro...",
+        "pt": "Ah... olhando para você com olhinhos de cachorro...",
+        "id": "Huu... menatapmu dengan mata puppy..."
+      },
+      "sugar_rush": {
+        "en": "Sugar rush! Hehe~",
+        "zh_TW": "甜蜜暴擊！嘻嘻～",
+        "es": "¡Golpe dulce! Jeje~",
+        "pt": "Ataque doce! Hehe~",
+        "id": "Serangan manis! Hehe~"
+      }
     },
-    "taunts": [
-      "你是不是紧张了呀？嘻嘻～",
-      "要不要我教你怎么玩呀？",
-      "感觉你快要输了哦～"
-    ],
-    "compliments": [
-      "哇，你好聪明哦！",
-      "你玩得真好呢～",
-      "要向你学习才行！"
-    ],
-    "intimacy": {
-      "low": [
-        "初次见面，请多关照～",
-        "希望我们能成为好朋友呢"
+    "strategy_dialogue": {
+      "challenge_action": {
+        "en": ["I don't believe it", "That's not right", "Let me see", "Really?"],
+        "zh_TW": ["我不信", "不對吧", "讓我看看", "真的嗎？"],
+        "es": ["No lo creo", "Eso no está bien", "Déjame ver", "¿En serio?"],
+        "pt": ["Não acredito", "Isso não está certo", "Deixe-me ver", "Sério?"],
+        "id": ["Aku tidak percaya", "Tidak benar", "Coba lihat", "Benarkah?"]
+      },
+      "value_bet": {
+        "en": ["I have it", "Trust me", "Follow me~"],
+        "zh_TW": ["我有哦", "相信我", "跟上來～"],
+        "es": ["Lo tengo", "Confía en mí", "Sígueme~"],
+        "pt": ["Eu tenho", "Confie em mim", "Me siga~"],
+        "id": ["Aku punya", "Percaya padaku", "Ikuti aku~"]
+      },
+      "semi_bluff": {
+        "en": ["Let's try", "Keep playing", "Will you follow?"],
+        "zh_TW": ["試試看", "繼續玩", "跟不跟"],
+        "es": ["Intentemos", "Sigamos jugando", "¿Sigues?"],
+        "pt": ["Vamos tentar", "Continue jogando", "Vai seguir?"],
+        "id": ["Mari coba", "Lanjut main", "Ikut tidak?"]
+      },
+      "bluff": {
+        "en": ["That's it", "All in", "Dare to follow?"],
+        "zh_TW": ["就這樣", "全押了", "敢跟嗎"],
+        "es": ["Eso es todo", "Todo adentro", "¿Te atreves?"],
+        "pt": ["É isso", "Tudo dentro", "Ousa seguir?"],
+        "id": ["Itu saja", "Semua masuk", "Berani ikut?"]
+      },
+      "reverse_trap": {
+        "en": "I'm... not sure",
+        "zh_TW": "我...不確定",
+        "es": "No... estoy segura",
+        "pt": "Eu... não tenho certeza",
+        "id": "Aku... tidak yakin"
+      },
+      "pressure_play": {
+        "en": ["Time to decide", "What will you do?", "Show me~"],
+        "zh_TW": ["該決定了", "你要怎麼做？", "讓我看看～"],
+        "es": ["Hora de decidir", "¿Qué harás?", "Muéstrame~"],
+        "pt": ["Hora de decidir", "O que vai fazer?", "Me mostre~"],
+        "id": ["Waktunya memutuskan", "Apa yang akan kamu lakukan?", "Tunjukkan padaku~"]
+      },
+      "safe_play": {
+        "en": ["Let's be careful", "Playing safe", "No rush~"],
+        "zh_TW": ["小心一點", "求穩", "不急～"],
+        "es": ["Seamos cuidadosos", "Jugando seguro", "Sin prisa~"],
+        "pt": ["Vamos ser cuidadosos", "Jogando seguro", "Sem pressa~"],
+        "id": ["Mari berhati-hati", "Main aman", "Tidak terburu-buru~"]
+      },
+      "reverse_trap_alt": {
+        "en": "Um... maybe I made a mistake...",
+        "zh_TW": "嗯...也許我弄錯了...",
+        "es": "Um... tal vez me equivoqué...",
+        "pt": "Hum... talvez eu tenha errado...",
+        "id": "Um... mungkin aku salah..."
+      },
+      "pressure_escalation": {
+        "en": "Suddenly serious mode! Ganbatte!",
+        "zh_TW": "突然認真模式！Ganbatte！",
+        "es": "¡Modo serio repentino! ¡Ganbatte!",
+        "pt": "Modo sério repentino! Ganbatte!",
+        "id": "Tiba-tiba mode serius! Ganbatte!"
+      },
+      "pattern_break": {
+        "en": "Surprise~ Did I fool you?",
+        "zh_TW": "驚喜～我騙到你了嗎？",
+        "es": "Sorpresa~ ¿Te engañé?",
+        "pt": "Surpresa~ Te enganei?",
+        "id": "Kejutan~ Apa aku berhasil menipumu?"
+      },
+      "late_pressure": {
+        "en": "It's the final push! Ikuzo!",
+        "zh_TW": "最後衝刺了！Ikuzo！",
+        "es": "¡Es el empujón final! ¡Ikuzo!",
+        "pt": "É o empurrão final! Ikuzo!",
+        "id": "Dorongan terakhir! Ikuzo!"
+      },
+      "aggressive_bait": {
+        "en": "Come on~ I dare you~",
+        "zh_TW": "來嘛～我敢你哦～",
+        "es": "Vamos~ Te reto~",
+        "pt": "Vamos~ Eu te desafio~",
+        "id": "Ayo~ Aku berani kamu~"
+      }
+    },
+    "taunts": {
+      "en": [
+        "Are you nervous? Hehe~",
+        "Should I teach you how to play?",
+        "Feels like you're about to lose~"
       ],
-      "medium": [
-        "和你在一起玩游戏很开心呢～",
-        "你是个很有趣的人哦"
+      "zh_TW": [
+        "你是不是緊張了呀？嘻嘻～",
+        "要不要我教你怎麼玩呀？",
+        "感覺你快要輸了哦～"
       ],
-      "high": [
-        "最喜欢和你一起玩了～",
-        "嘻嘻，只要和你在一起就很开心"
+      "es": [
+        "¿Estás nervioso? Jeje~",
+        "¿Debería enseñarte cómo jugar?",
+        "Parece que vas a perder~"
+      ],
+      "pt": [
+        "Está nervoso? Hehe~",
+        "Devo te ensinar como jogar?",
+        "Parece que você vai perder~"
+      ],
+      "id": [
+        "Kamu gugup ya? Hehe~",
+        "Mau kuajari cara main?",
+        "Kayaknya kamu mau kalah~"
       ]
+    },
+    "compliments": {
+      "en": [
+        "Wow, you're so smart!",
+        "You play really well~",
+        "I need to learn from you!"
+      ],
+      "zh_TW": [
+        "哇，你好聰明哦！",
+        "你玩得真好呢～",
+        "要向你學習才行！"
+      ],
+      "es": [
+        "¡Wow, eres tan inteligente!",
+        "Juegas muy bien~",
+        "¡Necesito aprender de ti!"
+      ],
+      "pt": [
+        "Uau, você é tão inteligente!",
+        "Você joga muito bem~",
+        "Preciso aprender com você!"
+      ],
+      "id": [
+        "Wow, kamu pintar sekali!",
+        "Kamu main bagus sekali~",
+        "Aku harus belajar darimu!"
+      ]
+    },
+    "intimacy": {
+      "low": {
+        "en": [
+          "Nice to meet you, please take care of me~",
+          "I hope we can be good friends"
+        ],
+        "zh_TW": [
+          "初次見面，請多關照～",
+          "希望我們能成為好朋友呢"
+        ],
+        "es": [
+          "Encantada de conocerte, por favor cuida de mí~",
+          "Espero que podamos ser buenos amigos"
+        ],
+        "pt": [
+          "Prazer em conhecê-lo, por favor cuide de mim~",
+          "Espero que possamos ser bons amigos"
+        ],
+        "id": [
+          "Senang bertemu denganmu, mohon bantuannya~",
+          "Semoga kita bisa jadi teman baik"
+        ]
+      },
+      "medium": {
+        "en": [
+          "Playing games with you is really fun~",
+          "You're such an interesting person"
+        ],
+        "zh_TW": [
+          "和你在一起玩遊戲很開心呢～",
+          "你是個很有趣的人哦"
+        ],
+        "es": [
+          "Jugar contigo es muy divertido~",
+          "Eres una persona muy interesante"
+        ],
+        "pt": [
+          "Jogar com você é muito divertido~",
+          "Você é uma pessoa muito interessante"
+        ],
+        "id": [
+          "Main game denganmu sangat menyenangkan~",
+          "Kamu orang yang menarik"
+        ]
+      },
+      "high": {
+        "en": [
+          "I love playing with you the most~",
+          "Hehe, as long as I'm with you, I'm happy"
+        ],
+        "zh_TW": [
+          "最喜歡和你一起玩了～",
+          "嘻嘻，只要和你在一起就很開心"
+        ],
+        "es": [
+          "Me encanta jugar contigo más que nada~",
+          "Jeje, mientras esté contigo, soy feliz"
+        ],
+        "pt": [
+          "Adoro jogar com você mais do que tudo~",
+          "Hehe, desde que esteja com você, estou feliz"
+        ],
+        "id": [
+          "Paling suka main denganmu~",
+          "Hehe, asal bersamamu, aku senang"
+        ]
+      }
     }
   }
 }

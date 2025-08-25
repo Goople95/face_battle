@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
 import '../utils/logger_utils.dart';
@@ -39,16 +40,16 @@ class ShareImageService {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
+        builder: (context) => Center(
           child: Card(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('正在加载头像...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.loadingAvatar),
                 ],
               ),
             ),
@@ -84,16 +85,16 @@ class ShareImageService {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
+        builder: (context) => Center(
           child: Card(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('正在生成分享图片...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.generatingShareImage),
                 ],
               ),
             ),
@@ -119,6 +120,7 @@ class ShareImageService {
           child: RepaintBoundary(
             key: shareKey,
             child: _buildShareCard(
+              context: context,
               defeatedAI: defeatedAI,
               drinkingState: drinkingState,
               intimacyMinutes: intimacyMinutes,
@@ -166,7 +168,7 @@ class ShareImageService {
           await Share.shareXFiles(
             [XFile(imagePath)],
             text: shareText,
-            subject: 'Dice Girls - 完美胜利！',
+            subject: AppLocalizations.of(context)!.shareSubject,
           );
           
           return;
@@ -184,7 +186,7 @@ class ShareImageService {
       // 降级到纯文字分享
       await Share.share(
         shareText,
-        subject: '表情博弈 - 完美胜利！',
+        subject: AppLocalizations.of(context)!.shareSubject,
       );
       
     } catch (e) {
@@ -207,27 +209,21 @@ class ShareImageService {
     }
   }
   
-  /// 生成分享文本
+  /// 生成分享文本（使用本地化文本）
   static String _generateShareText({
     required AIPersonality defeatedAI,
     required DrinkingState drinkingState,
     required int intimacyMinutes,
   }) {
+    // 这个方法现在应该不会被使用，因为share_service已经提供了本地化的分享文本
+    // 但作为后备，我们保留这个方法
     final drinks = drinkingState.getAIDrinks(defeatedAI.id);
-    
-    List<String> templates = [
-      '🎉 我在Dice Girls中把${defeatedAI.name}灌醉了！喝了整整$drinks杯，独处了$intimacyMinutes分钟～ #DiceGirls #完美胜利',
-      '🏆 战绩播报：${defeatedAI.name}已倒！$drinks杯下肚，亲密度+$intimacyMinutes！谁敢来挑战？ #DiceGirls',
-      '😎 轻松拿下${defeatedAI.name}！$drinks杯酒就不行了，我们还聊了$intimacyMinutes分钟的小秘密～ #DiceGirls',
-      '🍺 今晚的MVP是我！${defeatedAI.name}醉倒在第$drinks杯，接下来的$intimacyMinutes分钟...你懂的😏 #DiceGirls',
-    ];
-    
-    final randomIndex = DateTime.now().millisecond % templates.length;
-    return templates[randomIndex];
+    return '🎉 Dice Girls - ${defeatedAI.name} - $drinks drinks - $intimacyMinutes minutes #DiceGirls';
   }
   
   /// 构建分享卡片（简化版，确保能正确渲染）
   static Widget _buildShareCard({
+    required BuildContext context,
     required AIPersonality defeatedAI,
     required DrinkingState drinkingState,
     required int intimacyMinutes,
@@ -244,18 +240,19 @@ class ShareImageService {
             end: Alignment.bottomCenter,
             colors: [
               Colors.black,
-              Colors.pink.shade900.withValues(alpha: 0.9),
-              Colors.purple.shade900.withValues(alpha: 0.9),
+              Color.fromRGBO(139, 0, 0, 0.9), // 暗红色
+              Colors.black87,
               Colors.black,
             ],
+            stops: const [0.0, 0.35, 0.65, 1.0],
           ),
         ),
         child: Column(
           children: [
             const SizedBox(height: 40),
             // 标题
-            const Text(
-              '🏆 完美胜利！',
+            Text(
+              AppLocalizations.of(context)!.perfectVictory,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -362,20 +359,30 @@ class ShareImageService {
             
             const SizedBox(height: 20),
             
-            // 醉倒状态
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
-              ),
+            // 醉倒状态 - 直接显示在底图上
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.red.shade400,
+                  Colors.red.shade700,
+                ],
+              ).createShader(bounds),
               child: Text(
-                '${defeatedAI.name} 已醉倒',
+                '${defeatedAI.name} ${AppLocalizations.of(context)!.shareCardDrunk}',
                 style: const TextStyle(
-                  color: Colors.redAccent,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 8,
+                      color: Colors.black54,
+                      offset: Offset(2, 2),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -406,8 +413,8 @@ class ShareImageService {
                         size: 28,
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        '亲密度',
+                      Text(
+                        AppLocalizations.of(context)!.shareCardIntimacy,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -433,7 +440,7 @@ class ShareImageService {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '独处了 $intimacyMinutes 分钟',
+                    AppLocalizations.of(context)!.shareCardPrivateTime(intimacyMinutes),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
@@ -479,7 +486,7 @@ class ShareImageService {
                         ),
                       ),
                       Text(
-                        '100+等你来挑战',
+                        AppLocalizations.of(context)!.gameSlogan,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 12,
@@ -495,7 +502,7 @@ class ShareImageService {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '立即挑战',
+                      AppLocalizations.of(context)!.challengeNow,
                       style: TextStyle(
                         color: Colors.amber,
                         fontSize: 12,
