@@ -146,39 +146,39 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         children: [
           // Google登录按钮
           _buildGoogleSignInButton(authService),
-          const SizedBox(height: 16),
+          // const SizedBox(height: 16),
           
-          // 分隔线
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 1,
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  AppLocalizations.of(context)!.or,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  height: 1,
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          // // 分隔线
+          // Row(
+          //   children: [
+          //     Expanded(
+          //       child: Container(
+          //         height: 1,
+          //         color: Colors.white.withValues(alpha: 0.2),
+          //       ),
+          //     ),
+          //     Padding(
+          //       padding: const EdgeInsets.symmetric(horizontal: 16),
+          //       child: Text(
+          //         AppLocalizations.of(context)!.or,
+          //         style: const TextStyle(
+          //           color: Colors.white54,
+          //           fontSize: 14,
+          //         ),
+          //       ),
+          //     ),
+          //     Expanded(
+          //       child: Container(
+          //         height: 1,
+          //         color: Colors.white.withValues(alpha: 0.2),
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // const SizedBox(height: 16),
           
-          // Facebook登录按钮
-          _buildFacebookSignInButton(authService),
+          // // Facebook登录按钮
+          // _buildFacebookSignInButton(authService),
           
           const SizedBox(height: 24),
           

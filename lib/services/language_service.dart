@@ -15,6 +15,7 @@ class LanguageService extends ChangeNotifier {
   
   static const Map<String, Locale> supportedLanguages = {
     'en': Locale('en'),
+    'zh': Locale('zh'), // 所有中文变体都使用繁体中文
     'zh_TW': Locale('zh', 'TW'),
     'es': Locale('es'),
     'pt': Locale('pt'),
@@ -48,11 +49,11 @@ class LanguageService extends ChangeNotifier {
   String _normalizeLanguageCode(String code) {
     LoggerUtils.debug('规范化语言代码，输入: $code');
     
-    // 处理所有中文变体 - 统一映射到繁体中文（因为游戏只支持繁体中文）
+    // 处理所有中文变体 - 统一映射到zh（因为游戏只支持繁体中文）
     if (code.toLowerCase().contains('zh')) {
-      // zh, zh-CN, zh_CN, zh-TW, zh_TW, zh-HK 等都映射到 zh_TW
-      LoggerUtils.debug('识别为中文变体: $code -> zh_TW');
-      return 'zh_TW';
+      // zh, zh-CN, zh_CN, zh-TW, zh_TW, zh-HK 等都映射到 zh
+      LoggerUtils.debug('识别为中文变体: $code -> zh');
+      return 'zh';
     }
     
     // 转换为小写进行其他语言判断
@@ -76,9 +77,9 @@ class LanguageService extends ChangeNotifier {
     // 处理各种中文格式（包括 - 和 _ 分隔符）
     final lowerLocale = systemLocale.toLowerCase();
     if (lowerLocale.startsWith('zh')) {
-      // zh-CN, zh_CN, zh-HK, zh_HK, zh-TW, zh_TW 等都映射到繁体中文
-      LoggerUtils.debug('检测到中文系统语言，映射到 zh_TW');
-      return 'zh_TW';
+      // zh-CN, zh_CN, zh-HK, zh_HK, zh-TW, zh_TW 等都映射到zh
+      LoggerUtils.debug('检测到中文系统语言，映射到 zh');
+      return 'zh';
     }
     
     // 处理其他语言（使用 _ 或 - 分隔符）

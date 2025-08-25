@@ -115,6 +115,7 @@ class MyApp extends StatelessWidget {
                 ],
                 supportedLocales: const [
                   Locale('en'),
+                  Locale('zh'), // 支持所有中文变体，都使用繁体中文
                   Locale('zh', 'TW'),
                   Locale('es'),
                   Locale('pt'),
