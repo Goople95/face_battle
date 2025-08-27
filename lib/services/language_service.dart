@@ -164,11 +164,22 @@ class LanguageService extends ChangeNotifier {
       // 开始监听语言设置变化
       startListeningToLanguageChanges();
     } catch (e) {
-      LoggerUtils.error('同步云端语言设置失败: $e');
-      // 优先级3：出错时使用英语
-      _currentLocale = const Locale('en');
-      LoggerUtils.info('✅ 优先级3：使用默认英语');
-      notifyListeners();
+      // 权限错误是正常的（游客模式），不需要显示为错误
+      if (e.toString().contains('permission-denied')) {
+        LoggerUtils.debug('游客模式，使用本地语言设置');
+        // 使用系统语言
+        final systemLocale = Platform.localeName;
+        final languageCode = _mapSystemLocaleToSupported(systemLocale);
+        _currentLocale = supportedLanguages[languageCode] ?? const Locale('en');
+        LoggerUtils.info('✅ 游客模式：使用系统语言 $languageCode');
+        notifyListeners();
+      } else {
+        LoggerUtils.error('同步云端语言设置失败: $e');
+        // 优先级3：出错时使用英语
+        _currentLocale = const Locale('en');
+        LoggerUtils.info('✅ 优先级3：使用默认英语');
+        notifyListeners();
+      }
     }
   }
   
@@ -176,12 +187,15 @@ class LanguageService extends ChangeNotifier {
   void startListeningToLanguageChanges() {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        LoggerUtils.debug('用户未登录，跳过语言设置监听');
+        return;
+      }
       
       // 取消之前的监听
       _languageSubscription?.cancel();
       
-      // 监听用户文档的变化
+      // 监听用户文档的变化（添加错误处理）
       _languageSubscription = FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -226,7 +240,12 @@ class LanguageService extends ChangeNotifier {
           }
         }
       }, onError: (error) {
-        LoggerUtils.error('监听语言设置失败: $error');
+        // 权限错误通常是因为用户未登录或游客模式，这是正常的
+        if (error.toString().contains('permission-denied')) {
+          LoggerUtils.debug('游客模式或未登录，无法监听云端语言设置');
+        } else {
+          LoggerUtils.error('监听语言设置失败: $error');
+        }
       });
       
       LoggerUtils.info('🎯 开始监听数据库语言设置变化 (用户: ${user.uid})');
