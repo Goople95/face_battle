@@ -337,9 +337,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedback => 'Feedback';
 
   @override
-  String version(Object version) {
-    return 'Version $version';
-  }
+  String get version => 'Version';
 
   @override
   String get allDiceValues => 'All dice';

@@ -336,9 +336,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get feedback => '反饋';
 
   @override
-  String version(Object version) {
-    return '版本 $version';
-  }
+  String get version => '版本';
 
   @override
   String get allDiceValues => '所有骰子';
@@ -1236,9 +1234,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get feedback => '反饋';
 
   @override
-  String version(Object version) {
-    return '版本 $version';
-  }
+  String get version => '版本';
 
   @override
   String get allDiceValues => '所有骰子';

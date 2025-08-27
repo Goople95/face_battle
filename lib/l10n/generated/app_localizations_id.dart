@@ -337,9 +337,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get feedback => 'Umpan Balik';
 
   @override
-  String version(Object version) {
-    return 'Versi $version';
-  }
+  String get version => 'Versi';
 
   @override
   String get allDiceValues => 'Semua dadu';

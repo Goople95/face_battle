@@ -175,10 +175,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           //     ),
           //   ],
           // ),
-          // const SizedBox(height: 16),
+          const SizedBox(height: 16),
           
-          // // Facebook登录按钮
-          // _buildFacebookSignInButton(authService),
+          // Facebook登录按钮
+          _buildFacebookSignInButton(authService),
           
           const SizedBox(height: 24),
           

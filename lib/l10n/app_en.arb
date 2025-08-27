@@ -669,6 +669,11 @@
   "watchAdUnlock": "Watch Ad",
   "drunkAndWon": "{name} passed out, you won!",
   "copiedToClipboard": "Copied to clipboard",
+  
+  "@version": {
+    "description": "Version label"
+  },
+  "version": "Version",
   "pleaseWaitThinking": "{name} is thinking...",
   "pleaseBid": "Make your bid",
   "showDice": "Call the bluff!",

@@ -337,9 +337,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get feedback => 'Comentarios';
 
   @override
-  String version(Object version) {
-    return 'Versión $version';
-  }
+  String get version => 'Versión';
 
   @override
   String get allDiceValues => 'Todos los dados';

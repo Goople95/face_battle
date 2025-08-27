@@ -338,9 +338,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get feedback => 'Feedback';
 
   @override
-  String version(Object version) {
-    return 'Versão $version';
-  }
+  String get version => 'Versão';
 
   @override
   String get allDiceValues => 'Todos os dados';

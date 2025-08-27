@@ -684,8 +684,8 @@ abstract class AppLocalizations {
   /// Version label
   ///
   /// In en, this message translates to:
-  /// **'Version {version}'**
-  String version(Object version);
+  /// **'Version'**
+  String get version;
 
   /// All dice values indicator
   ///

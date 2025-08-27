@@ -235,6 +235,7 @@
   "intimacyLevelShort": "Nv.{level}",
   "drunkAndWon": "{name} desmaiou, você ganhou!",
   "copiedToClipboard": "Copiado para a área de transferência",
+  "version": "Versão",
   
   "aiBidFormat": "{quantity} {value}",
   "defaultChallenge": "Não acredito",

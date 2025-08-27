@@ -240,6 +240,7 @@
   "intimacyLevelShort": "Lv.{level}",
   "drunkAndWon": "{name}醉倒了，你贏了！",
   "copiedToClipboard": "已複製到剪貼板",
+  "version": "版本",
   
   "nightFall": "🌙 夜深了...",
   "aiGotDrunk": "{name} 醉了",

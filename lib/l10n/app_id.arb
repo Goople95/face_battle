@@ -235,6 +235,7 @@
   "intimacyLevelShort": "Lv.{level}",
   "drunkAndWon": "{name} pingsan, Anda menang!",
   "copiedToClipboard": "Disalin ke papan klip",
+  "version": "Versi",
   
   "aiBidFormat": "{quantity} angka {value}",
   "defaultChallenge": "Saya tidak percaya",

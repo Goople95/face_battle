@@ -187,6 +187,7 @@
   "intimacyLevelShort": "Nv.{level}",
   "drunkAndWon": "{name} se desmayó, ¡ganaste!",
   "copiedToClipboard": "Copiado al portapapeles",
+  "version": "Versión",
   "adWatchedSober": "✨ ¡Anuncio visto, completamente sobrio!",
   "usedSoberPotion": "¡Usaste poción de sobriedad, despejaste 2 bebidas!",
   "aiSoberedUp": "✨ ¡{name} se desembriagó, continúa el juego!",

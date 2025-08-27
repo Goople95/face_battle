@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:async';
 import 'game_screen.dart';
 import '../models/ai_personality.dart';
@@ -38,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   GameProgressData? _gameProgress;
   DrinkingState? _drinkingState;
   Timer? _soberTimer;
+  PackageInfo? _packageInfo;
   
   // 获取当前应用的locale代码
   String _getLocaleCode(BuildContext context) {
@@ -72,12 +74,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _startTimer();
     // 同步语言设置
     _syncLanguageSettings();
+    // 获取版本信息
+    _initPackageInfo();
     // 监听authService变化，更新userService
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncUserService();
     });
   }
   
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _packageInfo = info;
+      });
+    }
+  }
+
   Future<void> _syncUserService() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final userService = Provider.of<UserService>(context, listen: false);
@@ -1886,7 +1899,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
+              
+              // 版本号显示
+              if (_packageInfo != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    '${AppLocalizations.of(context)!.version}: ${_packageInfo!.version}+${_packageInfo!.buildNumber}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white60,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 12),
               
               // 统计信息
               if (userService.playerProfile != null) ...[
