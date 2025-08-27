@@ -423,10 +423,10 @@ class AIService {
         locale: locale
       );
       
-      // 根据心理战术设置表情
+      // 根据心理战术设置表情（只用核心4种）
       switch (masterDecision['psychTactic']) {
         case 'reverse_trap_alt':
-          expression = 'nervous';
+          expression = 'suspicious';  // nervous改为suspicious
           break;
         case 'pressure_escalation':
         case 'late_pressure':
@@ -450,36 +450,32 @@ class AIService {
       }
     }
     
-    // 根据策略调整表情
+    // 根据策略调整表情（只用核心4种）
     if (strategy.contains('bluff')) {
-      expression = random.nextDouble() < 0.3 ? 'nervous' : 'thinking';
+      expression = random.nextDouble() < 0.3 ? 'suspicious' : 'thinking';
     } else if (strategy.contains('value')) {
       expression = 'confident';
     } else if (strategy.contains('trap')) {
-      expression = 'nervous';
+      expression = 'suspicious';  // nervous改为suspicious
     } else if (strategy.contains('pressure')) {
       expression = 'confident';
     }
     
-    // 性格微调
+    // 性格微调（只用新ID格式）
     switch (personality.id) {
-      case 'professor':
       case '0001':
         if (expression == 'confident' && random.nextDouble() < 0.5) {
           expression = 'thinking';
         }
         break;
-      case 'gambler':
       case '0002':
         if (expression == 'thinking' && random.nextDouble() < 0.5) {
           expression = 'confident';
         }
         break;
-      case 'provocateur':
       case '0003':
         if (random.nextDouble() < 0.3) expression = 'suspicious';
         break;
-      case 'youngwoman':
       case '0004':
         if (random.nextDouble() < 0.3) expression = 'happy';
         break;

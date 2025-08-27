@@ -107,7 +107,7 @@ $eliteAdvice$psychAdvice
 {
   "decision": "challenge" 或 "bid",
   "bid": {"quantity": 数量, "value": 点数} (仅在bid时需要),
-  "emotions": ["表情1", "表情2"],  // 从thinking/happy/confident/nervous/suspicious中选
+  "emotions": ["表情1", "表情2"],  // 从thinking/happy/confident/suspicious中选（只有4种）
   "dialogue": "对话内容",
   "reasoning": "决策理由",
   "bluffing": true/false
@@ -164,7 +164,7 @@ $optionsText
 请根据你的性格特点，从以上方案中选择一个。输出JSON格式：
 {
   "choice": 选项编号(1-${options.length}),
-  "emotions": ["表情1", "表情2"],  // 1-3个表情，从thinking/happy/confident/nervous/suspicious中选
+  "emotions": ["表情1", "表情2"],  // 1-3个表情，从thinking/happy/confident/suspicious中选（只有4种）
   "dialogue": "对话内容",
   "reasoning": "选择理由"
 }''';
@@ -247,9 +247,9 @@ $optionsText
           emotions = List<String>.from(json['emotions']);
         }
         if (emotions.isEmpty) {
-          // 根据策略生成默认表情
+          // 根据策略生成默认表情（只用4种）
           if (eliteDecision['strategy'] == 'reverse_trap') {
-            emotions = ['nervous', 'thinking'];
+            emotions = ['suspicious', 'thinking'];
           } else if (eliteDecision['strategy'] == 'pressure_play') {
             emotions = ['confident', 'happy'];
           } else {
@@ -360,45 +360,39 @@ $optionsText
     }
   }
   
-  /// 根据Elite策略生成表情
+  /// 根据Elite策略生成表情 - 只使用4种核心表情
   List<String> _generateEliteEmotions(Map<String, dynamic> eliteDecision) {
     String strategy = eliteDecision['strategy'] ?? '';
     
-    // 支持新的Master AI策略
+    // 4种核心表情: thinking, happy, confident, suspicious
     switch (strategy) {
       case 'aggressive':
-        return ['confident', 'happy'];
-      case 'conservative':
-        return ['thinking', 'nervous'];
-      case 'trap':
-        return ['nervous', 'thinking']; // 故意示弱
       case 'pressure':
-        return ['confident', 'suspicious'];
-      case 'probe':
-        return ['thinking', 'happy'];
-      case 'balanced':
-        return ['thinking', 'confident'];
-      case 'forced':
-        return ['nervous'];
       case 'absolute_rule':
-        return ['confident'];
-      // 兼容旧的Elite AI策略
-      case 'reverse_trap':
-        return ['nervous', 'thinking'];
       case 'pressure_play':
-        return ['confident', 'suspicious'];
-      case 'value_bet':
-        return ['confident', 'happy'];
-      case 'pure_bluff':
-        return ['thinking', 'nervous'];
       case 'style_switch_aggressive':
         return ['confident', 'happy'];
+        
+      case 'conservative':
+      case 'forced':
+      case 'pure_bluff':
+        return ['suspicious'];
+        
+      case 'trap':
+      case 'reverse_trap':
+        return ['suspicious', 'thinking']; // 故意示弱
+        
+      case 'probe':
+      case 'value_bet':
+        return ['thinking', 'confident'];
+        
+      case 'balanced':
       default:
         double confidence = eliteDecision['confidence'] ?? 0.5;
-        if (confidence > 0.8) return ['confident'];
-        if (confidence > 0.6) return ['thinking', 'happy'];
-        if (confidence > 0.4) return ['thinking'];
-        return ['nervous', 'thinking'];
+        if (confidence > 0.7) return ['confident'];
+        if (confidence > 0.5) return ['thinking', 'happy'];
+        if (confidence > 0.3) return ['thinking'];
+        return ['suspicious'];
     }
   }
   
@@ -770,7 +764,7 @@ ${newBid != null ? '- 叫牌：$newBid' : ''}
 
 请生成：
 1. 符合性格的一句对话（10字以内）
-2. 表情（happy/confident/nervous/thinking/suspicious之一）
+2. 表情（happy/confident/thinking/suspicious之一）
 
 输出JSON格式：
 {

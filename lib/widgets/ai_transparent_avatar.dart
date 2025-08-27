@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../config/character_assets.dart';
+import '../config/character_config.dart';
 
 /// 支持透明 PNG 序列帧的 AI 头像组件
 /// 使用带 alpha 通道的 PNG 图片实现透明效果
@@ -87,8 +87,9 @@ class _AITransparentAvatarState extends State<AITransparentAvatar>
     int frameCount = 30;  // 假设每个表情30帧
     
     for (int i = 1; i <= frameCount; i++) {
-      // 使用统一的CharacterAssets获取透明图片路径
-      String framePath = CharacterAssets.getTransparentPath(widget.characterId, emotion, i);
+      // 透明PNG序列功能已不再使用，直接跳过
+      continue;
+      // String framePath = CharacterConfig.getTransparentPath(widget.characterId, emotion, i);
       
       try {
         final image = Image.asset(
@@ -107,7 +108,7 @@ class _AITransparentAvatarState extends State<AITransparentAvatar>
     
     // 如果没有透明序列，尝试加载普通头像
     if (frames.isEmpty) {
-      String staticPath = CharacterAssets.getAvatarPath(widget.characterId);
+      String staticPath = CharacterConfig.getAvatarPath(widget.characterId);
       try {
         final image = Image.asset(
           staticPath,

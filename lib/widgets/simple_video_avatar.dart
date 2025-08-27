@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import '../config/character_assets.dart';
+import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
 
 /// 简化版的视频头像组件
@@ -66,8 +66,8 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       _controller = null;
     }
 
-    // 使用统一的CharacterAssets获取视频路径
-    String videoPath = CharacterAssets.getVideoPath(widget.characterId, widget.emotion);
+    // 使用简化的CharacterConfig获取视频路径
+    String videoPath = CharacterConfig.getVideoPath(widget.characterId, widget.emotion);
     
     try {
       // 创建新控制器
@@ -118,8 +118,8 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
   }
 
   Widget _buildFallback() {
-    // 使用统一的CharacterAssets获取头像路径
-    String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
+    // 使用简化的CharacterConfig获取头像路径
+    String imagePath = CharacterConfig.getAvatarPath(widget.characterId);
     
     return Image.asset(
       imagePath,

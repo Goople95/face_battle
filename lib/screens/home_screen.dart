@@ -17,7 +17,7 @@ import '../services/language_service.dart';
 import '../utils/ad_helper.dart';
 import '../utils/responsive_utils.dart';
 import '../services/vip_unlock_service.dart';
-import '../config/character_assets.dart';
+import '../config/character_config.dart';
 import '../services/intimacy_service.dart';
 import '../models/intimacy_data.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -1009,7 +1009,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           width: 2,
                         ),
                         image: DecorationImage(
-                          image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
+                          image: AssetImage(CharacterConfig.getFullAvatarPath(personality.avatarPath)),
                           fit: BoxFit.cover,
                           colorFilter: isUnavailable 
                             ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
@@ -1398,7 +1398,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 width: 2,
                               ),
                               image: DecorationImage(
-                                image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
+                                image: AssetImage(CharacterConfig.getFullAvatarPath(personality.avatarPath)),
                                 fit: BoxFit.cover,
                                 colorFilter: isUnavailable
                                   ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
@@ -1632,7 +1632,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.red, width: 3),
                   image: DecorationImage(
-                    image: AssetImage(CharacterAssets.getFullAvatarPath(personality.avatarPath)),
+                    image: AssetImage(CharacterConfig.getFullAvatarPath(personality.avatarPath)),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(Colors.grey, BlendMode.saturation),
                   ),

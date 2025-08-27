@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../config/character_assets.dart';
+import '../config/character_config.dart';
 
 /// 基于图片序列帧的 AI 头像组件
 /// 比视频播放器内存占用更少，性能更好
@@ -64,7 +64,8 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
       _isLoading = true;
     });
     
-    String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
+    // 直接使用characterId，不再需要标准化
+    String normalizedId = widget.characterId;
     String cacheKey = '${normalizedId}_$emotion';
     
     // 检查缓存
@@ -87,7 +88,9 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
     int frameCount = 30;
     
     for (int i = 1; i <= frameCount; i++) {
-      String framePath = CharacterAssets.getSpritePath(widget.characterId, emotion, i);
+      // Sprite功能已不再使用，直接跳过
+      continue;
+      // String framePath = CharacterConfig.getSpritePath(widget.characterId, emotion, i);
       
       // 预加载图片
       try {
@@ -109,7 +112,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
     
     if (frames.isEmpty) {
       // 如果没有帧序列，回退到静态图片
-      String staticImagePath = CharacterAssets.getAvatarPath(widget.characterId);
+      String staticImagePath = CharacterConfig.getAvatarPath(widget.characterId);
       
       frames.add(Image.asset(
         staticImagePath,
@@ -168,7 +171,7 @@ class _AISpriteAvatarState extends State<AISpriteAvatar> with SingleTickerProvid
   }
   
   Widget _buildFallbackImage() {
-    String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
+    String imagePath = CharacterConfig.getAvatarPath(widget.characterId);
     
     return ClipOval(
       child: Image.asset(

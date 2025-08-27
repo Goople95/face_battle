@@ -5,8 +5,8 @@ import '../utils/logger_utils.dart';
 
 /// AI动画表情组件
 /// 
-/// 使用Rive动画显示AI的表情变化
-/// 支持的表情：neutral, happy, sad, angry, thinking, confident, nervous, excited
+/// 使用自定义绘制显示AI的表情变化
+/// 支持的表情：thinking, happy, confident, suspicious（核心4种）
 class AnimatedAIFace extends StatefulWidget {
   final String emotion;
   final double size;

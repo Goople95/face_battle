@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import '../config/character_assets.dart';
+import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
 
 /// AI角色视频播放头像组件
@@ -36,7 +36,7 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
   final Map<String, int> _usageCount = {};
   final Map<String, DateTime> _lastUsed = {};
   
-  // 使用CharacterAssets中的统一映射，不再需要本地映射表
+  // 现在直接使用CharacterConfig，已经没有映射表了
 
   @override
   void initState() {
@@ -58,10 +58,9 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       // 跳过当前正在显示的表情
       if (emotion == widget.emotion) continue;
       
-      String videoPath = CharacterAssets.getVideoPath(widget.characterId, emotion);
-      String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
-      String normalizedEmotion = CharacterAssets.emotionMapping[emotion.toLowerCase()] ?? 'happy';
-      String cacheKey = '${normalizedId}_$normalizedEmotion';
+      String videoPath = CharacterConfig.getVideoPath(widget.characterId, emotion);
+      // 简化缓存键，直接使用characterId和emotion
+      String cacheKey = '${widget.characterId}_$emotion';
       
       // 如果已经在缓存中，跳过
       if (_controllerCache.containsKey(cacheKey)) continue;
@@ -117,11 +116,10 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
       _isInitializing = true;
     });
 
-    // 使用统一的CharacterAssets获取视频路径
-    String videoPath = CharacterAssets.getVideoPath(widget.characterId, emotion);
-    String normalizedId = CharacterAssets.getNormalizedId(widget.characterId);
-    String normalizedEmotion = CharacterAssets.emotionMapping[emotion.toLowerCase()] ?? 'happy';
-    String cacheKey = '${normalizedId}_$normalizedEmotion';
+    // 使用简化的CharacterConfig获取视频路径
+    String videoPath = CharacterConfig.getVideoPath(widget.characterId, emotion);
+    // 简化缓存键，直接使用characterId和emotion
+    String cacheKey = '${widget.characterId}_$emotion';
     LoggerUtils.debug(' [AIVideoAvatar] 视频路径: $videoPath, 缓存键: $cacheKey');
     
     try {
@@ -264,8 +262,8 @@ class _AIVideoAvatarState extends State<AIVideoAvatar> {
   }
 
   Widget _buildFallbackImage() {
-    // 使用统一的CharacterAssets获取头像路径
-    String imagePath = CharacterAssets.getAvatarPath(widget.characterId);
+    // 使用简化的CharacterConfig获取头像路径
+    String imagePath = CharacterConfig.getAvatarPath(widget.characterId);
     
     return ClipOval(
       child: Image.asset(

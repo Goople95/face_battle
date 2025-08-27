@@ -9,7 +9,7 @@ import '../services/ai_service.dart';
 import '../services/auth_service.dart';
 import '../utils/ad_helper.dart';
 import '../utils/responsive_utils.dart';
-import '../config/character_assets.dart';
+import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/simple_ai_avatar.dart';
 import '../widgets/simple_video_avatar.dart';  // 使用简化版
@@ -1109,18 +1109,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         return Colors.yellow;
       case 'confident':
         return Colors.green;
-      case 'nervous':
+      case 'suspicious':
         return Colors.orange;
-      case 'angry':
-        return Colors.red;
-      case 'excited':
-        return Colors.pink;
-      case 'worried':
-        return Colors.purple;
       case 'thinking':
         return Colors.blue;
-      case 'smirk':
-        return Colors.amber;
       default:
         return Colors.white;
     }
@@ -1133,26 +1125,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         return '😊 开心';
       case 'confident':
         return '😎 自信';
-      case 'nervous':
-        return '😰 紧张';
-      case 'angry':
-        return '😠 生气';
-      case 'excited':
-        return '🤩 兴奋';
-      case 'worried':
-        return '😟 担心';
       case 'thinking':
         return '🤔 思考';
-      case 'smirk':
-        return '😏 得意';
       case 'suspicious':
         return '🧐 怀疑';
-      case 'disappointed':
-        return '😔 失望';
-      case 'surprised':
-        return '😲 惊讶';
-      case 'neutral':
-        return '😐 平静';
       default:
         return '😐 观察';
     }
