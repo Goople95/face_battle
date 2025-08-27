@@ -900,6 +900,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gameSlogan => '100+等你來挑戰';
+
+  @override
+  String get youGotDrunk => '你醉倒了！';
+
+  @override
+  String get watchAdToSoberSubtitle => '免費，立即完全清醒';
+
+  @override
+  String get goHomeToRest => '回家休息';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -1798,4 +1807,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get gameSlogan => '100+等你來挑戰';
+
+  @override
+  String get youGotDrunk => '你醉倒了！';
+
+  @override
+  String get watchAdToSoberSubtitle => '免費，立即完全清醒';
+
+  @override
+  String get goHomeToRest => '回家休息';
 }

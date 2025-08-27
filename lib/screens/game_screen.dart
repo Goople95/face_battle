@@ -18,6 +18,7 @@ import '../widgets/sober_dialog.dart';
 import '../widgets/victory_drunk_animation.dart';
 import '../widgets/animated_intimacy_display.dart';
 import '../services/share_image_service.dart';
+import '../services/image_share_service.dart';
 import '../services/intimacy_service.dart';
 import '../services/dialogue_service.dart';
 import '../services/game_progress_service.dart';
@@ -279,8 +280,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _loadPlayerProfile();
-    // 确保初始表情变量同步
-    _applyAIEmotion(_aiExpression, 0.5, false);
+    // 不在initState时调用_applyAIEmotion，避免视频跳跃
+    // 初始表情已经设置为'excited'，组件会自动加载对应视频
     // Don't start game automatically
     
     // 初始化酒杯飞行动画控制器
@@ -392,11 +393,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           ? AppLocalizations.of(context)!.yourTurn
           : dialogueService.getStrategyDialogue(widget.aiPersonality.id, 'pressure_play', locale: localeCode);
       }
-      _currentAIEmotion = _aiExpression;  // 同步更新视频表情
+      
+      // 只在表情真正改变时才更新视频
+      if (_currentAIEmotion != _aiExpression) {
+        _currentAIEmotion = _aiExpression;
+      }
     });
-    
-    // 初始化AI表情 - 确保所有变量同步更新
-    _applyAIEmotion(_aiExpression, 0.5, false);
     
     // If AI goes first
     if (!_currentRound!.isPlayerTurn) {
@@ -1170,6 +1172,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },
+            onShare: (intimacyMinutes) {
+              // 直接分享图片（无需预览）
+              ImageShareService.shareDirectly(
+                context: context,
+                defeatedAI: widget.aiPersonality,
+                drinkingState: _drinkingState!,
+                intimacyMinutes: intimacyMinutes,
+              );
+            },
           onRematch: () {
             // 看广告让AI醒酒
             AdHelper.showRewardedAdAfterDialogClose(
@@ -1193,14 +1204,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   SnackBar(content: Text(AppLocalizations.of(context)!.adLoadFailed)),
                 );
               },
-            );
-          },
-          onShare: (intimacyMinutes) async {
-            await ShareImageService.shareVictoryWithImage(
-              context: context,
-              defeatedAI: widget.aiPersonality,
-              drinkingState: _drinkingState!,
-              intimacyMinutes: intimacyMinutes,
             );
           },
         ),
@@ -1337,9 +1340,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 style: TextStyle(fontSize: 60),
               ),
               const SizedBox(height: 10),
-              const Text(
-                '你醉倒了！',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.youGotDrunk,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -1347,7 +1350,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 10),
               Text(
-                '已经喝了${_drinkingState!.drinksConsumed}杯酒',
+                AppLocalizations.of(context)!.drinksConsumedMessage(_drinkingState!.drinksConsumed),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
@@ -1359,7 +1362,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   Navigator.of(context).pop();
                   _showSoberDialog();
                 },
-                child: const Text('醒酒选项'),
+                child: Text(AppLocalizations.of(context)!.soberOptions),
               ),
             ],
           ),
@@ -1451,6 +1454,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _applyAIEmotion(String emotion, double probability, bool talking) {
     if (!mounted) return;
     
+    // 如果表情没有改变，直接返回，避免不必要的更新
+    if (_currentAIEmotion == emotion) return;
+    
     // 即使 avatarKey 还没有准备好，我们也要更新文字显示
     
     // 表情中文映射 - reserved for future use
@@ -1534,12 +1540,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       '沉思': 'thinking.mp4',
     }; */
     
-    // 只有表情真正改变时才更新，避免不必要的重新渲染
-    if (_currentAIEmotion != emotion) {
-      setState(() {
-        _currentAIEmotion = emotion;  // 更新视频表情
-      });
-    }
+    // 更新视频表情
+    setState(() {
+      _currentAIEmotion = emotion;
+    });
     
     // 根据情绪和概率计算精细参数
     double valence = 0.0;

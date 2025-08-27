@@ -906,4 +906,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gameSlogan => '100+ waiting for your challenge';
+
+  @override
+  String get youGotDrunk => 'You got drunk!';
+
+  @override
+  String get watchAdToSoberSubtitle => 'Free, instantly sober';
+
+  @override
+  String get goHomeToRest => 'Go Home to Rest';
 }

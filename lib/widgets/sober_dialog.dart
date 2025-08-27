@@ -124,7 +124,7 @@ class SoberDialog extends StatelessWidget {
                 _buildOption(
                   icon: Icons.play_circle_outline,
                   title: AppLocalizations.of(context)!.watchAdToSoberTitle,
-                  subtitle: '免费，立即完全清醒',
+                  subtitle: AppLocalizations.of(context)!.watchAdToSoberSubtitle,
                   color: Colors.blue,
                   onTap: () {
                     Navigator.of(context).pop();
@@ -140,7 +140,7 @@ class SoberDialog extends StatelessWidget {
                 // 放弃（返回主页）
                 _buildOption(
                   icon: Icons.home,
-                  title: '回家休息',
+                  title: AppLocalizations.of(context)!.goHomeToRest,
                   subtitle: AppLocalizations.of(context)!.returnToHome,
                   color: Colors.grey,
                   onTap: () {

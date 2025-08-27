@@ -907,4 +907,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gameSlogan => '100+ menunggu tantangan Anda';
+
+  @override
+  String get youGotDrunk => 'Anda mabuk!';
+
+  @override
+  String get watchAdToSoberSubtitle => 'Gratis, langsung sadar';
+
+  @override
+  String get goHomeToRest => 'Pulang untuk Istirahat';
 }

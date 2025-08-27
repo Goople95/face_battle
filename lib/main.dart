@@ -17,6 +17,7 @@ import 'services/storage/local_storage_service.dart';
 import 'services/game_progress_service.dart';
 import 'services/temp_state_service.dart';
 import 'utils/logger_utils.dart';
+import 'services/share_tracking_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +63,14 @@ void main() async {
     LoggerUtils.info('对话服务初始化成功');
   } catch (e) {
     LoggerUtils.error('对话服务初始化失败: $e');
+  }
+  
+  // Initialize share tracking (不使用Firebase Dynamic Links)
+  try {
+    await ShareTrackingService.trackInstallSource();
+    LoggerUtils.info('分享追踪服务初始化成功');
+  } catch (e) {
+    LoggerUtils.error('分享追踪服务初始化失败: $e');
   }
   
   // Game Progress Service will be initialized after user login

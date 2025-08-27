@@ -1651,6 +1651,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'100+ waiting for your challenge'**
   String get gameSlogan;
+
+  /// No description provided for @youGotDrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'You got drunk!'**
+  String get youGotDrunk;
+
+  /// No description provided for @watchAdToSoberSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free, instantly sober'**
+  String get watchAdToSoberSubtitle;
+
+  /// No description provided for @goHomeToRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Home to Rest'**
+  String get goHomeToRest;
 }
 
 class _AppLocalizationsDelegate

@@ -52,19 +52,10 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       return;
     }
 
-    // 移除防抖逻辑，确保视频能够加载
-    // 如果需要防抖，应该在外部调用处控制
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    // 先释放旧的控制器
-    if (_controller != null) {
-      await _controller!.pause();
-      await _controller!.dispose();
-      _controller = null;
-    }
+    // 保存旧控制器，等新视频加载完成再释放
+    final oldController = _controller;
+    
+    // 不立即设置加载状态，保持旧视频显示
 
     // 使用简化的CharacterConfig获取视频路径
     String videoPath = CharacterConfig.getVideoPath(widget.characterId, widget.emotion);
@@ -91,6 +82,12 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
           _currentEmotion = widget.emotion;
           _isLoading = false;
         });
+        
+        // 新视频加载完成后，释放旧控制器
+        if (oldController != null) {
+          oldController.pause();
+          oldController.dispose();
+        }
       } else {
         // 如果组件已卸载，立即释放
         controller.dispose();
@@ -149,16 +146,16 @@ class _SimpleVideoAvatarState extends State<SimpleVideoAvatar> {
       // 加载中显示静态图片
       content = _buildFallback();
     } else if (_controller != null && _controller!.value.isInitialized) {
-      // 显示视频 - 使用ClipRect裁剪，避免溢出
+      // 显示视频 - 使用FittedBox确保视频填满容器
       content = Container(
         width: widget.size,
         height: widget.size,
-        color: Colors.grey[900],
         child: ClipRect(
-          child: Center(
+          child: FittedBox(
+            fit: BoxFit.cover,  // 使用cover模式确保视频完全覆盖容器
             child: SizedBox(
-              width: widget.size,
-              height: widget.size,
+              width: _controller!.value.size.width,
+              height: _controller!.value.size.height,
               child: VideoPlayer(_controller!),
             ),
           ),

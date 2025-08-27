@@ -5,17 +5,23 @@ library;
 
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
 import '../utils/logger_utils.dart';
+import '../widgets/share_card_with_qr.dart';
+import 'share_tracking_service.dart';
+import 'auth_service.dart';
+import 'package:provider/provider.dart';
 
 class ShareService {
   
-  /// 分享醉倒胜利
+  /// 分享醉倒胜利（增强版：带二维码和动态链接）
   static Future<void> shareDrunkVictory({
     required BuildContext context,
     required AIPersonality defeatedAI,
@@ -23,32 +29,116 @@ class ShareService {
     required int intimacyMinutes,
   }) async {
     try {
-      // 生成分享文本
-      final shareText = _generateShareText(
+      // 显示加载对话框
+      showDialog(
         context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: Colors.pinkAccent),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.generatingShareImage,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      
+      // 获取本地化的AI名称
+      final locale = Localizations.localeOf(context);
+      final languageCode = locale.languageCode;
+      String localeCode = languageCode;
+      if (languageCode == 'zh') {
+        localeCode = 'zh_TW';
+      }
+      final aiName = defeatedAI.getLocalizedName(localeCode);
+      
+      // 获取用户ID（用于追踪）
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final userId = authService.uid;
+      
+      // 生成带追踪参数的Play商店链接
+      final trackedUrl = ShareTrackingService.generateTrackedPlayStoreLink(
+        aiName: aiName,
+        drinkCount: drinkingState.getAIDrinks(defeatedAI.id),
+        intimacyMinutes: intimacyMinutes,
+        userId: userId,
+      );
+      
+      // 生成短链接（可选）
+      final shortUrl = await ShareTrackingService.generateShortLink(
+        longUrl: trackedUrl,
+      );
+      
+      // 创建带二维码的分享卡片
+      final shareCard = ShareCardWithQR(
         defeatedAI: defeatedAI,
         drinkingState: drinkingState,
         intimacyMinutes: intimacyMinutes,
+        dynamicLink: shortUrl,
       );
       
-      // 创建分享卡片
-      final shareCard = _buildShareCard(
-        context: context,
-        defeatedAI: defeatedAI,
-        drinkingState: drinkingState,
-        intimacyMinutes: intimacyMinutes,
-      );
+      // 将widget转换为图片
+      final imageBytes = await _captureWidgetAsImage(shareCard, context);
       
-      // 暂时只分享文字，不生成图片
-      final l10n = AppLocalizations.of(context)!;
-      await Share.share(
-        shareText,
-        subject: l10n.shareSubject,
-      );
+      // 关闭加载对话框
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      
+      if (imageBytes != null && imageBytes.isNotEmpty) {
+        // 保存图片到临时文件
+        final directory = await getTemporaryDirectory();
+        final imagePath = '${directory.path}/share_${DateTime.now().millisecondsSinceEpoch}.png';
+        final imageFile = File(imagePath);
+        await imageFile.writeAsBytes(imageBytes);
+        
+        // 生成分享文本（包含短链接）
+        final shareText = _generateShareTextWithLink(
+          context: context,
+          defeatedAI: defeatedAI,
+          drinkingState: drinkingState,
+          intimacyMinutes: intimacyMinutes,
+          dynamicLink: shortUrl,
+        );
+        
+        // 分享图片和文字
+        await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: shareText,
+          subject: AppLocalizations.of(context)!.shareSubject,
+        );
+        
+        // 记录分享事件
+        LoggerUtils.info('分享成功: AI=$aiName, 短链接=$shortUrl');
+      } else {
+        // 如果图片生成失败，仅分享文字和链接
+        _shareTextOnly(
+          context: context,
+          defeatedAI: defeatedAI,
+          drinkingState: drinkingState,
+          intimacyMinutes: intimacyMinutes,
+        );
+      }
       
     } catch (e) {
       LoggerUtils.error('分享失败: $e');
-      // 如果图片分享失败，至少分享文字
+      // 关闭可能存在的对话框
+      if (context.mounted && Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+      // 降级到文字分享
       _shareTextOnly(
         context: context,
         defeatedAI: defeatedAI,
@@ -559,9 +649,116 @@ class ShareService {
     }
   }
   
-  /// 简化的截图方法 - 直接分享文字，不生成图片
+  /// 生成带链接的分享文本
+  static String _generateShareTextWithLink({
+    required BuildContext context,
+    required AIPersonality defeatedAI,
+    required DrinkingState drinkingState,
+    required int intimacyMinutes,
+    required String dynamicLink,
+  }) {
+    final drinks = drinkingState.getAIDrinks(defeatedAI.id);
+    final l10n = AppLocalizations.of(context)!;
+    
+    // 获取本地化的AI名称
+    final locale = Localizations.localeOf(context);
+    final languageCode = locale.languageCode;
+    String localeCode = languageCode;
+    if (languageCode == 'zh') {
+      localeCode = 'zh_TW';
+    }
+    final aiName = defeatedAI.getLocalizedName(localeCode);
+    
+    // 使用本地化的分享模板
+    List<String> templates = [
+      l10n.shareTemplate1(aiName, drinks, intimacyMinutes),
+      l10n.shareTemplate2(aiName, drinks, intimacyMinutes),
+      l10n.shareTemplate3(aiName, drinks, intimacyMinutes),
+      l10n.shareTemplate4(aiName, drinks, intimacyMinutes),
+    ];
+    
+    // 随机选择一个模板
+    final randomIndex = DateTime.now().millisecond % templates.length;
+    final shareText = templates[randomIndex];
+    
+    // 添加下载链接
+    return '$shareText\n\n👉 下载游戏: $dynamicLink';
+  }
+  
+  /// 将Widget转换为图片
+  static Future<Uint8List?> _captureWidgetAsImage(Widget widget, BuildContext context) async {
+    try {
+      // 创建一个RenderRepaintBoundary来捕获widget
+      final boundary = RenderRepaintBoundary();
+      
+      // 创建一个pipeline owner
+      final pipelineOwner = PipelineOwner();
+      
+      // 创建一个build owner
+      final buildOwner = BuildOwner(focusManager: FocusManager());
+      
+      // 设置大小
+      const size = Size(400, 700);
+      
+      // 创建render object
+      final renderView = RenderView(
+        child: RenderPositionedBox(
+          alignment: Alignment.center,
+          child: boundary,
+        ),
+        configuration: ViewConfiguration(
+          size: size,
+          devicePixelRatio: ui.window.devicePixelRatio,
+        ),
+        view: ui.window,
+      );
+      
+      // 设置pipeline owner
+      pipelineOwner.rootNode = renderView;
+      renderView.prepareInitialFrame();
+      
+      // 构建widget
+      final rootElement = RenderObjectToWidgetAdapter<RenderBox>(
+        container: boundary,
+        child: MediaQuery(
+          data: MediaQueryData(
+            size: size,
+            devicePixelRatio: ui.window.devicePixelRatio,
+          ),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: InheritedTheme.captureAll(
+              context,
+              Material(
+                color: Colors.transparent,
+                child: widget,
+              ),
+            ),
+          ),
+        ),
+      ).attachToRenderTree(buildOwner);
+      
+      // 触发构建和布局
+      buildOwner.buildScope(rootElement);
+      pipelineOwner.flushLayout();
+      pipelineOwner.flushCompositingBits();
+      pipelineOwner.flushPaint();
+      
+      // 捕获图像
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      return byteData?.buffer.asUint8List();
+      
+    } catch (e) {
+      LoggerUtils.error('捕获widget为图片失败: $e');
+      return null;
+    }
+  }
+  
+  /// 简化的截图方法（保留旧方法名以兼容）
   static Future<Uint8List> _captureWidget(Widget widget, BuildContext context) async {
-    // 暂时返回空数组，仅分享文字
-    return Uint8List(0);
+    final bytes = await _captureWidgetAsImage(widget, context);
+    return bytes ?? Uint8List(0);
   }
 }

@@ -252,5 +252,8 @@
   "loadingAvatar": "Cargando avatar...",
   "generatingShareImage": "Generando imagen para compartir...",
   "challengeNow": "Desafiar Ahora",
-  "gameSlogan": "100+ esperando tu desafío"
+  "gameSlogan": "100+ esperando tu desafío",
+  "youGotDrunk": "¡Te emborrachaste!",
+  "watchAdToSoberSubtitle": "Gratis, sobrio al instante",
+  "goHomeToRest": "Ir a Casa a Descansar"
 }

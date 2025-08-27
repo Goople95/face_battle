@@ -832,5 +832,8 @@
   "loadingAvatar": "Loading avatar...",
   "generatingShareImage": "Generating share image...",
   "challengeNow": "Challenge Now",
-  "gameSlogan": "100+ waiting for your challenge"
+  "gameSlogan": "100+ waiting for your challenge",
+  "youGotDrunk": "You got drunk!",
+  "watchAdToSoberSubtitle": "Free, instantly sober",
+  "goHomeToRest": "Go Home to Rest"
 }

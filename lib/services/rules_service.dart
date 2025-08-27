@@ -66,7 +66,7 @@ class RulesService {
   Map<String, List<String>> _getDefaultRules() {
     return {
       'en': [
-        'Each player rolls 5 dice in secret.',
+        'Each player rolls 5 dices in secret.',
         '1s are wild and count as any number, until someone calls 1s directly.',
         'Each new bid must be higher in quantity or face value.',
         'If you think it\'s a bluff, call it! The dice will decide who loses.',

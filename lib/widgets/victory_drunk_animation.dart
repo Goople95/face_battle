@@ -918,33 +918,18 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     if (_showingStats) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-        child: Row(
-          children: [
-            // 炫耀按钮
-            Expanded(
-              child: _buildSimpleButton(
-                label: AppLocalizations.of(context)!.showOff,
-                color: Color(0xFFE91E63),
-                onTap: () {
-                  if (widget.onShare != null) {
-                    widget.onShare!(_intimacyMinutes);
-                  }
-                },
-                icon: Icons.share,
-              ),
+        child: Center(
+          // 只保留继续按钮（返回主页）
+          child: SizedBox(
+            width: 200,
+            child: _buildSimpleButton(
+              label: AppLocalizations.of(context)!.continueButton,
+              color: Colors.white,
+              textColor: Colors.black87,
+              onTap: widget.onComplete,
+              icon: Icons.home,
             ),
-            const SizedBox(width: 20),
-            // 继续按钮（返回主页）
-            Expanded(
-              child: _buildSimpleButton(
-                label: AppLocalizations.of(context)!.continueButton,
-                color: Colors.white,
-                textColor: Colors.black87,
-                onTap: widget.onComplete,
-                icon: Icons.home,
-              ),
-            ),
-          ],
+          ),
         ),
       );
     }
