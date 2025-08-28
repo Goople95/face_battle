@@ -939,4 +939,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get goHomeToRest => 'Ir para Casa Descansar';
+
+  @override
+  String get loadingNPCResources => 'Loading character resources...';
+
+  @override
+  String get npcResourcesReady => 'Character ready';
 }

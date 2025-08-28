@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import '../models/ai_personality.dart';
 import '../utils/logger_utils.dart';
+import 'cloud_npc_service.dart';
 
 /// NPC配置服务
 /// 负责从JSON文件加载和管理所有NPC配置
@@ -80,12 +81,30 @@ class NPCConfigService {
     try {
       LoggerUtils.info('开始加载NPC配置...');
       
-      // 加载JSON文件
-      final String jsonString = await rootBundle.loadString('assets/config/npc_config.json');
-      final Map<String, dynamic> jsonData = json.decode(jsonString);
+      // 优先从云端加载配置
+      List<NPCConfig> cloudConfigs;
+      try {
+        cloudConfigs = await CloudNPCService.fetchNPCConfigs(forceRefresh: false);
+        LoggerUtils.info('成功从云端加载了${cloudConfigs.length}个NPC配置');
+      } catch (e) {
+        LoggerUtils.warning('云端加载失败，回退到本地配置: $e');
+        // 如果云端加载失败，使用本地配置
+        final String jsonString = await rootBundle.loadString('assets/config/npc_config.json');
+        final Map<String, dynamic> jsonData = json.decode(jsonString);
+        final npcsData = jsonData['npcs'] as Map<String, dynamic>;
+        
+        // 转换为NPCConfig列表
+        cloudConfigs = [];
+        for (final entry in npcsData.entries) {
+          cloudConfigs.add(NPCConfig.fromJson(entry.key, entry.value));
+        }
+      }
       
-      // 解析NPC数据
-      final npcsData = jsonData['npcs'] as Map<String, dynamic>;
+      // 处理配置数据
+      final Map<String, dynamic> npcsData = {};
+      for (final config in cloudConfigs) {
+        npcsData[config.id] = config.toJson();
+      }
       
       for (final entry in npcsData.entries) {
         final String id = entry.key;

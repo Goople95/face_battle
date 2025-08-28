@@ -936,4 +936,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get goHomeToRest => 'Pulang untuk Istirahat';
+
+  @override
+  String get loadingNPCResources => 'Loading character resources...';
+
+  @override
+  String get npcResourcesReady => 'Character ready';
 }

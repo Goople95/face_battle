@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "lastUpdate": "2024-01-20T10:00:00Z",
+  "minAppVersion": "1.0.0",
+  "features": {
+    "cloudNPC": true,
+    "dynamicUpdate": true
+  },
+  "changes": [
+    {
+      "date": "2024-01-20",
+      "description": "Initial cloud NPC release",
+      "npcs": ["2001"]
+    }
+  ],
+  "totalNPCs": 1,
+  "metadata": {
+    "environment": "production",
+    "region": "global"
+  }
+}

@@ -187,10 +187,20 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     // 醉倒视频路径
     String videoPath = 'assets/people/${widget.defeatedAI.id}/videos/drunk.mp4';
     
-    LoggerUtils.debug('加载醉倒视频: $videoPath');
+    LoggerUtils.debug('尝试加载醉倒视频: $videoPath');
     
-    // 创建视频控制器
-    _videoController = VideoPlayerController.asset(videoPath);
+    try {
+      // 先尝试本地资源
+      await rootBundle.load(videoPath);
+      _videoController = VideoPlayerController.asset(videoPath);
+      LoggerUtils.debug('使用本地醉倒视频');
+    } catch (e) {
+      // 本地资源不存在，使用网络资源
+      final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
+                        'npcs%2F${widget.defeatedAI.id}%2Fdrunk.mp4?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+      _videoController = VideoPlayerController.networkUrl(Uri.parse(networkUrl));
+      LoggerUtils.info('使用网络醉倒视频: $networkUrl');
+    }
     
     await _videoController!.initialize();
     

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
@@ -72,8 +73,22 @@ class _PreloadedVideoAvatarState extends State<PreloadedVideoAvatar>
   /// 加载单个视频
   Future<void> _loadSingleVideo(String emotion) async {
     try {
-      final videoPath = CharacterConfig.getVideoPath(widget.characterId, emotion);
-      final controller = VideoPlayerController.asset(videoPath);
+      // 先尝试本地资源
+      final localPath = CharacterConfig.getVideoPath(widget.characterId, emotion);
+      VideoPlayerController? controller;
+      
+      try {
+        // 检查本地资源是否存在
+        await rootBundle.load(localPath);
+        controller = VideoPlayerController.asset(localPath);
+        LoggerUtils.debug('使用本地视频: $localPath');
+      } catch (e) {
+        // 本地资源不存在，使用网络资源
+        final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
+                          'npcs%2F${widget.characterId}%2F$emotion.mp4?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+        controller = VideoPlayerController.networkUrl(Uri.parse(networkUrl));
+        LoggerUtils.info('使用网络视频: $networkUrl');
+      }
       
       // 初始化视频
       await controller.initialize();
@@ -171,6 +186,50 @@ class _PreloadedVideoAvatarState extends State<PreloadedVideoAvatar>
   }
   
   
+  /// 构建后备图片（支持本地和网络资源）
+  Future<Widget> _buildFallbackImage() async {
+    try {
+      // 先尝试本地资源
+      final localPath = CharacterConfig.getAvatarPath(widget.characterId);
+      try {
+        await rootBundle.load(localPath);
+        return Image.asset(
+          localPath,
+          width: 512,
+          height: 512,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildPlaceholder();
+          },
+        );
+      } catch (e) {
+        // 本地资源不存在，使用网络资源
+        final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
+                          'npcs%2F${widget.characterId}%2F1.png?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+        LoggerUtils.info('使用网络图片作为后备: $networkUrl');
+        return Image.network(
+          networkUrl,
+          width: 512,
+          height: 512,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildPlaceholder();
+          },
+        );
+      }
+    } catch (e) {
+      LoggerUtils.error('加载后备图片失败: $e');
+      return _buildPlaceholder();
+    }
+  }
+  
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 512,
+      height: 512,
+      color: Colors.grey[700],
+      child: Icon(Icons.person, size: 300, color: Colors.white54),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 获取当前应该显示的控制器
@@ -188,21 +247,23 @@ class _PreloadedVideoAvatarState extends State<PreloadedVideoAvatar>
         ),
       );
     } else {
-      videoContent = FittedBox(
-        fit: BoxFit.fill,
-        child: Image.asset(
-          CharacterConfig.getAvatarPath(widget.characterId),
-          width: 512,
-          height: 512,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 512,
-              height: 512,
-              color: Colors.grey[700],
-              child: Icon(Icons.person, size: 300, color: Colors.white54),
+      // 视频未准备好时显示静态图片
+      videoContent = FutureBuilder<Widget>(
+        future: _buildFallbackImage(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return FittedBox(
+              fit: BoxFit.fill,
+              child: snapshot.data!,
             );
-          },
-        ),
+          }
+          return Container(
+            width: 512,
+            height: 512,
+            color: Colors.grey[700],
+            child: Icon(Icons.person, size: 300, color: Colors.white54),
+          );
+        },
       );
     }
     

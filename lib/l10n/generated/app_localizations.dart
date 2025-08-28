@@ -1705,6 +1705,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go Home to Rest'**
   String get goHomeToRest;
+
+  /// No description provided for @loadingNPCResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading character resources...'**
+  String get loadingNPCResources;
+
+  /// No description provided for @npcResourcesReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Character ready'**
+  String get npcResourcesReady;
 }
 
 class _AppLocalizationsDelegate

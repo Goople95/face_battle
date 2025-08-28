@@ -5,7 +5,12 @@
       "Bash(mv:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
+      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
+      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
+      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
+      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)"
     ],
     "deny": [],
     "ask": [],

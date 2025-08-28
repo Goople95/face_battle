@@ -95,7 +95,7 @@ $gameInfo
 是否虚张：$isBluffing
 
 生成2-3个合适的表情，从以下选择：
-happy, angry, confident, nervous, thinking, suspicious, excited, disappointed, neutral, smirking
+happy, angry, confident, nervous, thinking, suspicious, disappointed, neutral, smirking
 
 输出JSON数组：["表情1", "表情2"]''';
   }

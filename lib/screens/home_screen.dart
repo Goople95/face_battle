@@ -27,6 +27,7 @@ import '../services/npc_config_service.dart';
 import '../services/storage/local_storage_service.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/rules_display.dart';
+import '../widgets/npc_avatar_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1012,23 +1013,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 // 使用真实头像替换图标
                 Stack(
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isUnavailable ? Colors.red : Colors.white, 
-                          width: 2,
-                        ),
-                        image: DecorationImage(
-                          image: AssetImage(CharacterConfig.getFullAvatarPath(personality.avatarPath)),
-                          fit: BoxFit.cover,
-                          colorFilter: isUnavailable 
-                            ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
-                            : null,
-                        ),
-                      ),
+                    // 头像
+                    NPCAvatarWidget(
+                      personality: personality,
+                      size: 60,
+                      showBorder: true,
+                      isUnavailable: isUnavailable,
                     ),
                     // 如果不能游戏，显示醉酒标记
                     if (isUnavailable)
@@ -1401,23 +1391,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       // 头像
                       Stack(
                         children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isUnavailable ? Colors.red : Colors.amber, 
-                                width: 2,
-                              ),
-                              image: DecorationImage(
-                                image: AssetImage(CharacterConfig.getFullAvatarPath(personality.avatarPath)),
-                                fit: BoxFit.cover,
-                                colorFilter: isUnavailable
-                                  ? ColorFilter.mode(Colors.grey, BlendMode.saturation)
-                                  : null,
-                              ),
-                            ),
+                          // VIP卡片头像
+                          NPCAvatarWidget(
+                            personality: personality,
+                            size: 60,
+                            showBorder: true,
+                            isUnavailable: isUnavailable,
                           ),
                           // 醉酒标记
                           if (isUnavailable && !isLocked)
@@ -1638,18 +1617,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             children: [
               // AI头像和状态
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.red, width: 3),
-                  image: DecorationImage(
-                    image: AssetImage(CharacterConfig.getFullAvatarPath(personality.avatarPath)),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(Colors.grey, BlendMode.saturation),
-                  ),
-                ),
+              // 醉酒状态头像
+              NPCAvatarWidget(
+                personality: personality,
+                size: 80,
+                showBorder: true,
+                isUnavailable: true,
               ),
               const SizedBox(height: 10),
               Text(

@@ -12,7 +12,7 @@ import '../utils/responsive_utils.dart';
 import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/simple_ai_avatar.dart';
-import '../widgets/preloaded_video_avatar.dart';  // 使用预加载版
+import '../widgets/simple_network_video_avatar.dart';  // 使用简单网络版
 import '../widgets/drunk_overlay.dart';
 import '../widgets/sober_dialog.dart';
 import '../widgets/victory_drunk_animation.dart';
@@ -51,7 +51,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   int _selectedValue = 2;
   
   // AI Expression and Dialogue
-  String _aiExpression = 'excited';  // 默认表情改为 excited
+  String _aiExpression = 'happy';  // 默认表情改为 happy (excited映射到happy)
   String _aiDialogue = '';
   List<String> _emotionQueue = []; // 情绪播放队列
   int _currentEmotionIndex = 0; // 当前播放的情绪索引
@@ -72,7 +72,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late AnimationController _drinkChangeAnimationController;
   int _animatingDrinkIndex = -1; // 正在动画的酒杯索引
   bool _isAnimatingAIDrink = false; // 是否是AI的酒杯在动画
-  String _currentAIEmotion = 'excited';  // 当前AI表情，默认excited
+  String _currentAIEmotion = 'happy';  // 当前AI表情，默认happy
+  DateTime _lastEmotionChange = DateTime.now();  // 记录上次表情改变时间
   
   // 获取本地化的AI名称
   String _getLocalizedAIName(BuildContext context) {
@@ -286,7 +287,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     super.initState();
     _loadPlayerProfile();
     // 不在initState时调用_applyAIEmotion，避免视频跳跃
-    // 初始表情已经设置为'excited'，组件会自动加载对应视频
+    // 初始表情已经设置为'happy'，组件会自动加载对应视频
     // Don't start game automatically
     
     // 初始化酒杯飞行动画控制器
@@ -1499,31 +1500,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _applyAIEmotion(String emotion, double probability, bool talking) {
     if (!mounted) return;
     
+    // 防抖：避免频繁切换表情导致视频缓冲区溢出
+    final now = DateTime.now();
+    if (now.difference(_lastEmotionChange).inSeconds < 3) {
+      // 3秒内不切换表情
+      return;
+    }
+    
     // 新方案：4选1随机表情，让AI更生动
     final random = math.Random();
     final emotions = ['thinking', 'happy', 'confident', 'suspicious'];
     
-    // 特定场景保留固定表情
-    bool keepOriginal = false;
+    // 完全随机化表情，让游戏更有变化性
+    emotion = emotions[random.nextInt(emotions.length)];
     
-    // 场景1：AI赢了（玩家输了），必须显示happy
-    if (_currentRound != null && _currentRound!.isRoundOver && _isPlayerLoser) {
-      emotion = 'happy';
-      keepOriginal = true;
-    }
-    // 场景2：AI输了，可以是thinking或suspicious
-    else if (_currentRound != null && _currentRound!.isRoundOver && !_isPlayerLoser) {
-      emotion = random.nextBool() ? 'thinking' : 'suspicious';
-      keepOriginal = true;
-    }
-    
-    // 如果不是特殊场景，完全随机
-    if (!keepOriginal) {
-      emotion = emotions[random.nextInt(emotions.length)];
-    }
-    
-    // 避免连续重复同一表情，重新随机
-    if (_currentAIEmotion == emotion && !keepOriginal) {
+    // 避免连续重复同一表情，增加变化
+    if (_currentAIEmotion == emotion) {
       // 从剩余的3个表情中选择
       final otherEmotions = emotions.where((e) => e != emotion).toList();
       emotion = otherEmotions[random.nextInt(otherEmotions.length)];
@@ -1618,6 +1610,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // 更新视频表情
     setState(() {
       _currentAIEmotion = emotion;
+      _lastEmotionChange = DateTime.now();  // 记录表情改变时间
     });
     
     // 根据情绪和概率计算精细参数
@@ -1660,11 +1653,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         arousal = 0.8;
         confidence = 0.3;
         blink = 'fast';
-        break;
-      case 'excited':
-        valence = 0.8;
-        arousal = 0.9;
-        confidence = 0.6;
         break;
       case 'angry':
         valence = -0.7;
@@ -1852,7 +1840,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             children: [
                               // 视频背景 - 1:1显示
                               Positioned.fill(
-                                child: PreloadedVideoAvatar(
+                                child: SimpleNetworkVideoAvatar(
                                   characterId: widget.aiPersonality.id,
                                   emotion: _currentAIEmotion,
                                   size: videoSize,  // 使用正方形尺寸

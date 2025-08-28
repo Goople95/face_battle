@@ -1,0 +1,77 @@
+{
+  "npcs": {
+    "0001": {
+      "id": "0001",
+      "names": {
+        "en": "Lena",
+        "zh_TW": "萊娜",
+        "es": "Lena",
+        "pt": "Lena",
+        "id": "Lena"
+      },
+      "descriptions": {
+        "en": "Her calm gaze hides a quiet allure.",
+        "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
+        "es": "Su mirada serena esconde un encanto silencioso.",
+        "pt": "Seu olhar calmo esconde um charme discreto.",
+        "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
+      },
+      "avatarPath": "assets/people/0001/",
+      "videosPath": "assets/people/0001/videos/",
+      "isVIP": false,
+      "unlocked": true,
+      "personality": {
+        "bluffRatio": 0.25,
+        "challengeThreshold": 0.4,
+        "riskAppetite": 0.3,
+        "mistakeRate": 0.02,
+        "tellExposure": 0.08,
+        "reverseActingProb": 0.25,
+        "bidPreferenceThreshold": 0.1
+      },
+      "drinkCapacity": 6,
+      "country": "Germany",
+      "isLocal": true,
+      "version": 1
+    },
+    "0002": {
+      "id": "0002",
+      "names": {
+        "en": "Katerina",
+        "zh_TW": "卡捷琳娜",
+        "es": "Katerina",
+        "pt": "Katerina",
+        "id": "Katerina"
+      },
+      "descriptions": {
+        "en": "Graceful and distant, she draws you closer without a word.",
+        "zh_TW": "高貴而疏離，她無聲地吸引著你靠近。",
+        "es": "Elegante y distante, te atrae sin decir una palabra.",
+        "pt": "Elegante e distante, ela te atrai sem dizer uma palavra.",
+        "id": "Anggun dan berjarak, ia menarikmu tanpa sepatah kata pun."
+      },
+      "avatarPath": "assets/people/0002/",
+      "videosPath": "assets/people/0002/videos/",
+      "isVIP": false,
+      "unlocked": true,
+      "personality": {
+        "bluffRatio": 0.4,
+        "challengeThreshold": 0.38,
+        "riskAppetite": 0.5,
+        "mistakeRate": 0.025,
+        "tellExposure": 0.1,
+        "reverseActingProb": 0.35,
+        "bidPreferenceThreshold": 0.12
+      },
+      "drinkCapacity": 6,
+      "country": "Russia",
+      "isLocal": true,
+      "version": 1
+    }
+  },
+  "vipConfig": {
+    "adRequiredPerGame": true,
+    "adRewardDuration": 1,
+    "unlockPriceGems": 30
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "version": 2,
+  "npcs": {
+    "2001": {
+      "id": "2001",
+      "names": {
+        "en": "Sophia",
+        "zh_TW": "索菲亞",
+        "es": "Sophia",
+        "pt": "Sophia",
+        "id": "Sophia"
+      },
+      "descriptions": {
+        "en": "Her eyes hold mysteries waiting to be discovered.",
+        "zh_TW": "她的眼睛裡藏著等待被發現的秘密。",
+        "es": "Sus ojos guardan misterios esperando ser descubiertos.",
+        "pt": "Seus olhos guardam mistérios esperando para serem descobertos.",
+        "id": "Matanya menyimpan misteri yang menunggu untuk ditemukan."
+      },
+      "avatarPath": "cloud",
+      "videosPath": "cloud",
+      "isVIP": false,
+      "unlocked": false,
+      "personality": {
+        "bluffRatio": 0.35,
+        "challengeThreshold": 0.45,
+        "riskAppetite": 0.4,
+        "mistakeRate": 0.018,
+        "tellExposure": 0.09,
+        "reverseActingProb": 0.28,
+        "bidPreferenceThreshold": 0.11
+      },
+      "drinkCapacity": 6,
+      "country": "France",
+      "isLocal": false,
+      "cloudUrl": "npcs/2001",
+      "version": 2
+    },
+    "2002": {
+      "id": "2002",
+      "names": {
+        "en": "Mia",
+        "zh_TW": "米亞",
+        "es": "Mia",
+        "pt": "Mia",
+        "id": "Mia"
+      },
+      "descriptions": {
+        "en": "A smile that promises adventures yet to come.",
+        "zh_TW": "一個承諾未來冒險的微笑。",
+        "es": "Una sonrisa que promete aventuras por venir.",
+        "pt": "Um sorriso que promete aventuras por vir.",
+        "id": "Senyum yang menjanjikan petualangan yang akan datang."
+      },
+      "avatarPath": "cloud",
+      "videosPath": "cloud",
+      "isVIP": true,
+      "unlocked": false,
+      "unlockPrice": 50,
+      "unlockItemId": "vip_2002_unlock",
+      "personality": {
+        "bluffRatio": 0.6,
+        "challengeThreshold": 0.48,
+        "riskAppetite": 0.75,
+        "mistakeRate": 0.01,
+        "tellExposure": 0.04,
+        "reverseActingProb": 0.45,
+        "bidPreferenceThreshold": 0.07
+      },
+      "drinkCapacity": 6,
+      "country": "Italy",
+      "isLocal": false,
+      "cloudUrl": "npcs/2002",
+      "version": 2
+    }
+  }
+}

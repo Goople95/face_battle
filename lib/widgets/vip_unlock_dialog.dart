@@ -3,8 +3,8 @@ import '../models/ai_personality.dart';
 import '../services/vip_unlock_service.dart';
 import '../services/game_progress_service.dart';
 import '../utils/ad_helper.dart';
-import '../config/character_config.dart';
 import '../l10n/generated/app_localizations.dart';
+import 'npc_avatar_widget.dart';
 
 /// VIP解锁对话框
 class VIPUnlockDialog extends StatefulWidget {
@@ -74,9 +74,16 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
             const SizedBox(height: 10),
             
             // 角色头像
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage(CharacterConfig.getFullAvatarPath(widget.character.avatarPath)),
+            SizedBox(
+              width: 100,
+              height: 100,
+              child: ClipOval(
+                child: NPCAvatarWidget(
+                  personality: widget.character,
+                  size: 100,
+                  showBorder: false,
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             

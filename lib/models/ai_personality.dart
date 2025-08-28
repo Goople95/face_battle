@@ -98,6 +98,110 @@ class AIPersonality {
     // 使用已有的方法来获取描述
     return getLocalizedDescription(localeCode);
   }
+  
+  /// 从JSON创建AIPersonality
+  factory AIPersonality.fromJson(Map<String, dynamic> json) {
+    return AIPersonality(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      namesMap: json['namesMap'] != null 
+          ? Map<String, String>.from(json['namesMap'])
+          : null,
+      descriptionsMap: json['descriptionsMap'] != null
+          ? Map<String, String>.from(json['descriptionsMap']) 
+          : null,
+      avatarPath: json['avatarPath'] ?? '',
+      bluffRatio: (json['bluffRatio'] ?? 0.3).toDouble(),
+      challengeThreshold: (json['challengeThreshold'] ?? 0.4).toDouble(),
+      riskAppetite: (json['riskAppetite'] ?? 0.5).toDouble(),
+      mistakeRate: (json['mistakeRate'] ?? 0.02).toDouble(),
+      tellExposure: (json['tellExposure'] ?? 0.1).toDouble(),
+      reverseActingProb: (json['reverseActingProb'] ?? 0.3).toDouble(),
+      bidPreferenceThreshold: (json['bidPreferenceThreshold'] ?? 0.1).toDouble(),
+      isVIP: json['isVIP'] ?? false,
+      country: json['country'],
+      drinkCapacity: json['drinkCapacity'] ?? 4,
+    );
+  }
+  
+  /// 转换为JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      if (namesMap != null) 'namesMap': namesMap,
+      if (descriptionsMap != null) 'descriptionsMap': descriptionsMap,
+      'avatarPath': avatarPath,
+      'bluffRatio': bluffRatio,
+      'challengeThreshold': challengeThreshold,
+      'riskAppetite': riskAppetite,
+      'mistakeRate': mistakeRate,
+      'tellExposure': tellExposure,
+      'reverseActingProb': reverseActingProb,
+      'bidPreferenceThreshold': bidPreferenceThreshold,
+      'isVIP': isVIP,
+      if (country != null) 'country': country,
+      'drinkCapacity': drinkCapacity,
+    };
+  }
+  
+  /// 创建副本
+  AIPersonality copyWith({
+    String? id,
+    String? name,
+    String? description,
+    Map<String, String>? namesMap,
+    Map<String, String>? descriptionsMap,
+    String? avatarPath,
+    double? bluffRatio,
+    double? challengeThreshold,
+    double? riskAppetite,
+    double? mistakeRate,
+    double? tellExposure,
+    double? reverseActingProb,
+    double? bidPreferenceThreshold,
+    bool? isVIP,
+    String? country,
+    int? drinkCapacity,
+  }) {
+    return AIPersonality(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      namesMap: namesMap ?? this.namesMap,
+      descriptionsMap: descriptionsMap ?? this.descriptionsMap,
+      avatarPath: avatarPath ?? this.avatarPath,
+      bluffRatio: bluffRatio ?? this.bluffRatio,
+      challengeThreshold: challengeThreshold ?? this.challengeThreshold,
+      riskAppetite: riskAppetite ?? this.riskAppetite,
+      mistakeRate: mistakeRate ?? this.mistakeRate,
+      tellExposure: tellExposure ?? this.tellExposure,
+      reverseActingProb: reverseActingProb ?? this.reverseActingProb,
+      bidPreferenceThreshold: bidPreferenceThreshold ?? this.bidPreferenceThreshold,
+      isVIP: isVIP ?? this.isVIP,
+      country: country ?? this.country,
+      drinkCapacity: drinkCapacity ?? this.drinkCapacity,
+    );
+  }
+  
+  /// 创建默认personality
+  static AIPersonality defaultPersonality() {
+    return const AIPersonality(
+      id: 'default',
+      name: 'Default',
+      description: 'Default personality',
+      avatarPath: 'assets/people/default/',
+      bluffRatio: 0.3,
+      challengeThreshold: 0.4,
+      riskAppetite: 0.5,
+      mistakeRate: 0.02,
+      tellExposure: 0.1,
+      reverseActingProb: 0.3,
+      bidPreferenceThreshold: 0.1,
+    );
+  }
 }
 
 // AI角色配置现在从JSON文件加载

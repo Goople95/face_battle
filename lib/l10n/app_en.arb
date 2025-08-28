@@ -848,5 +848,7 @@
   "gameSlogan": "100+ waiting for your challenge",
   "youGotDrunk": "You got drunk!",
   "watchAdToSoberSubtitle": "Free, instantly sober",
-  "goHomeToRest": "Go Home to Rest"
+  "goHomeToRest": "Go Home to Rest",
+  "loadingNPCResources": "Loading character resources...",
+  "npcResourcesReady": "Character ready"
 }

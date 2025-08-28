@@ -929,6 +929,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get goHomeToRest => '回家休息';
+
+  @override
+  String get loadingNPCResources => '正在載入角色資源...';
+
+  @override
+  String get npcResourcesReady => '角色已就緒';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

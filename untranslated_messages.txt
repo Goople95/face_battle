@@ -1,1 +1,21 @@
-{}
+{
+  "es": [
+    "loadingNPCResources",
+    "npcResourcesReady"
+  ],
+
+  "id": [
+    "loadingNPCResources",
+    "npcResourcesReady"
+  ],
+
+  "pt": [
+    "loadingNPCResources",
+    "npcResourcesReady"
+  ],
+
+  "zh_TW": [
+    "loadingNPCResources",
+    "npcResourcesReady"
+  ]
+}

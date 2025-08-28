@@ -3,6 +3,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
 import '../l10n/generated/app_localizations.dart';
+import 'npc_avatar_widget.dart';
 
 /// 简化版分享卡片 - 更美观的布局
 class SimpleShareCard extends StatelessWidget {
@@ -108,34 +109,10 @@ class SimpleShareCard extends StatelessWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(15),
-                    child: Image.asset(
-                      '${defeatedAI.avatarPath}avatar.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey.shade800,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  aiName,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                    child: NPCAvatarWidget(
+                      personality: defeatedAI,
+                      size: 200,
+                      showBorder: false,
                     ),
                   ),
                 ),

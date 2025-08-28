@@ -939,4 +939,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get goHomeToRest => 'Ir a Casa a Descansar';
+
+  @override
+  String get loadingNPCResources => 'Loading character resources...';
+
+  @override
+  String get npcResourcesReady => 'Character ready';
 }
