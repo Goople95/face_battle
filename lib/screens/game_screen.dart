@@ -12,7 +12,7 @@ import '../utils/responsive_utils.dart';
 import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/simple_ai_avatar.dart';
-import '../widgets/simple_video_avatar.dart';  // 使用简化版
+import '../widgets/preloaded_video_avatar.dart';  // 使用预加载版
 import '../widgets/drunk_overlay.dart';
 import '../widgets/sober_dialog.dart';
 import '../widgets/victory_drunk_animation.dart';
@@ -1777,7 +1777,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             children: [
                               // 视频背景 - 1:1显示
                               Positioned.fill(
-                                child: SimpleVideoAvatar(
+                                child: PreloadedVideoAvatar(
                                   characterId: widget.aiPersonality.id,
                                   emotion: _currentAIEmotion,
                                   size: videoSize,  // 使用正方形尺寸
