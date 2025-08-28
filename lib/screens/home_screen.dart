@@ -1705,10 +1705,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     width: 1,
                   ),
                 ),
-                child: const Text(
-                  '她喝醉了，无法陪你游戏\n需要你帮她醒酒',
+                child: Text(
+                  AppLocalizations.of(context)!.aiDrunkMessage,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     height: 1.5,
@@ -1721,7 +1721,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // 看广告
-                  ElevatedButton.icon(
+                  ElevatedButton(
                     onPressed: () {
                       // 使用公用方法显示广告（先关闭当前对话框）
                       AdHelper.showRewardedAdAfterDialogClose(
@@ -1743,10 +1743,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         },
                       );
                     },
-                    icon: const Icon(Icons.play_circle_outline, size: 22, color: Colors.white),
-                    label: const Text(
-                      '看广告',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.watchAdToSober,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -1759,14 +1758,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   // 取消
-                  ElevatedButton.icon(
+                  ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    icon: const Icon(Icons.close, size: 22, color: Colors.white),
-                    label: const Text(
-                      '取消',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.cancel,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,

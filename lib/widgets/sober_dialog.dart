@@ -8,6 +8,7 @@ class SoberDialog extends StatelessWidget {
   final VoidCallback onWatchAd;
   final VoidCallback onUsePotion;
   final VoidCallback onCancel;
+  final bool fromGameScreen; // 是否从游戏页面调用
   
   const SoberDialog({
     super.key,
@@ -15,6 +16,7 @@ class SoberDialog extends StatelessWidget {
     required this.onWatchAd,
     required this.onUsePotion,
     required this.onCancel,
+    this.fromGameScreen = false, // 默认从主页调用
   });
   
   @override
@@ -144,8 +146,10 @@ class SoberDialog extends StatelessWidget {
                   subtitle: AppLocalizations.of(context)!.returnToHome,
                   color: Colors.grey,
                   onTap: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop(); // 返回主页
+                    Navigator.of(context).pop(); // 关闭对话框
+                    if (fromGameScreen) {
+                      Navigator.of(context).pop(); // 返回主页（从游戏页面调用时）
+                    }
                   },
                 ),
               ],

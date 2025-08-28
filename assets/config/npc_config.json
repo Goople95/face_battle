@@ -29,7 +29,7 @@
         "reverseActingProb": 0.25,
         "bidPreferenceThreshold": 0.1
       },
-      "drinkCapacity": 2,
+      "drinkCapacity": 6,
       "country": "Germany"
     },
     "0002": {
@@ -61,7 +61,7 @@
         "reverseActingProb": 0.35,
         "bidPreferenceThreshold": 0.12
       },
-      "drinkCapacity": 2,
+      "drinkCapacity": 6,
       "country": "Russia"
     },
     "1001": {
@@ -95,7 +95,7 @@
         "reverseActingProb": 0.35,
         "bidPreferenceThreshold": 0.08
       },
-      "drinkCapacity": 2,
+      "drinkCapacity": 6,
       "country": "Japan"
     },
     "1002": {
@@ -129,7 +129,7 @@
         "reverseActingProb": 0.4,
         "bidPreferenceThreshold": 0.09
       },
-      "drinkCapacity": 2,
+      "drinkCapacity": 6,
       "country": "Brazil"
     }
   },

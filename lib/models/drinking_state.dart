@@ -22,12 +22,8 @@ class DrinkingState {
   final _npcService = NPCConfigService();
   
   DrinkingState() {
-    // 初始化所有AI的酒杯数和醉酒状态
-    for (var npc in _npcService.allCharacters) {
-      aiDrinks[npc.id] = 0;
-      aiDrunkStates[npc.id] = false;
-      aiLastDrinkTimes[npc.id] = null;
-    }
+    // 不在构造函数中初始化AI状态，让loadFromPrefs来处理
+    // 这样可以避免覆盖从存储载入的数据
     
     // 兼容旧ID格式
     _initLegacyIds();
@@ -354,8 +350,16 @@ class DrinkingState {
     playerLastDrinkTime = state.playerLastDrinkTime;
     soberPotions = state.soberPotions;
     
-    // 加载AI状态
-    // 遍历保存的状态，而不是当前的aiDrinks（可能是空的）
+    // 先初始化所有AI的默认状态（对于新增的NPC）
+    for (var npc in _npcService.allCharacters) {
+      // 使用putIfAbsent确保不覆盖已有数据
+      aiDrinks.putIfAbsent(npc.id, () => 0);
+      aiDrunkStates.putIfAbsent(npc.id, () => false);
+      aiLastDrinkTimes.putIfAbsent(npc.id, () => null);
+    }
+    
+    // 加载AI状态（覆盖默认值）
+    // 遍历保存的状态，更新已保存的AI数据
     for (var entry in state.aiStates.entries) {
       aiDrinks[entry.key] = entry.value.currentDrinks;
       aiLastDrinkTimes[entry.key] = entry.value.lastDrinkTime;
@@ -363,10 +367,10 @@ class DrinkingState {
       LoggerUtils.debug('加载AI状态 - ID: ${entry.key}, 饮酒数: ${entry.value.currentDrinks}, 醉酒状态: ${entry.value.isDrunkState}');
     }
     
-    // 处理醒酒（TempStateService已经处理过）
-    // processSobering();
+    // 处理醒酒
+    processSobering();
     
-    LoggerUtils.info('饮酒状态已加载');
+    LoggerUtils.info('饮酒状态已加载 - 玩家: $drinksConsumed杯, AI数量: ${aiDrinks.length}');
   }
   
   /// 兼容旧方法名：加载状态（实例方法）

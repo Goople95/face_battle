@@ -90,7 +90,8 @@ $systemLogFilters = @(
     "ActivityManager",         # 活动管理器系统日志
     "InputMethodManager",      # 输入法管理器
     "ViewRootImpl",            # 视图根实现
-    "WindowManager"            # 窗口管理器
+    "WindowManager",           # 窗口管理器
+    "MetadataUtil.*Skipped"    # 视频元数据警告
 )
 
 # 日志过滤函数

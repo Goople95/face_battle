@@ -414,6 +414,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aggressiveness => 'Aggression';
 
   @override
+  String get bluffLabel => 'Bluff';
+
+  @override
+  String get aggressiveLabel => 'Aggressive';
+
+  @override
   String get challengeRate => 'Challenge Rate';
 
   @override
@@ -426,22 +432,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get styleBluffer => 'Bluffer';
 
   @override
-  String get styleHonest => 'Honest';
+  String get styleHonest => 'Steady';
 
   @override
-  String get styleAggressive => 'Aggressive';
+  String get styleAggressive => 'Bold';
 
   @override
   String get styleOffensive => 'Offensive';
 
   @override
-  String get styleConservative => 'Conservative';
+  String get styleConservative => 'Strategic';
 
   @override
   String get styleChallenger => 'Challenger';
 
   @override
-  String get styleCautious => 'Cautious';
+  String get styleCautious => 'Tactical';
 
   @override
   String get styleBalanced => 'Balanced';
@@ -501,11 +507,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourDice => 'You rolled';
 
   @override
-  String get playerDiceLabel => 'Your dice';
+  String get playerDiceLabel => 'You';
 
   @override
   String aiDiceLabel(Object name) {
-    return '$name\'s dice';
+    return '$name';
   }
 
   @override
@@ -553,6 +559,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completeBidHistory => 'Bid History';
+
+  @override
+  String roundsCount(int count) {
+    return '$count rounds';
+  }
 
   @override
   String get totalGamesCount => 'Games';
@@ -827,6 +838,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String actualLabel(int count, int value) {
     return 'Actual: $count×${value}s';
   }
+
+  @override
+  String get bidShort => 'Bid';
+
+  @override
+  String get actualShort => 'Actual';
+
+  @override
+  String get inclShort => 'incl.';
 
   @override
   String quantityDisplay(int quantity) {

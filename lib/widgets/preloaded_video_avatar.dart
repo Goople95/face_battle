@@ -170,83 +170,51 @@ class _PreloadedVideoAvatarState extends State<PreloadedVideoAvatar>
     super.dispose();
   }
   
-  /// 构建静态图片后备（与视频保持完全一致的显示方式）
-  Widget _buildFallback() {
-    return Container(
-      width: widget.size,
-      height: widget.size,
-      color: Colors.black,  // 与视频容器保持一致的黑色背景
-      child: ClipRect(
-        child: Center(
-          child: SizedBox(
-            width: widget.size,
-            height: widget.size,
-            child: FittedBox(
-              fit: BoxFit.cover,  // 与视频保持一致的裁剪方式
-              child: Image.asset(
-                CharacterConfig.getAvatarPath(widget.characterId),
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: widget.size,
-                    height: widget.size,
-                    color: Colors.grey[700],
-                    child: Icon(
-                      Icons.person,
-                      size: widget.size * 0.6,
-                      color: Colors.white54,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
   
   @override
   Widget build(BuildContext context) {
-    Widget content;
-    
     // 获取当前应该显示的控制器
     final currentController = _controllers[_currentEmotion];
     
+    Widget videoContent;
     if (currentController != null && currentController.value.isInitialized) {
-      // 使用AnimatedSwitcher实现淡入淡出过渡
-      content = AnimatedSwitcher(
-        duration: Duration(milliseconds: 200),  // 缩短过渡时间，更快响应
-        switchInCurve: Curves.easeIn,
-        switchOutCurve: Curves.easeOut,
-        child: Container(
-          key: ValueKey(_currentEmotion),  // 关键：使用唯一key让AnimatedSwitcher识别变化
-          width: widget.size,
-          height: widget.size,
-          color: Colors.black,
-          child: ClipRect(
-            child: Center(
-              child: SizedBox(
-                width: widget.size,
-                height: widget.size,
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: currentController.value.size.width,
-                    height: currentController.value.size.height,
-                    child: VideoPlayer(currentController),
-                  ),
-                ),
-              ),
-            ),
-          ),
+      videoContent = FittedBox(
+        key: ValueKey(_currentEmotion),
+        fit: BoxFit.fill,
+        child: SizedBox(
+          width: 512,
+          height: 512,
+          child: VideoPlayer(currentController),
         ),
       );
     } else {
-      // 加载中或未加载完成时都显示静态图片（无loading动画）
-      content = _buildFallback();
+      videoContent = FittedBox(
+        fit: BoxFit.fill,
+        child: Image.asset(
+          CharacterConfig.getAvatarPath(widget.characterId),
+          width: 512,
+          height: 512,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: 512,
+              height: 512,
+              color: Colors.grey[700],
+              child: Icon(Icons.person, size: 300, color: Colors.white54),
+            );
+          },
+        ),
+      );
     }
     
-    // 添加边框装饰（无圆角，匹配视频方形）
+    // 使用AnimatedSwitcher实现淡入淡出
+    final content = AnimatedSwitcher(
+      duration: Duration(milliseconds: 200),
+      switchInCurve: Curves.easeIn,
+      switchOutCurve: Curves.easeOut,
+      child: videoContent,
+    );
+    
+    // 添加边框装饰
     if (widget.showBorder) {
       return Container(
         decoration: BoxDecoration(

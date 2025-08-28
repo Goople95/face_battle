@@ -67,6 +67,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   Animation<Offset>? _drinkAnimation;
   bool _showFlyingDrink = false;
   bool _isPlayerLoser = false; // 记录是玩家还是AI输了
+  
+  // 酒杯变化动画
+  late AnimationController _drinkChangeAnimationController;
+  int _animatingDrinkIndex = -1; // 正在动画的酒杯索引
+  bool _isAnimatingAIDrink = false; // 是否是AI的酒杯在动画
   String _currentAIEmotion = 'excited';  // 当前AI表情，默认excited
   
   // 获取本地化的AI名称
@@ -289,6 +294,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1500),  // 放慢动画速度
       vsync: this,
     );
+    
+    // 初始化酒杯变化动画控制器
+    _drinkChangeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
   }
   
   Future<void> _loadPlayerProfile() async {
@@ -378,7 +389,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         isPlayerTurn: isPlayerFirst,
       );
       _showDice = false; // Don't show AI dice at start
-      _aiExpression = isPlayerFirst ? 'thinking' : 'confident';
+      // 随机初始表情，更自然
+      final emotions = ['thinking', 'happy', 'confident', 'suspicious'];
+      _aiExpression = emotions[random.nextInt(emotions.length)];
       
       // 使用DialogueService获取问候语或轮到谁的提示
       final dialogueService = DialogueService();
@@ -434,16 +447,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       // Check if 1s are being called
       _currentRound!.addBid(newBid, true); // true表示是玩家叫牌
       _currentRound!.isPlayerTurn = false;
-      // Reset AI expression when player bids
-      _aiExpression = 'thinking';
+      // 玩家叫牌后，AI随机表情
+      final emotions = ['thinking', 'suspicious', 'confident'];
+      _aiExpression = emotions[math.Random().nextInt(emotions.length)];
       // 使用个性化的思考对话
       final dialogueService = DialogueService();
       final locale = Localizations.localeOf(context);
       final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
       _aiDialogue = dialogueService.getThinkingDialogue(widget.aiPersonality.id, locale: localeCode);
     });
-    // 立即更新表情映射
-    _applyAIEmotion('thinking', 0.5, false);
+    // 随机表情会在_applyAIEmotion中处理
+    _applyAIEmotion('', 0.5, false);
     
     // AI's turn
     _aiTurn();
@@ -653,13 +667,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       
       // 不在这里更新亲密度，只在NPC喝醉时更新
       
-      // 先执行酒杯飞行动画
+      // 执行酒杯飞行动画
       await _playDrinkFlyAnimation(!playerWon);
       
       // 更新饮酒状态
       if (_drinkingState != null) {
         bool needRecordNPCDrunk = false;
         bool needRecordPlayerDrunk = false;
+        
+        // 先设置动画参数（在更新状态之前）
+        if (playerWon) {
+          // AI输了，AI的下一个空杯子将变化
+          _isAnimatingAIDrink = true;
+          _animatingDrinkIndex = _drinkingState!.getAIDrinks(widget.aiPersonality.id);
+        } else {
+          // 玩家输了，玩家的下一个空杯子将变化
+          _isAnimatingAIDrink = false;
+          _animatingDrinkIndex = _drinkingState!.drinksConsumed;
+        }
         
         // 在setState中更新饮酒状态，确保界面立即刷新
         setState(() {
@@ -671,8 +696,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             final locale = Localizations.localeOf(context);
             final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
             _aiDialogue = dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
-            _aiExpression = 'thinking';  // 设置思考的表情
-            _currentAIEmotion = 'thinking';
+            // 表情会在_applyAIEmotion中随机选择thinking或suspicious
+            _applyAIEmotion('', 0.5, false);
             
             // 如果AI喝醉了，显示胜利提示
             if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
@@ -683,6 +708,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               });
             }
           } else {
+            // 设置动画参数：玩家的下一个酒杯将变化
+            _isAnimatingAIDrink = false;
+            _animatingDrinkIndex = _drinkingState!.drinksConsumed;
+            
             _drinkingState!.aiWin(widget.aiPersonality.id); // AI赢，玩家喝酒
             
             // 显示NPC赢了的对话
@@ -690,8 +719,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             final locale = Localizations.localeOf(context);
             final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
             _aiDialogue = dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
-            _aiExpression = 'happy';  // 设置开心的表情
-            _currentAIEmotion = 'happy';
+            // AI赢了，表情会在_applyAIEmotion中设置为happy
+            _applyAIEmotion('happy', 0.8, false);
             
             // 如果玩家喝醉了，显示提示
             if (_drinkingState!.isDrunk) {
@@ -703,6 +732,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             }
           }
         });
+        
+        // 触发酒杯变化动画（状态更新后）
+        if (_animatingDrinkIndex >= 0) {
+          // 立即开始动画
+          _drinkChangeAnimationController.forward().then((_) {
+            // 动画完成后重置
+            _drinkChangeAnimationController.reset();
+            setState(() {
+              _animatingDrinkIndex = -1;
+            });
+          });
+          
+          // 等待动画显示
+          await Future.delayed(const Duration(milliseconds: 800));
+        }
         
         // 在setState外处理异步操作
         if (needRecordNPCDrunk) {
@@ -1378,6 +1422,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       barrierDismissible: false,
       builder: (context) => SoberDialog(
         drinkingState: _drinkingState!,
+        fromGameScreen: true, // 标识从游戏页面调用
         onWatchAd: () {
           LoggerUtils.debug('点击观看广告醒酒按钮');
           // 使用公用方法显示广告
@@ -1450,11 +1495,41 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 应用精细的AI表情控制
+  // 应用精细的AI表情控制（带随机化）
   void _applyAIEmotion(String emotion, double probability, bool talking) {
     if (!mounted) return;
     
-    // 如果表情没有改变，直接返回，避免不必要的更新
+    // 新方案：4选1随机表情，让AI更生动
+    final random = math.Random();
+    final emotions = ['thinking', 'happy', 'confident', 'suspicious'];
+    
+    // 特定场景保留固定表情
+    bool keepOriginal = false;
+    
+    // 场景1：AI赢了（玩家输了），必须显示happy
+    if (_currentRound != null && _currentRound!.isRoundOver && _isPlayerLoser) {
+      emotion = 'happy';
+      keepOriginal = true;
+    }
+    // 场景2：AI输了，可以是thinking或suspicious
+    else if (_currentRound != null && _currentRound!.isRoundOver && !_isPlayerLoser) {
+      emotion = random.nextBool() ? 'thinking' : 'suspicious';
+      keepOriginal = true;
+    }
+    
+    // 如果不是特殊场景，完全随机
+    if (!keepOriginal) {
+      emotion = emotions[random.nextInt(emotions.length)];
+    }
+    
+    // 避免连续重复同一表情，重新随机
+    if (_currentAIEmotion == emotion && !keepOriginal) {
+      // 从剩余的3个表情中选择
+      final otherEmotions = emotions.where((e) => e != emotion).toList();
+      emotion = otherEmotions[random.nextInt(otherEmotions.length)];
+    }
+    
+    // 如果最终表情没有改变，直接返回
     if (_currentAIEmotion == emotion) return;
     
     // 即使 avatarKey 还没有准备好，我们也要更新文字显示
@@ -1757,7 +1832,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       // 计算1:1视频的高度（与宽度相同）
-                      final videoSize = constraints.maxWidth - 30; // 减去padding
+                      final videoSize = constraints.maxWidth; // 不需要再减去padding，constraints已经是padding后的宽度
                       
                       return Container(
                         height: videoSize,  // 使用1:1的高度
@@ -2137,14 +2212,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                     gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.amber.shade400,
-                                        Colors.orange.shade700,
-                                      ],
+                                      colors: _isPlayerLoser
+                                        ? [
+                                            Colors.amber.shade400,
+                                            Colors.orange.shade700,
+                                          ]
+                                        : [
+                                            Colors.red.shade300,
+                                            Colors.red.shade700,
+                                          ],
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.amber.withValues(alpha: 0.5),
+                                        color: (_isPlayerLoser ? Colors.amber : Colors.red).withValues(alpha: 0.5),
                                         blurRadius: 15,
                                         spreadRadius: 5,
                                       ),
@@ -2443,15 +2523,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                '→',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Icon(
                 winner == 'Player' ? Icons.emoji_events : Icons.sentiment_dissatisfied,
                 color: Colors.white,
@@ -2478,30 +2550,78 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ],
           ),
           const SizedBox(height: 6),
-          // Bid result in one line
+          // Bid result in one line with dice icons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 叫牌部分
               Text(
-                AppLocalizations.of(context)!.bidLabel(currentBid.quantity, currentBid.value),
+                '${AppLocalizations.of(context)!.bidShort}: ',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white60,
+                ),
+              ),
+              Text(
+                '${currentBid.quantity}×',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.white70,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 10),
+              Image.asset(
+                'assets/dice/dice-${currentBid.value}.png',
+                width: 18,
+                height: 18,
+              ),
+              const SizedBox(width: 12),
+              // 实际结果
               Text(
-                AppLocalizations.of(context)!.actualLabel(actualCount, currentBid.value),
+                '${AppLocalizations.of(context)!.actualShort}: ',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white60,
+                ),
+              ),
+              Text(
+                '$actualCount×',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: bidSuccess ? Colors.greenAccent : Colors.redAccent,
                 ),
               ),
+              Image.asset(
+                'assets/dice/dice-${currentBid.value}.png',
+                width: 18,
+                height: 18,
+              ),
               if (!_currentRound!.onesAreCalled && currentBid.value != 1) ...[
                 const SizedBox(width: 6),
                 Text(
-                  AppLocalizations.of(context)!.wildcardWithCount(_currentRound!.playerDice.values.where((v) => v == 1).length + _currentRound!.aiDice.values.where((v) => v == 1).length),
+                  '(${AppLocalizations.of(context)!.inclShort} ',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.yellow.shade200,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                Text(
+                  '${_currentRound!.playerDice.values.where((v) => v == 1).length + _currentRound!.aiDice.values.where((v) => v == 1).length}×',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.yellow.shade200,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                Image.asset(
+                  'assets/dice/dice-1.png',
+                  width: 14,
+                  height: 14,
+                ),
+                Text(
+                  ')',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.yellow.shade200,
@@ -2595,7 +2715,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const Spacer(),
               Text(
-                '${_currentRound!.bidHistory.length} rounds',
+                AppLocalizations.of(context)!.roundsCount(_currentRound!.bidHistory.length),
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.5),
@@ -2621,10 +2741,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 if (index < _currentRound!.bidBehaviors.length) {
                   final behavior = _currentRound!.bidBehaviors[index];
                   if (behavior.isBluffing) {
-                    behaviorTags.add('Bluff');
+                    behaviorTags.add(AppLocalizations.of(context)!.bluffLabel);
                   }
                   if (behavior.isAggressive) {
-                    behaviorTags.add('Aggressive');
+                    behaviorTags.add(AppLocalizations.of(context)!.aggressiveLabel);
                   }
                 }
                 
@@ -2821,14 +2941,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 List<String> behaviorTags = [];
                 if (index < _currentRound!.bidBehaviors.length) {
                   final behavior = _currentRound!.bidBehaviors[index];
-                  LoggerUtils.debug('显示标签 index=$index, isPlayerBid=$isPlayerBid, behavior: 虚张=${behavior.isBluffing}, 激进=${behavior.isAggressive}');
                   // 游戏进行中只显示玩家的行为标签，AI的行为保密
                   if (isPlayerBid) {
                     if (behavior.isBluffing) {
-                      behaviorTags.add('Bluff');
+                      behaviorTags.add(AppLocalizations.of(context)!.bluffLabel);
                     }
                     if (behavior.isAggressive) {
-                      behaviorTags.add('Aggressive');
+                      behaviorTags.add(AppLocalizations.of(context)!.aggressiveLabel);
                     }
                   }
                 }
@@ -3244,13 +3363,40 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       children: List.generate(displayCount, (index) {
         int drinkIndex = startIndex + index;
         bool isFilled = drinkIndex < drinks;
-        return Icon(
+        bool isAnimating = (_isAnimatingAIDrink == isAI) && (drinkIndex == _animatingDrinkIndex);
+        
+        Widget drinkIcon = Icon(
           Icons.local_bar,
           size: 14,
           color: isFilled 
             ? (isAI ? Colors.red.shade300 : Colors.amber.shade300)
             : Colors.grey.withValues(alpha: 0.8),
         );
+        
+        // 如果这个酒杯正在动画中，添加放大缩小效果
+        if (isAnimating) {
+          return AnimatedBuilder(
+            animation: _drinkChangeAnimationController,
+            builder: (context, child) {
+              // 使用曲线动画：先放大到2.4倍，然后恢复到1.0
+              double scale = 1.0;
+              if (_drinkChangeAnimationController.value < 0.5) {
+                // 前半段：放大
+                scale = 1.0 + (_drinkChangeAnimationController.value * 2 * 1.4);
+              } else {
+                // 后半段：缩小
+                scale = 2.4 - ((_drinkChangeAnimationController.value - 0.5) * 2 * 1.4);
+              }
+              
+              return Transform.scale(
+                scale: scale,
+                child: drinkIcon,
+              );
+            },
+          );
+        }
+        
+        return drinkIcon;
       }),
     );
   }
@@ -3639,58 +3785,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _showFlyingDrink = true;
     });
     
-    // 计算第一个空杯子的位置
-    Offset targetPosition;
-    if (_drinkingState != null) {
-      if (isPlayerLoser) {
-        // 玩家输了，计算玩家第一个空杯的位置
-        int playerDrinks = _drinkingState!.drinksConsumed;
-        int playerCapacity = 6;  // 玩家固定6杯
-        
-        // 杯子分左右两边显示，左边3个，右边3个
-        int leftCount = (playerCapacity + 1) ~/ 2;  // 左边数量（3个）
-        int nextDrinkIndex = playerDrinks;  // 下一个要填的杯子索引
-        
-        if (nextDrinkIndex < leftCount) {
-          // 在左边，从左往右填充
-          double baseX = 0.3;  // 左侧起始位置
-          double xOffset = baseX + (nextDrinkIndex * 0.03);  
-          targetPosition = Offset(xOffset, 0.82);  // 玩家骰子行位置
-        } else {
-          // 在右边，从左往右填充
-          int rightIndex = nextDrinkIndex - leftCount;
-          double baseX = 0.62;  // 右侧起始位置
-          double xOffset = baseX + (rightIndex * 0.03);
-          targetPosition = Offset(xOffset, 0.82);
-        }
-      } else {
-        // AI输了，计算AI第一个空杯的位置
-        int aiDrinks = _drinkingState!.getAIDrinks(widget.aiPersonality.id);
-        int aiCapacity = widget.aiPersonality.drinkCapacity;
-        
-        // 杯子分左右两边显示
-        int leftCount = (aiCapacity + 1) ~/ 2;  // 左边数量
-        int nextDrinkIndex = aiDrinks;  // 下一个要填的杯子索引
-        
-        if (nextDrinkIndex < leftCount) {
-          // 在左边，从左往右填充
-          double baseX = 0.3;  // 左侧起始位置
-          double xOffset = baseX + (nextDrinkIndex * 0.03);
-          targetPosition = Offset(xOffset, 0.18);  // AI骰子行位置
-        } else {
-          // 在右边，从左往右填充
-          int rightIndex = nextDrinkIndex - leftCount;
-          double baseX = 0.62;  // 右侧起始位置
-          double xOffset = baseX + (rightIndex * 0.03);
-          targetPosition = Offset(xOffset, 0.18);
-        }
-      }
-    } else {
-      // 默认位置
-      targetPosition = isPlayerLoser 
-        ? const Offset(0.2, 0.85)
-        : const Offset(0.8, 0.15);
-    }
+    // 简化处理：所有酒杯都飞到正中间
+    // 只区分垂直高度：玩家0.65, NPC 0.08
+    Offset targetPosition = isPlayerLoser 
+      ? const Offset(0.5, 0.65)  // 玩家位置：中间，高度0.65
+      : const Offset(0.5, 0.08);  // NPC位置：中间，高度0.08
     
     // 创建动画曲线 - 牌桌内部的相对位置
     _drinkAnimation = Tween<Offset>(
@@ -3716,6 +3815,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _drinkAnimationController.dispose();
+    _drinkChangeAnimationController.dispose();
     super.dispose();
   }
 }

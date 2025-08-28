@@ -831,6 +831,18 @@ abstract class AppLocalizations {
   /// **'Aggression'**
   String get aggressiveness;
 
+  /// No description provided for @bluffLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluff'**
+  String get bluffLabel;
+
+  /// No description provided for @aggressiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Aggressive'**
+  String get aggressiveLabel;
+
   /// No description provided for @challengeRate.
   ///
   /// In en, this message translates to:
@@ -858,13 +870,13 @@ abstract class AppLocalizations {
   /// No description provided for @styleHonest.
   ///
   /// In en, this message translates to:
-  /// **'Honest'**
+  /// **'Steady'**
   String get styleHonest;
 
   /// No description provided for @styleAggressive.
   ///
   /// In en, this message translates to:
-  /// **'Aggressive'**
+  /// **'Bold'**
   String get styleAggressive;
 
   /// No description provided for @styleOffensive.
@@ -876,7 +888,7 @@ abstract class AppLocalizations {
   /// No description provided for @styleConservative.
   ///
   /// In en, this message translates to:
-  /// **'Conservative'**
+  /// **'Strategic'**
   String get styleConservative;
 
   /// No description provided for @styleChallenger.
@@ -888,7 +900,7 @@ abstract class AppLocalizations {
   /// No description provided for @styleCautious.
   ///
   /// In en, this message translates to:
-  /// **'Cautious'**
+  /// **'Tactical'**
   String get styleCautious;
 
   /// No description provided for @styleBalanced.
@@ -990,13 +1002,13 @@ abstract class AppLocalizations {
   /// No description provided for @playerDiceLabel.
   ///
   /// In en, this message translates to:
-  /// **'Your dice'**
+  /// **'You'**
   String get playerDiceLabel;
 
   /// No description provided for @aiDiceLabel.
   ///
   /// In en, this message translates to:
-  /// **'{name}\'s dice'**
+  /// **'{name}'**
   String aiDiceLabel(Object name);
 
   /// No description provided for @bidCall.
@@ -1070,6 +1082,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bid History'**
   String get completeBidHistory;
+
+  /// No description provided for @roundsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rounds'**
+  String roundsCount(int count);
 
   /// No description provided for @totalGamesCount.
   ///
@@ -1513,6 +1531,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Actual: {count}×{value}s'**
   String actualLabel(int count, int value);
+
+  /// No description provided for @bidShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Bid'**
+  String get bidShort;
+
+  /// No description provided for @actualShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual'**
+  String get actualShort;
+
+  /// No description provided for @inclShort.
+  ///
+  /// In en, this message translates to:
+  /// **'incl.'**
+  String get inclShort;
 
   /// No description provided for @quantityDisplay.
   ///

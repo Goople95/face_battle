@@ -413,6 +413,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aggressiveness => '進攻性';
 
   @override
+  String get bluffLabel => '虛張';
+
+  @override
+  String get aggressiveLabel => '激進';
+
+  @override
   String get challengeRate => '質疑率';
 
   @override
@@ -425,22 +431,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get styleBluffer => '詐唱高手';
 
   @override
-  String get styleHonest => '誠實玩家';
+  String get styleHonest => '穩重型';
 
   @override
-  String get styleAggressive => '激進派';
+  String get styleAggressive => '勇猛型';
 
   @override
   String get styleOffensive => '進攻型';
 
   @override
-  String get styleConservative => '保守派';
+  String get styleConservative => '穩健派';
 
   @override
   String get styleChallenger => '挑戰者';
 
   @override
-  String get styleCautious => '謹慎型';
+  String get styleCautious => '策略型';
 
   @override
   String get styleBalanced => '均衡型';
@@ -499,11 +505,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get yourDice => '你的骰子';
 
   @override
-  String get playerDiceLabel => '你的骰子';
+  String get playerDiceLabel => '你';
 
   @override
   String aiDiceLabel(Object name) {
-    return '$name的骰子';
+    return '$name';
   }
 
   @override
@@ -551,6 +557,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get completeBidHistory => '完整叫牌記錄';
+
+  @override
+  String roundsCount(int count) {
+    return '$count 輪';
+  }
 
   @override
   String get totalGamesCount => '總局數';
@@ -821,6 +832,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String actualLabel(int count, int value) {
     return '實際：$count個$value';
   }
+
+  @override
+  String get bidShort => '叫牌';
+
+  @override
+  String get actualShort => '實際';
+
+  @override
+  String get inclShort => '含';
 
   @override
   String quantityDisplay(int quantity) {
@@ -1320,6 +1340,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aggressiveness => '進攻性';
 
   @override
+  String get bluffLabel => '虛張';
+
+  @override
+  String get aggressiveLabel => '激進';
+
+  @override
   String get challengeRate => '質疑率';
 
   @override
@@ -1332,22 +1358,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get styleBluffer => '詐唱高手';
 
   @override
-  String get styleHonest => '誠實玩家';
+  String get styleHonest => '穩重型';
 
   @override
-  String get styleAggressive => '激進派';
+  String get styleAggressive => '勇猛型';
 
   @override
   String get styleOffensive => '進攻型';
 
   @override
-  String get styleConservative => '保守派';
+  String get styleConservative => '穩健派';
 
   @override
   String get styleChallenger => '挑戰者';
 
   @override
-  String get styleCautious => '謹慎型';
+  String get styleCautious => '策略型';
 
   @override
   String get styleBalanced => '均衡型';
@@ -1406,11 +1432,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get yourDice => '你的骰子';
 
   @override
-  String get playerDiceLabel => '你的骰子';
+  String get playerDiceLabel => '你';
 
   @override
   String aiDiceLabel(Object name) {
-    return '$name的骰子';
+    return '$name';
   }
 
   @override
@@ -1458,6 +1484,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get completeBidHistory => '完整叫牌記錄';
+
+  @override
+  String roundsCount(int count) {
+    return '$count 輪';
+  }
 
   @override
   String get totalGamesCount => '總局數';
@@ -1728,6 +1759,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String actualLabel(int count, int value) {
     return '實際：$count個$value';
   }
+
+  @override
+  String get bidShort => '叫牌';
+
+  @override
+  String get actualShort => '實際';
+
+  @override
+  String get inclShort => '含';
 
   @override
   String quantityDisplay(int quantity) {

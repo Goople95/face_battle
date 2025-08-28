@@ -590,16 +590,18 @@
   "gameStyle": "Play Style",
   "bluffingTendency": "Bluff Rate",
   "aggressiveness": "Aggression",
+  "bluffLabel": "Bluff",
+  "aggressiveLabel": "Aggressive",
   "challengeRate": "Challenge Rate",
   "styleNovice": "Novice",
   "styleBluffMaster": "Bluff Master",
   "styleBluffer": "Bluffer",
-  "styleHonest": "Honest",
-  "styleAggressive": "Aggressive",
+  "styleHonest": "Steady",
+  "styleAggressive": "Bold",
   "styleOffensive": "Offensive",
-  "styleConservative": "Conservative",
+  "styleConservative": "Strategic",
   "styleChallenger": "Challenger",
-  "styleCautious": "Cautious",
+  "styleCautious": "Tactical",
   "styleBalanced": "Balanced",
   "totalGames": "{count} games",
   "win": "W",
@@ -616,8 +618,8 @@
   "languageSwitched": "Language switched to {language}",
   "instructionsDetail": "• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they're lying",
   "yourDice": "You rolled",
-  "playerDiceLabel": "Your dice",
-  "aiDiceLabel": "{name}'s dice",
+  "playerDiceLabel": "You",
+  "aiDiceLabel": "{name}",
   "bidCall": "Bid: {quantity}×{value}",
   "challengeSuccessRateDisplay": "Success chance: {rate}%",
   "bidMustBeHigher": "Bid must be higher than current",
@@ -647,6 +649,14 @@
   "aiThinking": "AI is thinking...",
   "bidHistory": "Bid History",
   "completeBidHistory": "Bid History",
+  "roundsCount": "{count} rounds",
+  "@roundsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "totalGamesCount": "Games",
   "watchAdSuccess": "✨ Watched ad, fully sober!",
   "usedSoberPotion": "Used sober potion, -2 drinks!",
@@ -781,6 +791,9 @@
       }
     }
   },
+  "bidShort": "Bid",
+  "actualShort": "Actual",
+  "inclShort": "incl.",
   "quantityDisplay": "{quantity}",
   "@quantityDisplay": {
     "placeholders": {

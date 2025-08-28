@@ -414,37 +414,43 @@ class AppLocalizationsId extends AppLocalizations {
   String get aggressiveness => 'Agresivitas';
 
   @override
+  String get bluffLabel => 'Gertakan';
+
+  @override
+  String get aggressiveLabel => 'Agresif';
+
+  @override
   String get challengeRate => 'Tingkat Tantangan';
 
   @override
-  String get styleNovice => 'Novice';
+  String get styleNovice => 'Pemula';
 
   @override
-  String get styleBluffMaster => 'Bluff Master';
+  String get styleBluffMaster => 'Master Gertakan';
 
   @override
-  String get styleBluffer => 'Bluffer';
+  String get styleBluffer => 'Penggertak';
 
   @override
-  String get styleHonest => 'Honest';
+  String get styleHonest => 'Stabil';
 
   @override
-  String get styleAggressive => 'Aggressive';
+  String get styleAggressive => 'Berani';
 
   @override
-  String get styleOffensive => 'Offensive';
+  String get styleOffensive => 'Ofensif';
 
   @override
-  String get styleConservative => 'Conservative';
+  String get styleConservative => 'Strategis';
 
   @override
-  String get styleChallenger => 'Challenger';
+  String get styleChallenger => 'Penantang';
 
   @override
-  String get styleCautious => 'Cautious';
+  String get styleCautious => 'Taktis';
 
   @override
-  String get styleBalanced => 'Balanced';
+  String get styleBalanced => 'Seimbang';
 
   @override
   String totalGames(Object count) {
@@ -501,11 +507,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get yourDice => 'Dadu Anda';
 
   @override
-  String get playerDiceLabel => 'Dadu Anda';
+  String get playerDiceLabel => 'Anda';
 
   @override
   String aiDiceLabel(Object name) {
-    return 'Dadu $name';
+    return '$name';
   }
 
   @override
@@ -553,6 +559,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get completeBidHistory => 'Riwayat Lengkap';
+
+  @override
+  String roundsCount(int count) {
+    return '$count ronde';
+  }
 
   @override
   String get totalGamesCount => 'Total Permainan';
@@ -827,6 +838,15 @@ class AppLocalizationsId extends AppLocalizations {
   String actualLabel(int count, int value) {
     return 'Aktual: $count $value';
   }
+
+  @override
+  String get bidShort => 'Taruhan';
+
+  @override
+  String get actualShort => 'Aktual';
+
+  @override
+  String get inclShort => 'tmsk.';
 
   @override
   String quantityDisplay(int quantity) {

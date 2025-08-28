@@ -415,37 +415,43 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aggressiveness => 'Agressividade';
 
   @override
+  String get bluffLabel => 'Blefe';
+
+  @override
+  String get aggressiveLabel => 'Agressivo';
+
+  @override
   String get challengeRate => 'Taxa de Desafio';
 
   @override
-  String get styleNovice => 'Novice';
+  String get styleNovice => 'Iniciante';
 
   @override
-  String get styleBluffMaster => 'Bluff Master';
+  String get styleBluffMaster => 'Mestre do Blefe';
 
   @override
-  String get styleBluffer => 'Bluffer';
+  String get styleBluffer => 'Blefador';
 
   @override
-  String get styleHonest => 'Honest';
+  String get styleHonest => 'Estável';
 
   @override
-  String get styleAggressive => 'Aggressive';
+  String get styleAggressive => 'Corajoso';
 
   @override
-  String get styleOffensive => 'Offensive';
+  String get styleOffensive => 'Ofensivo';
 
   @override
-  String get styleConservative => 'Conservative';
+  String get styleConservative => 'Estratégico';
 
   @override
-  String get styleChallenger => 'Challenger';
+  String get styleChallenger => 'Desafiador';
 
   @override
-  String get styleCautious => 'Cautious';
+  String get styleCautious => 'Tático';
 
   @override
-  String get styleBalanced => 'Balanced';
+  String get styleBalanced => 'Equilibrado';
 
   @override
   String totalGames(Object count) {
@@ -488,7 +494,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ela está bêbada demais para jogar\nAjude-a a ficar sóbria';
 
   @override
-  String get watchAdToSober => 'Assistir Anúncio';
+  String get watchAdToSober => 'Ver Anúncio';
 
   @override
   String languageSwitched(Object language) {
@@ -502,11 +508,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get yourDice => 'Seus Dados';
 
   @override
-  String get playerDiceLabel => 'Seus dados';
+  String get playerDiceLabel => 'Você';
 
   @override
   String aiDiceLabel(Object name) {
-    return 'Dados de $name';
+    return '$name';
   }
 
   @override
@@ -554,6 +560,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get completeBidHistory => 'Histórico Completo';
+
+  @override
+  String roundsCount(int count) {
+    return '$count rodadas';
+  }
 
   @override
   String get totalGamesCount => 'Total de Jogos';
@@ -830,6 +841,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String actualLabel(int count, int value) {
     return 'Real: $count $value';
   }
+
+  @override
+  String get bidShort => 'Aposta';
+
+  @override
+  String get actualShort => 'Real';
+
+  @override
+  String get inclShort => 'incl.';
 
   @override
   String quantityDisplay(int quantity) {
