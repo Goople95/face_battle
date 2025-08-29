@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
-import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
+import '../models/ai_personality.dart';
 import 'dart:math' as math;
 
-/// 自动轮播视频头像组件 - 每个视频播放完后自动切换到下一个随机视频
+/// 自动轮播视频头像组件 - 视频播放完后自动切换到下一个随机视频
 class AutoPlayVideoAvatar extends StatefulWidget {
   final String characterId;
   final double size;
   final bool showBorder;
+  final AIPersonality? personality;  // 传入personality以获取videoCount
 
   const AutoPlayVideoAvatar({
     super.key,
     required this.characterId,
     this.size = 120,
     this.showBorder = true,
+    this.personality,
   });
 
   @override
@@ -24,44 +25,44 @@ class AutoPlayVideoAvatar extends StatefulWidget {
 
 class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   VideoPlayerController? _controller;
-  String _currentEmotion = 'thinking';
-  bool _isLoading = true;
+  int _currentVideoIndex = 1;
+  bool _isInitialized = false;
   final _random = math.Random();
-  
-  // 4种核心表情
-  final List<String> _emotions = ['thinking', 'happy', 'confident', 'suspicious'];
   
   @override
   void initState() {
     super.initState();
-    // 随机选择初始表情
-    _currentEmotion = _emotions[_random.nextInt(_emotions.length)];
     _loadAndPlayVideo();
   }
   
   /// 加载并播放视频
   Future<void> _loadAndPlayVideo() async {
-    try {
-      // 先释放旧控制器
-      if (_controller != null) {
-        await _controller!.pause();
-        await _controller!.dispose();
-        _controller = null;
+    // 释放旧控制器
+    if (_controller != null) {
+      await _controller!.pause();
+      await _controller!.dispose();
+      _controller = null;
+      if (mounted) {
+        setState(() {
+          _isInitialized = false;
+        });
       }
+    }
+    
+    try {
+      // 随机选择视频编号
+      final videoCount = widget.personality?.videoCount ?? 4;
+      _currentVideoIndex = _random.nextInt(videoCount) + 1;
+      final fileName = '$_currentVideoIndex.mp4';
       
-      if (!mounted) return;
-      
-      setState(() {
-        _isLoading = true;
-      });
-      
-      // 构建视频URL（直接使用网络资源）
+      // 构建网络视频URL
       final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                        'npcs%2F${widget.characterId}%2F$_currentEmotion.mp4?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+                        'npcs%2F${widget.characterId}%2F$fileName?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
       
-      LoggerUtils.info('播放视频: $_currentEmotion');
+      LoggerUtils.info('播放视频: ${widget.characterId}/$fileName');
       
-      final newController = VideoPlayerController.networkUrl(
+      // 创建新控制器
+      _controller = VideoPlayerController.networkUrl(
         Uri.parse(networkUrl),
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
@@ -69,84 +70,79 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
         ),
       );
       
-      // 初始化
-      await newController.initialize();
-      await newController.setVolume(0);  // 静音
+      // 初始化并播放
+      await _controller!.initialize();
+      await _controller!.setVolume(0);
       
-      // 监听视频结束事件
-      newController.addListener(() {
-        if (newController.value.position >= newController.value.duration && 
-            newController.value.duration.inSeconds > 0) {
-          // 视频播放结束，切换到下一个随机视频
-          _playNextVideo();
+      // 添加监听器，视频播放完后自动播放下一个
+      _controller!.addListener(() {
+        if (!mounted) return;
+        
+        final value = _controller!.value;
+        if (value.position >= value.duration && value.duration > Duration.zero) {
+          // 视频播放完成，播放下一个随机视频
+          _loadAndPlayVideo();
         }
       });
       
-      if (!mounted) {
-        await newController.dispose();
-        return;
-      }
-      
-      setState(() {
-        _controller = newController;
-        _isLoading = false;
-      });
-      
-      // 开始播放
       await _controller!.play();
       
-    } catch (e) {
-      LoggerUtils.error('加载视频失败: $e');
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isInitialized = true;
         });
       }
-      // 出错后3秒重试
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          _playNextVideo();
-        }
-      });
+    } catch (e) {
+      LoggerUtils.error('视频加载失败: $e');
+      
+      if (mounted) {
+        setState(() {
+          _isInitialized = false;
+        });
+      }
     }
-  }
-  
-  /// 播放下一个随机视频
-  void _playNextVideo() {
-    if (!mounted) return;
-    
-    // 选择下一个随机表情（避免重复）
-    final otherEmotions = _emotions.where((e) => e != _currentEmotion).toList();
-    _currentEmotion = otherEmotions[_random.nextInt(otherEmotions.length)];
-    
-    // 加载新视频
-    _loadAndPlayVideo();
   }
   
   @override
   void dispose() {
-    _controller?.removeListener(() {});
-    _controller?.pause();
     _controller?.dispose();
     super.dispose();
   }
   
-  /// 构建后备图片
+  /// 构建后备静态图片
   Widget _buildFallbackImage() {
+    // 使用新的命名格式: {npcId}.jpg
     final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                      'npcs%2F${widget.characterId}%2F1.png?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+                      'npcs%2F${widget.characterId}%2F${widget.characterId}.jpg?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
     
     return Image.network(
       networkUrl,
-      width: 512,
-      height: 512,
+      width: widget.size,
+      height: widget.size,
       fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: SizedBox(
+            width: widget.size * 0.3,
+            height: widget.size * 0.3,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withValues(alpha: 0.7)),
+            ),
+          ),
+        );
+      },
       errorBuilder: (context, error, stackTrace) {
         return Container(
-          width: 512,
-          height: 512,
-          color: Colors.grey[700],
-          child: Icon(Icons.person, size: 300, color: Colors.white54),
+          width: widget.size,
+          height: widget.size,
+          color: Colors.grey[800],
+          child: Icon(
+            Icons.person,
+            size: widget.size * 0.6,
+            color: Colors.white30,
+          ),
         );
       },
     );
@@ -156,53 +152,53 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   Widget build(BuildContext context) {
     Widget content;
     
-    if (_controller != null && _controller!.value.isInitialized) {
+    if (_isInitialized && _controller != null && _controller!.value.isInitialized) {
       // 显示视频
-      content = FittedBox(
-        fit: BoxFit.fill,
+      content = ClipRect(
         child: SizedBox(
-          width: 512,
-          height: 512,
-          child: VideoPlayer(_controller!),
+          width: widget.size,
+          height: widget.size,
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: _controller!.value.size.width,
+              height: _controller!.value.size.height,
+              child: VideoPlayer(_controller!),
+            ),
+          ),
         ),
       );
     } else {
       // 显示后备图片
-      content = FittedBox(
-        fit: BoxFit.fill,
-        child: _buildFallbackImage(),
-      );
+      content = _buildFallbackImage();
     }
     
-    // 使用ClipRect确保不会超出边界
-    final clippedContent = ClipRect(
-      child: SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: content,
-      ),
-    );
-    
-    // 添加边框
+    // 添加边框装饰
     if (widget.showBorder) {
       return Container(
+        width: widget.size,
+        height: widget.size,
         decoration: BoxDecoration(
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
+          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: clippedContent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: content,
+        ),
       );
     }
     
-    return clippedContent;
+    return content;
   }
 }

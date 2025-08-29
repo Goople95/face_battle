@@ -323,6 +323,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _startNewRound() {
     final random = math.Random();
     
+    // 清空表情队列，停止循环播放
+    _emotionQueue.clear();
+    _currentEmotionIndex = 0;
     
     // Reset bid selector to minimum value 2×2
     setState(() {
@@ -384,6 +387,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       );
       _showDice = false; // Don't show AI dice at start
       // 随机初始表情，更自然
+      final emotions = ['thinking', 'happy', 'confident', 'suspicious'];
+      _aiExpression = emotions[random.nextInt(emotions.length)];
       
       // 使用DialogueService获取问候语或轮到谁的提示
       final dialogueService = DialogueService();
@@ -399,7 +404,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           : dialogueService.getStrategyDialogue(widget.aiPersonality.id, 'pressure_play', locale: localeCode);
       }
       
-      // 表情逻辑已移除，视频随机播放
+      // 只在表情真正改变时才更新视频
+      if (_currentAIEmotion != _aiExpression) {
+        _currentAIEmotion = _aiExpression;
+      }
     });
     
     // If AI goes first
@@ -437,12 +445,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _currentRound!.addBid(newBid, true); // true表示是玩家叫牌
       _currentRound!.isPlayerTurn = false;
       // 玩家叫牌后，AI随机表情
+      final emotions = ['thinking', 'suspicious', 'confident'];
+      _aiExpression = emotions[math.Random().nextInt(emotions.length)];
       // 使用个性化的思考对话
       final dialogueService = DialogueService();
       final locale = Localizations.localeOf(context);
       final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
       _aiDialogue = dialogueService.getThinkingDialogue(widget.aiPersonality.id, locale: localeCode);
     });
+    // 随机表情会在_applyAIEmotion中处理
+    _applyAIEmotion('', 0.5, false);
     
     // AI's turn
     _aiTurn();
@@ -520,7 +532,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       // 使用Gemini或本地生成的表情
       setState(() {
         _aiDialogue = aiDialogue;
+        _emotionQueue = aiEmotions; // 设置情绪队列
+        _currentEmotionIndex = 0;
       });
+      
+      // 开始播放情绪序列
+      _playEmotionSequence(decision.probability, true);
       
       // Wait a bit to show the dialogue
       await Future.delayed(const Duration(seconds: 1));
@@ -587,7 +604,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         }
         _currentRound!.isPlayerTurn = true;
         _aiDialogue = aiDialogue;
+        _emotionQueue = aiEmotions; // 设置情绪队列
+        _currentEmotionIndex = 0;
       });
+      
+      // 开始播放情绪序列
+      _playEmotionSequence(wasBluffing ? 0.7 : 0.3, true);
       
       // Clear dialogue after a few seconds
       Future.delayed(const Duration(seconds: 3), () {
@@ -671,6 +693,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             final locale = Localizations.localeOf(context);
             final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
             _aiDialogue = dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
+            // 表情会在_applyAIEmotion中随机选择thinking或suspicious
+            _applyAIEmotion('', 0.5, false);
             
             // 如果AI喝醉了，显示胜利提示
             if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
@@ -692,6 +716,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             final locale = Localizations.localeOf(context);
             final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
             _aiDialogue = dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
+            // AI赢了，表情会在_applyAIEmotion中设置为happy
+            _applyAIEmotion('happy', 0.8, false);
             
             // 如果玩家喝醉了，显示提示
             if (_drinkingState!.isDrunk) {
@@ -1169,6 +1195,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // 显示AI醉倒对话框 - 使用新的胜利动画
   void _showAIDrunkDialog() {
     // 停止表情序列播放，清理资源
+    _emotionQueue.clear();
     
     // 延迟一下，让视频资源有时间释放
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -1435,6 +1462,293 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
   
+  // 播放情绪序列
+  void _playEmotionSequence(double probability, bool talking) async {
+    if (_emotionQueue.isEmpty) return;
+    
+    // 播放第一个情绪
+    _currentEmotionIndex = 0;
+    _applyAIEmotion(_emotionQueue[0], probability, talking);
+    
+    // 如果有多个情绪，依次播放
+    if (_emotionQueue.length > 1) {
+      for (int i = 1; i < _emotionQueue.length; i++) {
+        await Future.delayed(const Duration(seconds: 5)); // 每个视频播放5秒
+        if (mounted && i < _emotionQueue.length) {
+          _currentEmotionIndex = i;
+          _applyAIEmotion(_emotionQueue[i], probability, false);
+        }
+      }
+      
+      // 播放完所有情绪后，继续循环播放
+      while (mounted && _emotionQueue.isNotEmpty) {
+        // 增加等待时间，减少切换频率
+        await Future.delayed(const Duration(seconds: 8)); // 从5秒改为8秒
+        if (mounted) {
+          _currentEmotionIndex = (_currentEmotionIndex + 1) % _emotionQueue.length;
+          _applyAIEmotion(_emotionQueue[_currentEmotionIndex], probability, false);
+        }
+      }
+    }
+  }
+
+  // 应用精细的AI表情控制（带随机化）
+  void _applyAIEmotion(String emotion, double probability, bool talking) {
+    if (!mounted) return;
+    
+    // 防抖：避免频繁切换表情导致视频缓冲区溢出
+    final now = DateTime.now();
+    if (now.difference(_lastEmotionChange).inSeconds < 3) {
+      // 3秒内不切换表情
+      return;
+    }
+    
+    // 新方案：4选1随机表情，让AI更生动
+    final random = math.Random();
+    final emotions = ['thinking', 'happy', 'confident', 'suspicious'];
+    
+    // 完全随机化表情，让游戏更有变化性
+    emotion = emotions[random.nextInt(emotions.length)];
+    
+    // 避免连续重复同一表情，增加变化
+    if (_currentAIEmotion == emotion) {
+      // 从剩余的3个表情中选择
+      final otherEmotions = emotions.where((e) => e != emotion).toList();
+      emotion = otherEmotions[random.nextInt(otherEmotions.length)];
+    }
+    
+    // 如果最终表情没有改变，直接返回
+    if (_currentAIEmotion == emotion) return;
+    
+    // 即使 avatarKey 还没有准备好，我们也要更新文字显示
+    
+    // 表情中文映射 - reserved for future use
+    /* Map<String, String> emotionChinese = {
+      'confident': '自信',
+      'nervous': '紧张',
+      'excited': '兴奋',
+      'angry': '愤怒',
+      'thinking': '思考',
+      'happy': '开心',
+      'worried': '担忧',
+      'smirk': '得意',
+      'surprised': '惊讶',
+      'disappointed': '失望',
+      'suspicious': '怀疑',
+      'proud': '骄傲',
+      'relaxed': '轻松',
+      'anxious': '焦虑',
+      'cunning': '狡黠',
+      'frustrated': '沮丧',
+      'determined': '坚定',
+      'playful': '调皮',
+      'neutral': '平静',
+      'contemplating': '沉思',
+      // 处理 API 返回的中文表情
+      '思考/沉思': '思考/沉思',
+      '开心/得意': '开心/得意',
+      '兴奋/自信': '兴奋/自信',
+      '担心/紧张': '担心/紧张',
+      '思考': '思考',
+      '怀疑': '怀疑',
+      '自信': '自信',
+      '紧张': '紧张',
+      '生气': '生气',
+      '兴奋': '兴奋',
+      '担心': '担心',
+      '惊讶': '惊讶',
+      '失望': '失望',
+      '得意': '得意',
+      '沉思': '沉思',
+    }; */
+    
+    // 视频文件映射（与 ai_video_avatar.dart 保持一致）- reserved for future use
+    /* Map<String, String> emotionFileMapping = {
+      'thinking': 'thinking.mp4',
+      'happy': 'happy.mp4',
+      'confident': 'confident.mp4',
+      'nervous': 'nervous.mp4',
+      'angry': 'angry.mp4',
+      'excited': 'excited.mp4',
+      'worried': 'worried.mp4',
+      'surprised': 'suprised.mp4',  // 注意拼写
+      'disappointed': 'disappointed.mp4',
+      'suspicious': 'suspicious.mp4',
+      // 其他表情映射到最接近的视频
+      'smirk': 'confident.mp4',
+      'proud': 'confident.mp4',
+      'relaxed': 'happy.mp4',
+      'anxious': 'nervous.mp4',
+      'cunning': 'suspicious.mp4',
+      'frustrated': 'angry.mp4',
+      'determined': 'confident.mp4',
+      'playful': 'happy.mp4',
+      'neutral': 'thinking.mp4',
+      'contemplating': 'thinking.mp4',
+      // 处理 API 返回的中文表情
+      '思考/沉思': 'thinking.mp4',
+      '开心/得意': 'happy.mp4',
+      '兴奋/自信': 'excited.mp4',
+      '担心/紧张': 'worried.mp4',
+      '思考': 'thinking.mp4',
+      '怀疑': 'suspicious.mp4',
+      '自信': 'confident.mp4',
+      '紧张': 'nervous.mp4',
+      '生气': 'angry.mp4',
+      '兴奋': 'excited.mp4',
+      '担心': 'worried.mp4',
+      '惊讶': 'suprised.mp4',
+      '失望': 'disappointed.mp4',
+      '得意': 'happy.mp4',
+      '沉思': 'thinking.mp4',
+    }; */
+    
+    // 更新视频表情
+    setState(() {
+      _currentAIEmotion = emotion;
+      _lastEmotionChange = DateTime.now();  // 记录表情改变时间
+    });
+    
+    // 根据情绪和概率计算精细参数
+    double valence = 0.0;
+    double arousal = 0.3;
+    double confidence = 0.5;
+    double bluff = 0.0;
+    String blink = 'none';
+    
+    // 根据概率调整基础参数
+    if (probability < 0.2) {
+      // 极低概率 - 很紧张或强烈诈唬
+      arousal = 0.85;
+      confidence = 0.2;
+      bluff = 0.8;
+    } else if (probability < 0.4) {
+      // 低概率 - 紧张或诈唬
+      arousal = 0.7;
+      confidence = 0.35;
+      bluff = 0.6;
+    } else if (probability > 0.8) {
+      // 极高概率 - 非常自信
+      arousal = 0.15;
+      confidence = 0.9;
+    } else if (probability > 0.6) {
+      // 高概率 - 自信
+      arousal = 0.25;
+      confidence = 0.75;
+    }
+    
+    // 根据具体情绪调整
+    switch (emotion) {
+      case 'confident':
+        valence = 0.3;
+        confidence = 0.9;
+        arousal = 0.2;
+        break;
+      case 'nervous':
+        valence = -0.2;
+        arousal = 0.8;
+        confidence = 0.3;
+        blink = 'fast';
+        break;
+      case 'angry':
+        valence = -0.7;
+        arousal = 0.9;
+        confidence = 0.6;
+        break;
+      case 'thinking':
+        valence = 0.0;
+        arousal = 0.4;
+        confidence = 0.5;
+        break;
+      case 'happy':
+        valence = 0.7;
+        arousal = 0.4;
+        confidence = 0.7;
+        break;
+      case 'worried':
+        valence = -0.3;
+        arousal = 0.6;
+        confidence = 0.2;
+        break;
+      case 'smirk':
+        valence = 0.4;
+        arousal = 0.3;
+        confidence = 0.8;
+        bluff = 0.6;
+        break;
+      case 'surprised':
+        valence = 0.1;
+        arousal = 0.8;
+        confidence = 0.4;
+        blink = 'fast';
+        break;
+      case 'disappointed':
+        valence = -0.5;
+        arousal = 0.3;
+        confidence = 0.3;
+        break;
+      case 'suspicious':
+        valence = -0.1;
+        arousal = 0.5;
+        confidence = 0.6;
+        bluff = 0.4;
+        break;
+      case 'proud':
+        valence = 0.6;
+        arousal = 0.3;
+        confidence = 0.95;
+        break;
+      case 'relaxed':
+        valence = 0.4;
+        arousal = 0.1;
+        confidence = 0.7;
+        break;
+      case 'anxious':
+        valence = -0.4;
+        arousal = 0.85;
+        confidence = 0.25;
+        blink = 'fast';
+        break;
+      case 'cunning':
+        valence = 0.3;
+        arousal = 0.4;
+        confidence = 0.7;
+        bluff = 0.8;
+        break;
+      case 'frustrated':
+        valence = -0.6;
+        arousal = 0.7;
+        confidence = 0.4;
+        break;
+      case 'determined':
+        valence = 0.2;
+        arousal = 0.6;
+        confidence = 0.85;
+        break;
+      case 'playful':
+        valence = 0.6;
+        arousal = 0.5;
+        confidence = 0.6;
+        bluff = 0.5;
+        break;
+      case 'contemplating':
+        valence = 0.0;
+        arousal = 0.35;
+        confidence = 0.55;
+        break;
+    }
+    
+    // 应用到头像
+    _avatarKey.currentState?.applyEmotion(
+      valence: valence,
+      arousal: arousal,
+      confidence: confidence,
+      bluff: bluff,
+      blink: blink,
+      talking: talking,
+      emotion: emotion,
+    );
+  }
   
   // Helper method to get dice image widget
   Widget _getDiceImage(int value, {double size = 28}) {
@@ -1526,7 +1840,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   characterId: widget.aiPersonality.id,
                                   size: videoSize,  // 使用正方形尺寸
                                   showBorder: false,
-                                  personality: widget.aiPersonality,  // 传递personality以获取videoCount
                                 ),
                               ),
                           // 左上角 - 返回主页按钮（粉色主题）

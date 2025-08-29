@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
-import '../config/character_config.dart';
+import 'dart:math' as math;
 import '../utils/logger_utils.dart';
+import '../models/ai_personality.dart';
 
-/// 简单网络视频头像组件 - 只加载当前需要的视频，避免内存问题
+/// 极简网络视频头像组件 - 随机播放数字编号的视频
 class SimpleNetworkVideoAvatar extends StatefulWidget {
   final String characterId;
-  final String emotion;
+  final String emotion;  // 现在只用于'drunk'，其他情况随机播放
   final double size;
   final bool showBorder;
+  final AIPersonality? personality;  // 传入personality以获取videoCount
 
   const SimpleNetworkVideoAvatar({
     super.key,
     required this.characterId,
-    this.emotion = 'thinking',
+    this.emotion = '',
     this.size = 120,
     this.showBorder = true,
+    this.personality,
   });
 
   @override
@@ -25,175 +27,111 @@ class SimpleNetworkVideoAvatar extends StatefulWidget {
 
 class _SimpleNetworkVideoAvatarState extends State<SimpleNetworkVideoAvatar> {
   VideoPlayerController? _controller;
-  bool _isLoading = true;
-  String _currentEmotion = 'thinking';
-  bool _isDisposing = false;  // 防止dispose期间加载新视频
-  DateTime _lastLoadTime = DateTime.now();  // 记录上次加载时间
-  static final Map<String, DateTime> _globalLastLoadTime = {};  // 全局防抖
-  static VideoPlayerController? _globalController;  // 全局唯一控制器
-  static String? _globalControllerKey;  // 当前控制器的视频key
-  static int _loadFailures = 0;  // 记录加载失败次数
-  static bool _useStaticOnly = false;  // 强制使用静态图片
-  static DateTime? _lastVideoLoadTime;  // 上次视频加载完成时间
+  bool _isInitialized = false;
+  String _currentVideoFile = '';
+  int _currentVideoIndex = 1;
+  final _random = math.Random();
   
   @override
   void initState() {
     super.initState();
-    _currentEmotion = widget.emotion;
-    _loadVideo(widget.emotion);
+    _loadRandomVideo();
   }
   
   @override
   void didUpdateWidget(SimpleNetworkVideoAvatar oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // 表情或角色改变时加载新视频
-    if (oldWidget.emotion != widget.emotion || 
-        oldWidget.characterId != widget.characterId) {
-      _currentEmotion = widget.emotion;
-      _loadVideo(widget.emotion);
+    // 如果角色改变或emotion从/到'drunk'改变，重新加载
+    if (oldWidget.characterId != widget.characterId ||
+        (widget.emotion == 'drunk' && oldWidget.emotion != 'drunk') ||
+        (widget.emotion != 'drunk' && oldWidget.emotion == 'drunk')) {
+      _loadRandomVideo();
     }
   }
   
-  /// 加载单个视频 - 只保持一个视频在内存中
-  Future<void> _loadVideo(String emotion) async {
-    // 如果强制使用静态图片模式，直接返回
-    if (_useStaticOnly) {
-      setState(() {
-        _isLoading = false;
-      });
+  /// 加载并播放随机视频
+  Future<void> _loadRandomVideo() async {
+    // 决定要加载的文件
+    String fileName;
+    if (widget.emotion == 'drunk') {
+      fileName = 'drunk.mp4';
+    } else {
+      // 随机选择一个视频编号
+      final videoCount = widget.personality?.videoCount ?? 4;
+      _currentVideoIndex = _random.nextInt(videoCount) + 1;
+      fileName = '$_currentVideoIndex.mp4';
+    }
+    
+    // 避免重复加载同一视频
+    if (_currentVideoFile == '${widget.characterId}_$fileName' && _isInitialized) {
       return;
     }
     
-    // 如果正在释放中，不加载新视频
-    if (_isDisposing) return;
-    
-    // 全局防抖：避免任何组件3秒内重复加载同一视频
-    final videoKey = '${widget.characterId}_$emotion';
-    final lastLoad = _globalLastLoadTime[videoKey];
-    if (lastLoad != null && DateTime.now().difference(lastLoad).inSeconds < 3) {
-      LoggerUtils.debug('防抖：跳过加载 $videoKey');
-      return;
-    }
-    
-    // 组件级防抖：避免本组件频繁加载
-    if (DateTime.now().difference(_lastLoadTime).inMilliseconds < 500) {
-      LoggerUtils.debug('组件防抖：跳过加载');
-      return;
-    }
-    
-    // 视频播放时间防护：确保当前视频至少播放5秒后才切换
-    if (_lastVideoLoadTime != null) {
-      final timeSinceLoad = DateTime.now().difference(_lastVideoLoadTime!);
-      if (timeSinceLoad.inSeconds < 5) {
-        LoggerUtils.debug('视频播放未满5秒，跳过切换 (已播放${timeSinceLoad.inSeconds}秒)');
-        return;
+    // 释放旧控制器
+    if (_controller != null) {
+      await _controller!.pause();
+      await _controller!.dispose();
+      _controller = null;
+      if (mounted) {
+        setState(() {
+          _isInitialized = false;
+        });
       }
     }
-    
-    // 如果失败次数过多，切换到静态图片模式
-    if (_loadFailures >= 3) {
-      LoggerUtils.warning('视频加载失败过多，切换到静态图片模式');
-      _useStaticOnly = true;
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
-    
-    _lastLoadTime = DateTime.now();
-    _globalLastLoadTime[videoKey] = DateTime.now();
-    
-    // 使用全局唯一控制器策略
     
     try {
-      // 如果已经有全局控制器且是同一个视频，复用它
-      if (_globalController != null && _globalControllerKey == videoKey) {
-        setState(() {
-          _controller = _globalController;
-          _isLoading = false;
+      // 构建网络视频URL
+      final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
+                        'npcs%2F${widget.characterId}%2F$fileName?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+      
+      LoggerUtils.info('播放视频: ${widget.characterId}/$fileName');
+      
+      // 创建新控制器
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(networkUrl),
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+      );
+      
+      // 初始化视频
+      await _controller!.initialize();
+      await _controller!.setVolume(0);
+      
+      // 根据视频类型设置播放模式
+      if (widget.emotion == 'drunk') {
+        // 醉酒视频循环播放
+        await _controller!.setLooping(true);
+      } else {
+        // 普通视频播放完后加载下一个
+        _controller!.addListener(() {
+          if (!mounted) return;
+          
+          final value = _controller!.value;
+          if (value.position >= value.duration && value.duration > Duration.zero) {
+            // 视频播放完成，加载下一个随机视频
+            _loadRandomVideo();
+          }
         });
-        return;
       }
       
-      // 释放旧的全局控制器
-      if (_globalController != null) {
-        final oldController = _globalController;
-        _globalController = null;
-        _globalControllerKey = null;
-        await oldController!.pause();
-        await oldController.dispose();
-        // 等待一下让系统释放资源
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
+      await _controller!.play();
       
-      // 释放本地控制器（如果有）
-      if (_controller != null && _controller != _globalController) {
-        await _controller!.pause();
-        await _controller!.dispose();
-        _controller = null;
-      }
-      
-      setState(() {
-        _isLoading = true;
-      });
-      
-      // 先尝试本地资源
-      final localPath = CharacterConfig.getVideoPath(widget.characterId, emotion);
-      VideoPlayerController? newController;
-      
-      try {
-        // 检查本地资源是否存在
-        await rootBundle.load(localPath);
-        newController = VideoPlayerController.asset(localPath);
-        LoggerUtils.debug('使用本地视频: $localPath');
-      } catch (e) {
-        // 本地资源不存在，使用网络资源
-        final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                          'npcs%2F${widget.characterId}%2F$emotion.mp4?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
-        newController = VideoPlayerController.networkUrl(
-          Uri.parse(networkUrl),
-          videoPlayerOptions: VideoPlayerOptions(
-            mixWithOthers: true,
-            allowBackgroundPlayback: false,
-          ),
-        );
-        LoggerUtils.info('使用网络视频: $networkUrl');
-      }
-      
-      // 初始化并播放
-      await newController.initialize();
-      await newController.setLooping(true);
-      await newController.setVolume(0);
-      await newController.play();
+      _currentVideoFile = '${widget.characterId}_$fileName';
       
       if (mounted) {
-        // 设置为全局控制器
-        _globalController = newController;
-        _globalControllerKey = videoKey;
-        _lastVideoLoadTime = DateTime.now();  // 记录视频加载时间
-        
         setState(() {
-          _controller = newController;
-          _isLoading = false;
+          _isInitialized = true;
         });
-      } else {
-        // 如果组件已卸载，释放控制器
-        await newController.dispose();
       }
     } catch (e) {
-      LoggerUtils.error('加载视频失败 $emotion: $e');
-      _loadFailures++;
-      
-      // 如果失败次数达到阈值，切换到静态模式
-      if (_loadFailures >= 3) {
-        LoggerUtils.warning('切换到静态图片模式');
-        _useStaticOnly = true;
-      }
-      
+      LoggerUtils.error('视频加载失败 $fileName: $e');
+      // 加载失败时显示静态图片作为后备
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isInitialized = false;
         });
       }
     }
@@ -201,41 +139,44 @@ class _SimpleNetworkVideoAvatarState extends State<SimpleNetworkVideoAvatar> {
   
   @override
   void dispose() {
-    _isDisposing = true;
-    // 不释放全局控制器，让其他组件可以复用
-    // 只是断开本组件与控制器的连接
-    _controller = null;
+    _controller?.dispose();
     super.dispose();
   }
   
-  /// 构建后备图片
+  /// 构建后备静态图片
   Widget _buildFallbackImage() {
-    // 直接使用网络图片作为后备
+    // 使用新的命名格式: {npcId}.jpg
     final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                      'npcs%2F${widget.characterId}%2F1.png?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+                      'npcs%2F${widget.characterId}%2F${widget.characterId}.jpg?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
     
     return Image.network(
       networkUrl,
-      width: 512,
-      height: 512,
+      width: widget.size,
+      height: widget.size,
       fit: BoxFit.cover,
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return Center(
-          child: CircularProgressIndicator(
-            value: loadingProgress.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                : null,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          child: SizedBox(
+            width: widget.size * 0.3,
+            height: widget.size * 0.3,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withValues(alpha: 0.7)),
+            ),
           ),
         );
       },
       errorBuilder: (context, error, stackTrace) {
         return Container(
-          width: 512,
-          height: 512,
-          color: Colors.grey[700],
-          child: Icon(Icons.person, size: 300, color: Colors.white54),
+          width: widget.size,
+          height: widget.size,
+          color: Colors.grey[800],
+          child: Icon(
+            Icons.person,
+            size: widget.size * 0.6,
+            color: Colors.white30,
+          ),
         );
       },
     );
@@ -245,54 +186,54 @@ class _SimpleNetworkVideoAvatarState extends State<SimpleNetworkVideoAvatar> {
   Widget build(BuildContext context) {
     Widget content;
     
-    // 如果强制使用静态模式或控制器未初始化，显示静态图片
-    if (_useStaticOnly || _controller == null || !_controller!.value.isInitialized) {
-      // 显示后备图片
-      content = FittedBox(
-        fit: BoxFit.fill,
-        child: _buildFallbackImage(),
-      );
-    } else {
+    // 根据视频初始化状态选择显示内容
+    if (_isInitialized && _controller != null && _controller!.value.isInitialized) {
       // 显示视频
-      content = FittedBox(
-        fit: BoxFit.fill,
+      content = ClipRect(
         child: SizedBox(
-          width: 512,
-          height: 512,
-          child: VideoPlayer(_controller!),
+          width: widget.size,
+          height: widget.size,
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: _controller!.value.size.width,
+              height: _controller!.value.size.height,
+              child: VideoPlayer(_controller!),
+            ),
+          ),
         ),
       );
+    } else {
+      // 显示后备图片
+      content = _buildFallbackImage();
     }
     
-    // 使用ClipRect确保不会超出边界
-    final clippedContent = ClipRect(
-      child: SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: content,
-      ),
-    );
-    
-    // 添加边框
+    // 添加边框装饰（如果需要）
     if (widget.showBorder) {
       return Container(
+        width: widget.size,
+        height: widget.size,
         decoration: BoxDecoration(
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
+          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: clippedContent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: content,
+        ),
       );
     }
     
-    return clippedContent;
+    return content;
   }
 }

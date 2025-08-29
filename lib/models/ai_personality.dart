@@ -19,6 +19,7 @@ class AIPersonality {
   final bool isVIP;               // 是否是VIP角色
   final String? country;          // 国家/地区
   final int drinkCapacity;        // 酒量（能喝几杯）
+  final int videoCount;            // 可用的视频数量 (1.mp4, 2.mp4, ...)
   
   const AIPersonality({
     required this.id,
@@ -37,6 +38,7 @@ class AIPersonality {
     this.isVIP = false,
     this.country,
     this.drinkCapacity = 4,  // 默认4杯
+    this.videoCount = 4,      // 默认4个视频
   });
   
   // 根据指定的locale获取名称
@@ -122,6 +124,7 @@ class AIPersonality {
       isVIP: json['isVIP'] ?? false,
       country: json['country'],
       drinkCapacity: json['drinkCapacity'] ?? 4,
+      videoCount: json['videoCount'] ?? 4,
     );
   }
   
@@ -144,6 +147,7 @@ class AIPersonality {
       'isVIP': isVIP,
       if (country != null) 'country': country,
       'drinkCapacity': drinkCapacity,
+      'videoCount': videoCount,
     };
   }
   
@@ -165,6 +169,7 @@ class AIPersonality {
     bool? isVIP,
     String? country,
     int? drinkCapacity,
+    int? videoCount,
   }) {
     return AIPersonality(
       id: id ?? this.id,
@@ -183,6 +188,7 @@ class AIPersonality {
       isVIP: isVIP ?? this.isVIP,
       country: country ?? this.country,
       drinkCapacity: drinkCapacity ?? this.drinkCapacity,
+      videoCount: videoCount ?? this.videoCount,
     );
   }
   

@@ -164,6 +164,7 @@ class NPCConfigService {
           isVIP: npcData['isVIP'] ?? false,
           country: npcData['country'],
           drinkCapacity: npcData['drinkCapacity'] ?? 4, // 默认酒量4杯
+          videoCount: npcData['videoCount'] ?? 4, // 默认4个视频
         );
         
         // 存储NPC

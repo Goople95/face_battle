@@ -30,7 +30,8 @@
         "bidPreferenceThreshold": 0.1
       },
       "drinkCapacity": 6,
-      "country": "Germany"
+      "country": "Germany",
+      "videoCount": 4
     },
     "0002": {
       "id": "0002",
@@ -62,7 +63,8 @@
         "bidPreferenceThreshold": 0.12
       },
       "drinkCapacity": 6,
-      "country": "Russia"
+      "country": "Russia",
+      "videoCount": 4
     },
     "1001": {
       "id": "1001",
@@ -96,7 +98,8 @@
         "bidPreferenceThreshold": 0.08
       },
       "drinkCapacity": 6,
-      "country": "Japan"
+      "country": "Japan",
+      "videoCount": 4
     },
     "1002": {
       "id": "1002",
@@ -130,7 +133,8 @@
         "bidPreferenceThreshold": 0.09
       },
       "drinkCapacity": 6,
-      "country": "Brazil"
+      "country": "Brazil",
+      "videoCount": 4
     }
   },
   "vipConfig": {
