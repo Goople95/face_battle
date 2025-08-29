@@ -3,6 +3,12 @@ import '../utils/logger_utils.dart';
 import '../services/admob_service.dart';
 import '../l10n/generated/app_localizations.dart';
 
+/// 广告类型枚举
+enum AdType {
+  sober,  // 醒酒广告
+  vip,    // VIP解锁广告
+}
+
 /// 广告辅助类 - 提供统一的广告展示流程
 class AdHelper {
   /// 显示带加载对话框的激励视频广告
@@ -11,11 +17,13 @@ class AdHelper {
   /// [onRewarded] 用户获得奖励后的回调
   /// [onCompleted] 广告流程完成后的回调（无论成功还是失败）
   /// [loadingText] 加载对话框显示的文字，默认为"正在加载广告..."
+  /// [adType] 广告类型，默认为醒酒广告
   static Future<void> showRewardedAdWithLoading({
     required BuildContext context,
     required Function(int rewardAmount) onRewarded,
     VoidCallback? onCompleted,
     String loadingText = '正在加载广告...',
+    AdType adType = AdType.sober,
   }) async {
     LoggerUtils.debug('📺 AdHelper.showRewardedAdWithLoading 被调用');
     if (!context.mounted) {
@@ -33,44 +41,87 @@ class AdHelper {
       builder: (BuildContext dialogContext) {
         LoggerUtils.debug('📺 加载对话框 builder 被调用');
         // 在builder内部调用AdMob服务，确保使用正确的context
-        AdMobService().showRewardedAd(
-          onRewarded: (rewardAmount) {
-            LoggerUtils.debug('📺 AdHelper收到奖励回调: $rewardAmount');
-            // 调用奖励回调
-            onRewarded(rewardAmount);
-          },
-          onAdClosed: () {
-            LoggerUtils.debug('📺 AdHelper收到广告关闭回调');
-            // 广告关闭后关闭加载对话框
-            if (isLoadingDialogOpen && dialogContext.mounted) {
-              isLoadingDialogOpen = false;
-              Navigator.of(dialogContext).pop();
-            }
-            // 调用完成回调
-            onCompleted?.call();
-          },
-          onAdFailed: () {
-            LoggerUtils.debug('📺 AdHelper收到广告失败回调');
-            // 广告失败时关闭加载对话框
-            if (isLoadingDialogOpen && dialogContext.mounted) {
-              isLoadingDialogOpen = false;
-              Navigator.of(dialogContext).pop();
-            }
-            
-            // 显示错误提示
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(AppLocalizations.of(context)!.adLoadFailedTryLater),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-            
-            // 调用完成回调
-            onCompleted?.call();
-          },
-        );
+        // 根据广告类型选择不同的广告单元
+        if (adType == AdType.vip) {
+          AdMobService().showVipAd(
+            onRewarded: (rewardAmount) {
+              LoggerUtils.debug('📺 AdHelper收到VIP奖励回调: $rewardAmount');
+              // 调用奖励回调
+              onRewarded(rewardAmount);
+            },
+            onAdClosed: () {
+              LoggerUtils.debug('📺 AdHelper收到VIP广告关闭回调');
+              // 广告关闭后关闭加载对话框
+              if (isLoadingDialogOpen && dialogContext.mounted) {
+                isLoadingDialogOpen = false;
+                Navigator.of(dialogContext).pop();
+              }
+              // 调用完成回调
+              onCompleted?.call();
+            },
+            onAdFailed: () {
+              LoggerUtils.debug('📺 AdHelper收到VIP广告失败回调');
+              // 广告失败时关闭加载对话框
+              if (isLoadingDialogOpen && dialogContext.mounted) {
+                isLoadingDialogOpen = false;
+                Navigator.of(dialogContext).pop();
+              }
+              
+              // 显示错误提示
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.adLoadFailedTryLater),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              
+              // 调用完成回调
+              onCompleted?.call();
+            },
+          );
+        } else {
+          // 默认使用醒酒广告
+          AdMobService().showSoberAd(
+            onRewarded: (rewardAmount) {
+              LoggerUtils.debug('📺 AdHelper收到奖励回调: $rewardAmount');
+              // 调用奖励回调
+              onRewarded(rewardAmount);
+            },
+            onAdClosed: () {
+              LoggerUtils.debug('📺 AdHelper收到广告关闭回调');
+              // 广告关闭后关闭加载对话框
+              if (isLoadingDialogOpen && dialogContext.mounted) {
+                isLoadingDialogOpen = false;
+                Navigator.of(dialogContext).pop();
+              }
+              // 调用完成回调
+              onCompleted?.call();
+            },
+            onAdFailed: () {
+              LoggerUtils.debug('📺 AdHelper收到广告失败回调');
+              // 广告失败时关闭加载对话框
+              if (isLoadingDialogOpen && dialogContext.mounted) {
+                isLoadingDialogOpen = false;
+                Navigator.of(dialogContext).pop();
+              }
+              
+              // 显示错误提示
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.adLoadFailedTryLater),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              
+              // 调用完成回调
+              onCompleted?.call();
+            },
+          );
+        }
         
         // 返回加载对话框UI
         return Dialog(
@@ -112,6 +163,7 @@ class AdHelper {
     VoidCallback? onCompleted,
     VoidCallback? onFailed,
     String loadingText = '正在加载广告...',
+    AdType adType = AdType.sober,
   }) async {
     // 先关闭当前对话框
     if (context.mounted && Navigator.canPop(context)) {
@@ -130,6 +182,7 @@ class AdHelper {
         onRewarded: onRewarded,
         onCompleted: onCompleted,
         loadingText: loadingText,
+        adType: adType,
       );
     } catch (e) {
       if (onFailed != null) {

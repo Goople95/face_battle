@@ -12,7 +12,7 @@ import '../utils/responsive_utils.dart';
 import '../config/character_config.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/simple_ai_avatar.dart';
-import '../widgets/simple_network_video_avatar.dart';  // 使用简单网络版
+import '../widgets/auto_play_video_avatar.dart';  // 使用自动轮播版
 import '../widgets/drunk_overlay.dart';
 import '../widgets/sober_dialog.dart';
 import '../widgets/victory_drunk_animation.dart';
@@ -330,6 +330,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   
   void _startNewRound() {
     final random = math.Random();
+    
+    // 清空表情队列，停止循环播放
+    _emotionQueue.clear();
+    _currentEmotionIndex = 0;
     
     // Reset bid selector to minimum value 2×2
     setState(() {
@@ -1838,11 +1842,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              // 视频背景 - 1:1显示
+                              // 视频背景 - 1:1显示（自动轮播）
                               Positioned.fill(
-                                child: SimpleNetworkVideoAvatar(
+                                child: AutoPlayVideoAvatar(
                                   characterId: widget.aiPersonality.id,
-                                  emotion: _currentAIEmotion,
                                   size: videoSize,  // 使用正方形尺寸
                                   showBorder: false,
                                 ),

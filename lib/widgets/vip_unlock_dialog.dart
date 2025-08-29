@@ -185,6 +185,7 @@ const SizedBox(height: 20),
                     if (context.mounted) {
                       AdHelper.showRewardedAdWithLoading(
                         context: context,
+                        adType: AdType.vip,  // 使用VIP解锁专用广告
                       onRewarded: (reward) async {
                         await _vipService.temporaryUnlock(widget.character.id);
                         // 记录看广告解锁VIP的次数
