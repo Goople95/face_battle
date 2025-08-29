@@ -55,7 +55,11 @@ class NPCAvatarWidget extends StatelessWidget {
                 return _buildLoadingIndicator(loadingProgress);
               },
               errorBuilder: (context, error, stack) {
+                // 记录失败的URL，避免下次重复尝试
+                _failedUrls.add(path);
                 LoggerUtils.error('加载网络头像失败: $path - $error');
+                
+                // 直接显示占位符，不再尝试其他格式
                 return _buildPlaceholder();
               },
             );
@@ -104,6 +108,9 @@ class NPCAvatarWidget extends StatelessWidget {
     );
   }
   
+  // 缓存失败的URL，避免重复请求
+  static final Set<String> _failedUrls = {};
+  
   Future<String> _getAvatarPath() async {
     try {
       final npcId = personality.id;
@@ -120,20 +127,26 @@ class NPCAvatarWidget extends StatelessWidget {
         }
       }
       
-      // 直接返回Firebase Storage的网络URL
-      // 这样即使本地缓存不存在，也能从网络加载
-      final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                        'npcs%2F${npcId}%2F1.png?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
-      LoggerUtils.info('使用网络头像: $networkUrl');
-      return networkUrl;
+      // 构建网络URL
+      final encodedId = Uri.encodeComponent(npcId);
+      
+      // 直接使用1.jpg格式
+      final jpgUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
+                     'npcs%2F${encodedId}%2F1.jpg?alt=media';
+      
+      // 如果.jpg已经失败过，直接返回空
+      if (!_failedUrls.contains(jpgUrl)) {
+        LoggerUtils.info('加载JPG头像: $jpgUrl');
+        return jpgUrl;
+      }
+      
+      // 如果都失败过，返回空字符串显示占位符
+      LoggerUtils.warning('NPC头像URL都已失败过: $npcId');
+      return '';
       
     } catch (e) {
       LoggerUtils.error('获取NPC头像路径失败: ${personality.id} - $e');
-      
-      // 如果所有方式都失败，返回默认网络URL
-      final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                        'npcs%2F${personality.id}%2F1.png?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
-      return networkUrl;
+      return '';
     }
   }
   

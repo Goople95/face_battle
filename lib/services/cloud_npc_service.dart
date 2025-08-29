@@ -17,23 +17,14 @@ class CloudNPCService {
   
   // 访问token (公开读取权限)
   static const String _accessToken = 'adacfb99-9f79-4002-9aa3-e3a9a97db26b';
-  static const String _cacheVersion = 'npc_cache_version';
-  static const int _currentVersion = 1;
+  static const String _cacheVersionKey = 'npc_cache_version';
+  static const String _cachedConfigsKey = 'npc_cached_configs';
   
-  /// 获取所有可用的NPC配置
+  /// 获取所有可用的NPC配置（始终使用云端最新配置）
   static Future<List<NPCConfig>> fetchNPCConfigs({bool forceRefresh = false}) async {
     try {
-      // 检查是否需要更新
-      if (!forceRefresh && await _isCacheValid()) {
-        final cached = await _loadCachedConfigs();
-        if (cached != null) {
-          LoggerUtils.info('使用缓存的NPC配置');
-          return cached;
-        }
-      }
-      
-      // 从云端获取配置 - 使用Firebase Storage SDK
-      LoggerUtils.info('从云端获取NPC配置...');
+      // 配置文件很小，始终从云端获取最新版本
+      LoggerUtils.info('从云端获取最新NPC配置...');
       
       try {
         // 使用Firebase Storage API
@@ -45,8 +36,8 @@ class CloudNPCService {
           final jsonData = json.decode(jsonStr);
           final configs = _parseNPCConfigs(jsonData);
           
-          // 缓存配置
-          await _cacheConfigs(configs);
+          // 不再缓存，每次都使用最新配置
+          LoggerUtils.info('成功获取${configs.length}个NPC配置');
           
           return configs;
         }
@@ -62,8 +53,8 @@ class CloudNPCService {
           final data = json.decode(response.body);
           final configs = _parseNPCConfigs(data);
           
-          // 缓存配置
-          await _cacheConfigs(configs);
+          // 不再缓存，每次都使用最新配置
+          LoggerUtils.info('通过HTTP成功获取${configs.length}个NPC配置');
           
           return configs;
         }
@@ -180,7 +171,7 @@ class CloudNPCService {
   static Future<List<NPCConfig>?> _loadCachedConfigs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cached = prefs.getString('npc_configs');
+      final cached = prefs.getString(_cachedConfigsKey);
       
       if (cached != null) {
         final data = json.decode(cached);
@@ -193,7 +184,7 @@ class CloudNPCService {
   }
   
   /// 缓存配置（保持现有JSON结构）
-  static Future<void> _cacheConfigs(List<NPCConfig> configs) async {
+  static Future<void> _cacheConfigs(List<NPCConfig> configs, {int? serverVersion}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       
@@ -207,18 +198,46 @@ class CloudNPCService {
         'npcs': npcsMap,
       };
       
-      await prefs.setString('npc_configs', json.encode(data));
-      await prefs.setInt(_cacheVersion, _currentVersion);
+      await prefs.setString(_cachedConfigsKey, json.encode(data));
+      
+      // 保存服务器版本
+      if (serverVersion != null) {
+        await prefs.setInt(_cacheVersionKey, serverVersion);
+        LoggerUtils.info('缓存配置成功，版本: $serverVersion');
+      }
     } catch (e) {
       LoggerUtils.error('缓存配置失败: $e');
     }
   }
   
   /// 检查缓存是否有效
-  static Future<bool> _isCacheValid() async {
-    final prefs = await SharedPreferences.getInstance();
-    final version = prefs.getInt(_cacheVersion) ?? 0;
-    return version == _currentVersion;
+  /// 检查是否需要更新缓存（通过比较服务器版本）
+  static Future<bool> _shouldUpdateCache() async {
+    try {
+      // 获取服务器配置的版本
+      final ref = _storage.ref('npcs/npc_config.json');
+      final data = await ref.getData();
+      
+      if (data != null) {
+        final jsonStr = utf8.decode(data);
+        final jsonData = json.decode(jsonStr);
+        final serverVersion = jsonData['version'] ?? 1;
+        
+        // 获取本地缓存的版本
+        final prefs = await SharedPreferences.getInstance();
+        final cachedVersion = prefs.getInt(_cacheVersionKey) ?? 0;
+        
+        LoggerUtils.info('版本检查: 服务器版本=$serverVersion, 本地缓存版本=$cachedVersion');
+        
+        // 如果服务器版本更新，需要更新缓存
+        return serverVersion > cachedVersion;
+      }
+    } catch (e) {
+      LoggerUtils.error('检查服务器版本失败: $e');
+    }
+    
+    // 如果检查失败，默认需要更新
+    return true;
   }
   
   /// 获取NPC目录
@@ -254,15 +273,64 @@ class CloudNPCService {
   static Future<List<Map<String, String>>> _getResourceList(String npcId) async {
     // 根据实际上传的文件结构
     final encodedId = Uri.encodeComponent(npcId);
-    return [
-      {'path': '1.png', 'url': '$_baseUrl/npcs%2F$encodedId%2F1.png?alt=media&token=$_accessToken'},
+    
+    // 尝试从配置中获取videoCount，默认为4
+    int videoCount = 4;
+    try {
+      // 尝试从已加载的配置中获取
+      final configs = await fetchNPCConfigs();
+      final npcConfig = configs.firstWhere(
+        (config) => config.id == npcId,
+        orElse: () => NPCConfig(
+          id: npcId,
+          names: {'en': npcId},
+          descriptions: {'en': ''},
+          avatarPath: '',
+          videosPath: '',
+          isVIP: false,
+          unlocked: true,
+          videoCount: 4,
+          personality: AIPersonality(
+            id: npcId,
+            name: npcId,
+            description: '',
+            avatarPath: '',
+            bluffRatio: 0.3,
+            challengeThreshold: 0.4,
+            riskAppetite: 0.4,
+            mistakeRate: 0.02,
+            tellExposure: 0.08,
+            reverseActingProb: 0.25,
+            bidPreferenceThreshold: 0.1,
+          ),
+          country: '',
+        ),
+      );
+      videoCount = npcConfig.videoCount;
+    } catch (e) {
+      LoggerUtils.debug('获取NPC videoCount失败，使用默认值4: $e');
+    }
+    
+    List<Map<String, String>> resources = [
+      {'path': '1.jpg', 'url': '$_baseUrl/npcs%2F$encodedId%2F1.jpg?alt=media&token=$_accessToken'},
       {'path': 'dialogue_$npcId.json', 'url': '$_baseUrl/npcs%2F$encodedId%2Fdialogue_$npcId.json?alt=media&token=$_accessToken'},
-      {'path': 'happy.mp4', 'url': '$_baseUrl/npcs%2F$encodedId%2Fhappy.mp4?alt=media&token=$_accessToken'},
-      {'path': 'confident.mp4', 'url': '$_baseUrl/npcs%2F$encodedId%2Fconfident.mp4?alt=media&token=$_accessToken'},
-      {'path': 'suspicious.mp4', 'url': '$_baseUrl/npcs%2F$encodedId%2Fsuspicious.mp4?alt=media&token=$_accessToken'},
-      {'path': 'thinking.mp4', 'url': '$_baseUrl/npcs%2F$encodedId%2Fthinking.mp4?alt=media&token=$_accessToken'},
-      {'path': 'drunk.mp4', 'url': '$_baseUrl/npcs%2F$encodedId%2Fdrunk.mp4?alt=media&token=$_accessToken'},
     ];
+    
+    // 动态添加视频资源
+    for (int i = 1; i <= videoCount; i++) {
+      resources.add({
+        'path': '$i.mp4',
+        'url': '$_baseUrl/npcs%2F$encodedId%2F$i.mp4?alt=media&token=$_accessToken'
+      });
+    }
+    
+    // 添加drunk视频
+    resources.add({
+      'path': 'drunk.mp4',
+      'url': '$_baseUrl/npcs%2F$encodedId%2Fdrunk.mp4?alt=media&token=$_accessToken'
+    });
+    
+    return resources;
   }
   
   /// 下载文件 - 优先使用Firebase Storage SDK
@@ -346,8 +414,21 @@ class CloudNPCService {
         },
         avatarPath: 'assets/people/0001/',
         videosPath: 'assets/people/0001/videos/',
-        personality: AIPersonality.defaultPersonality(),
+        personality: AIPersonality(
+          id: '0001',
+          name: 'Lena',
+          description: 'Her calm gaze hides a quiet allure.',
+          avatarPath: 'assets/people/0001/',
+          bluffRatio: 0.25,
+          challengeThreshold: 0.4,
+          riskAppetite: 0.3,
+          mistakeRate: 0.02,
+          tellExposure: 0.08,
+          reverseActingProb: 0.25,
+          bidPreferenceThreshold: 0.1,
+        ),
         country: 'Germany',
+        videoCount: 5,  // 0001有5个视频
         isLocal: true,
       ),
       NPCConfig(
@@ -365,10 +446,18 @@ class CloudNPCService {
         },
         avatarPath: 'assets/people/0002/',
         videosPath: 'assets/people/0002/videos/',
-        personality: AIPersonality.defaultPersonality().copyWith(
+        personality: AIPersonality(
+          id: '0002',
+          name: 'Katerina',
+          description: 'Graceful and distant, she draws you closer without a word.',
+          avatarPath: 'assets/people/0002/',
           bluffRatio: 0.4,
           challengeThreshold: 0.38,
           riskAppetite: 0.5,
+          mistakeRate: 0.025,
+          tellExposure: 0.1,
+          reverseActingProb: 0.35,
+          bidPreferenceThreshold: 0.12,
         ),
         country: 'Russia',
         isLocal: true,
@@ -391,6 +480,7 @@ class NPCConfig {
   final AIPersonality personality;
   final int drinkCapacity;
   final String country;
+  final int videoCount; // 视频数量
   final bool isLocal; // 是否为本地资源
   final String? cloudUrl; // 云端资源URL基础路径
   final int version; // 资源版本号
@@ -408,6 +498,7 @@ class NPCConfig {
     required this.personality,
     this.drinkCapacity = 6,
     required this.country,
+    this.videoCount = 4,
     this.isLocal = false,
     this.cloudUrl,
     this.version = 1,
@@ -428,6 +519,7 @@ class NPCConfig {
       personality: AIPersonality.fromJson(json['personality'] ?? {}),
       drinkCapacity: json['drinkCapacity'] ?? 6,
       country: json['country'] ?? '',
+      videoCount: json['videoCount'] ?? 4,
       isLocal: json['isLocal'] ?? true, // 默认为本地资源
       cloudUrl: json['cloudUrl'],
       version: json['version'] ?? 1,
@@ -463,6 +555,7 @@ class NPCConfig {
       'personality': personality.toJson(),
       'drinkCapacity': drinkCapacity,
       'country': country,
+      'videoCount': videoCount,
       'isLocal': isLocal,
       if (cloudUrl != null) 'cloudUrl': cloudUrl,
       'version': version,

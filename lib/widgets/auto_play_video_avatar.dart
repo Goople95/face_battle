@@ -28,6 +28,7 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   int _currentVideoIndex = 1;
   bool _isInitialized = false;
   final _random = math.Random();
+  bool _isLoadingNext = false;  // 防止重复加载
   
   @override
   void initState() {
@@ -37,32 +38,24 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   
   /// 加载并播放视频
   Future<void> _loadAndPlayVideo() async {
-    // 释放旧控制器
-    if (_controller != null) {
-      await _controller!.pause();
-      await _controller!.dispose();
-      _controller = null;
-      if (mounted) {
-        setState(() {
-          _isInitialized = false;
-        });
-      }
-    }
+    // 保存旧控制器，等新视频准备好后再释放
+    final oldController = _controller;
     
     try {
       // 随机选择视频编号
       final videoCount = widget.personality?.videoCount ?? 4;
+      LoggerUtils.info('视频数量配置: videoCount=$videoCount, personality=${widget.personality?.id}');
       _currentVideoIndex = _random.nextInt(videoCount) + 1;
       final fileName = '$_currentVideoIndex.mp4';
       
-      // 构建网络视频URL
+      // 构建网络视频URL (不需要token，使用公开访问)
       final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                        'npcs%2F${widget.characterId}%2F$fileName?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+                        'npcs%2F${widget.characterId}%2F$fileName?alt=media';
       
-      LoggerUtils.info('播放视频: ${widget.characterId}/$fileName');
+      LoggerUtils.info('播放视频: ${widget.characterId}/$fileName (从$videoCount个视频中选择)');
       
       // 创建新控制器
-      _controller = VideoPlayerController.networkUrl(
+      final newController = VideoPlayerController.networkUrl(
         Uri.parse(networkUrl),
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
@@ -70,22 +63,36 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
         ),
       );
       
-      // 初始化并播放
-      await _controller!.initialize();
-      await _controller!.setVolume(0);
+      // 初始化新视频
+      await newController.initialize();
+      await newController.setVolume(0);
       
       // 添加监听器，视频播放完后自动播放下一个
-      _controller!.addListener(() {
-        if (!mounted) return;
+      _isLoadingNext = false;  // 重置标志位
+      newController.addListener(() {
+        if (!mounted || _isLoadingNext) return;
         
-        final value = _controller!.value;
-        if (value.position >= value.duration && value.duration > Duration.zero) {
+        final value = newController.value;
+        // 确保视频真正播放到结尾（position接近duration）
+        if (value.duration > Duration.zero && 
+            value.position >= value.duration - const Duration(milliseconds: 100)) {
+          // 设置标志位，防止重复触发
+          _isLoadingNext = true;
           // 视频播放完成，播放下一个随机视频
           _loadAndPlayVideo();
         }
       });
       
-      await _controller!.play();
+      await newController.play();
+      
+      // 新视频准备好了，现在可以切换
+      _controller = newController;
+      
+      // 释放旧控制器
+      if (oldController != null) {
+        await oldController.pause();
+        oldController.dispose();
+      }
       
       if (mounted) {
         setState(() {
@@ -111,9 +118,9 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   
   /// 构建后备静态图片
   Widget _buildFallbackImage() {
-    // 使用新的命名格式: {npcId}.jpg
+    // 使用静态图片1.jpg作为后备
     final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                      'npcs%2F${widget.characterId}%2F${widget.characterId}.jpg?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
+                      'npcs%2F${widget.characterId}%2F1.jpg?alt=media';
     
     return Image.network(
       networkUrl,

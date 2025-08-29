@@ -17,19 +17,30 @@ class NPCResourceLoader {
     
     // 云端资源，检查是否已下载
     await _ensureResourcesLoaded(npcId);
-    return await CloudNPCService.getNPCResourcePath(npcId, '1.png');  // 云端使用1.png
+    return await CloudNPCService.getNPCResourcePath(npcId, '1.jpg');  // 云端使用1.jpg
   }
   
   /// 获取NPC视频路径（自动处理云端资源）
-  static Future<String> getVideoPath(String npcId, String basePath, String emotion) async {
+  static Future<String> getVideoPath(String npcId, String basePath, dynamic indexOrEmotion) async {
+    // 处理文件名
+    String fileName;
+    if (indexOrEmotion == 'drunk') {
+      fileName = 'drunk.mp4';
+    } else if (indexOrEmotion is int) {
+      fileName = '$indexOrEmotion.mp4';
+    } else {
+      // 默认使用1.mp4
+      fileName = '1.mp4';
+    }
+    
     // 如果是本地资源路径，直接返回
     if (basePath.startsWith('assets/')) {
-      return '$basePath/$emotion.mp4';
+      return '$basePath/$fileName';
     }
     
     // 云端资源，检查是否已下载
     await _ensureResourcesLoaded(npcId);
-    return await CloudNPCService.getNPCResourcePath(npcId, '$emotion.mp4');  // 云端视频直接在根目录
+    return await CloudNPCService.getNPCResourcePath(npcId, fileName);
   }
   
   /// 获取NPC对话文件路径（云端新增）

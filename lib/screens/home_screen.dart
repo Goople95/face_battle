@@ -844,30 +844,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }
     
-    // 每行2个角色
-    return SizedBox(
-      height: ResponsiveUtils.cardHeight,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (int i = 0; i < normalCharacters.length; i++) ...[
-            if (i > 0) SizedBox(width: 12.w),
-            Expanded(
-              child: _buildPersonalityCard(
-                context,
-                normalCharacters[i],
-                _getIconForCharacter(normalCharacters[i]),
-                _getColorForCharacter(normalCharacters[i]),
+    // 将普通角色按每行2个分组（与VIP角色保持一致）
+    List<Widget> rows = [];
+    for (int i = 0; i < normalCharacters.length; i += 2) {
+      rows.add(
+        SizedBox(
+          height: ResponsiveUtils.cardHeight,
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildPersonalityCard(
+                  context,
+                  normalCharacters[i],
+                  _getIconForCharacter(normalCharacters[i]),
+                  _getColorForCharacter(normalCharacters[i]),
+                ),
               ),
-            ),
-          ],
-          // 如果角色数量是奇数，添加空位
-          if (normalCharacters.length % 2 == 1) ...[
-            SizedBox(width: 12.w),
-            Expanded(child: Container()),
-          ],
-        ],
-      ),
+              SizedBox(width: 12.w),
+              if (i + 1 < normalCharacters.length)
+                Expanded(
+                  child: _buildPersonalityCard(
+                    context,
+                    normalCharacters[i + 1],
+                    _getIconForCharacter(normalCharacters[i + 1]),
+                    _getColorForCharacter(normalCharacters[i + 1]),
+                  ),
+                )
+              else
+                Expanded(child: Container()), // 空位
+            ],
+          ),
+        ),
+      );
+      if (i + 2 < normalCharacters.length) {
+        rows.add(SizedBox(height: 16.h)); // 行间距
+      }
+    }
+    
+    return Column(
+      children: rows,
     );
   }
   

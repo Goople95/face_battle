@@ -517,7 +517,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       // 记录质疑决策
       _currentRound!.aiDecisions.add(decision);
       
-      // 使用Gemini或本地生成的表情
+      // 使用AI生成的表情
       setState(() {
         _aiDialogue = aiDialogue;
       });
@@ -661,16 +661,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           _animatingDrinkIndex = _drinkingState!.drinksConsumed;
         }
         
+        // 获取对话（异步）
+        final dialogueService = DialogueService();
+        final locale = Localizations.localeOf(context);
+        final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+        
+        String dialogue;
+        if (playerWon) {
+          dialogue = await dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
+        } else {
+          dialogue = await dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
+        }
+        
         // 在setState中更新饮酒状态，确保界面立即刷新
         setState(() {
           if (playerWon) {
             _drinkingState!.playerWin(widget.aiPersonality.id); // 玩家赢，AI喝酒
-            
-            // 显示NPC输了的对话
-            final dialogueService = DialogueService();
-            final locale = Localizations.localeOf(context);
-            final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
-            _aiDialogue = dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
+            _aiDialogue = dialogue;
             
             // 如果AI喝醉了，显示胜利提示
             if (_drinkingState!.isAIDrunk(widget.aiPersonality.id)) {
@@ -686,12 +693,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             _animatingDrinkIndex = _drinkingState!.drinksConsumed;
             
             _drinkingState!.aiWin(widget.aiPersonality.id); // AI赢，玩家喝酒
-            
-            // 显示NPC赢了的对话
-            final dialogueService = DialogueService();
-            final locale = Localizations.localeOf(context);
-            final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
-            _aiDialogue = dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
+            _aiDialogue = dialogue;
             
             // 如果玩家喝醉了，显示提示
             if (_drinkingState!.isDrunk) {

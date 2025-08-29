@@ -58,7 +58,7 @@ class ShareImageService {
       );
       
       // 确保头像加载完成
-      final String avatarPath = '${defeatedAI.avatarPath}1.png';
+      final String avatarPath = '${defeatedAI.avatarPath}1.jpg';
       ByteData? avatarData;
       try {
         avatarData = await rootBundle.load(avatarPath);

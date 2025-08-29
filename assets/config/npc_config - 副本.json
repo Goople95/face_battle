@@ -58,36 +58,6 @@
       "country": "Russia",
       "videoCount": 8
     },
-    "0003": {
-      "id": "0003",
-      "names": {
-        "en": "Lena",
-        "zh_TW": "Lena",
-        "es": "Lena",
-        "pt": "Lena",
-        "id": "Lena"
-      },
-      "descriptions": {
-        "en": "Her calm gaze hides a quiet allure.",
-        "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
-        "es": "Su mirada serena esconde un encanto silencioso.",
-        "pt": "Seu olhar calmo esconde um charme discreto.",
-        "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
-      },
-      "avatarPath": "assets/people/0003/",
-      "videosPath": "assets/people/0003/videos/",
-      "isVIP": false,
-      "unlocked": true,
-      "personality": {
-        "bluffRatio": 0.25,
-        "challengeThreshold": 0.4,
-        "riskAppetite": 0.3
-      },
-      "drinkCapacity": 6,
-      "country": "Germany",
-      "videoCount": 5
-    },
-
     "1001": {
       "id": "1001",
       "names": {
@@ -149,39 +119,7 @@
       "drinkCapacity": 6,
       "country": "Brazil",
       "videoCount": 5
-    },
-    "1003": {
-      "id": "1003",
-      "names": {
-        "en": "Isabella",
-        "zh_TW": "Isabella",
-        "es": "Isabella",
-        "pt": "Isabella",
-        "id": "Isabella"
-      },
-      "descriptions": {
-        "en": "Her words flow like music, impossible to resist.",
-        "zh_TW": "她的話語像音樂般流淌，令人難以抗拒。",
-        "es": "Sus palabras fluyen como música, imposibles de resistir.",
-        "pt": "Suas palavras fluem como música, impossíveis de resistir.",
-        "id": "Kata-katanya mengalir seperti musik, mustahil untuk ditolak."
-      },
-      "avatarPath": "assets/people/1003/",
-      "videosPath": "assets/people/1003/videos/",
-      "isVIP": true,
-      "unlocked": false,
-      "unlockPrice": 30,
-      "unlockItemId": "vip_1003_unlock",
-      "personality": {
-        "bluffRatio": 0.55,
-        "challengeThreshold": 0.45,
-        "riskAppetite": 0.7
-      },
-      "drinkCapacity": 6,
-      "country": "Brazil",
-      "videoCount": 5
     }
-
   },
   "vipConfig": {
     "adRequiredPerGame": true,

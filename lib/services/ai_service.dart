@@ -8,7 +8,7 @@ import 'elite_ai_engine.dart';
 import 'master_ai_engine.dart';
 import 'dialogue_service.dart';
 
-/// 精简版AI服务 - 作为Gemini API的降级备用
+/// AI服务 - 游戏AI决策引擎
 class AIService {
   final AIPersonality personality;
   final GameProgressData? playerProfile;
@@ -515,7 +515,7 @@ class AIService {
   }
   
   /// 获取嘲讽语句
-  String getTaunt(GameRound round) {
+  Future<String> getTaunt(GameRound round) async {
     // 使用DialogueService获取对话
     final dialogueService = DialogueService();
     
@@ -523,8 +523,8 @@ class AIService {
       // 根据当前状态决定使用嘲讽还是鼓励
       final isWinning = _isCurrentlyWinning(round);
       return isWinning 
-        ? dialogueService.getTaunt(personality.id)
-        : dialogueService.getEncouragement(personality.id);
+        ? await dialogueService.getTaunt(personality.id)
+        : await dialogueService.getEncouragement(personality.id);
     }
     
     return '';

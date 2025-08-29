@@ -84,8 +84,9 @@ class NPCConfigService {
       // 优先从云端加载配置
       List<NPCConfig> cloudConfigs;
       try {
-        cloudConfigs = await CloudNPCService.fetchNPCConfigs(forceRefresh: false);
-        LoggerUtils.info('成功从云端加载了${cloudConfigs.length}个NPC配置');
+        // 始终获取最新配置
+        cloudConfigs = await CloudNPCService.fetchNPCConfigs();
+        LoggerUtils.info('获取到${cloudConfigs.length}个NPC配置');
       } catch (e) {
         LoggerUtils.warning('云端加载失败，回退到本地配置: $e');
         // 如果云端加载失败，使用本地配置
@@ -146,6 +147,10 @@ class NPCConfigService {
         LoggerUtils.info('  namesMap: $namesMap');
         LoggerUtils.info('  descriptionsMap: $descriptionsMap');
         
+        // 获取videoCount值
+        final videoCountValue = npcData['videoCount'] ?? 4;
+        LoggerUtils.info('  videoCount: $videoCountValue (原始值: ${npcData['videoCount']})');
+        
         // 创建AIPersonality对象
         final personality = AIPersonality(
           id: id,
@@ -164,7 +169,7 @@ class NPCConfigService {
           isVIP: npcData['isVIP'] ?? false,
           country: npcData['country'],
           drinkCapacity: npcData['drinkCapacity'] ?? 4, // 默认酒量4杯
-          videoCount: npcData['videoCount'] ?? 4, // 默认4个视频
+          videoCount: videoCountValue, // 使用配置的视频数量
         );
         
         // 存储NPC

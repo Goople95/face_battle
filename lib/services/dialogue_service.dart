@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../utils/logger_utils.dart';
 
 /// 对话服务 - 管理NPC的对话内容
@@ -11,41 +12,65 @@ class DialogueService {
 
   final Map<String, Map<String, dynamic>> _dialogues = {};
   final Random _random = Random();
-  bool _isLoaded = false;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  /// 初始化服务，加载所有对话文件
+  /// 初始化服务（不再预加载所有对话）
   Future<void> initialize() async {
-    if (_isLoaded) return;
-    
-    try {
-      // 加载所有NPC的对话文件
-      final npcIds = ['0001', '0002', '1001', '1002'];  // 移除不存在的1003
-      
-      for (String id in npcIds) {
-        try {
-          final String jsonString = await rootBundle.loadString(
-            'assets/dialogues/dialogue_$id.json'  // 使用新的文件命名格式
-          );
-          final Map<String, dynamic> dialogueData = json.decode(jsonString);
-          _dialogues[id] = dialogueData;
-          LoggerUtils.info('加载对话文件: $id');
-        } catch (e) {
-          LoggerUtils.warning('无法加载对话文件 $id: $e');
-        }
-      }
-      
-      _isLoaded = true;
-      LoggerUtils.info('对话服务初始化完成，加载了 ${_dialogues.length} 个角色的对话');
-    } catch (e) {
-      LoggerUtils.error('对话服务初始化失败: $e');
-    }
+    LoggerUtils.info('对话服务初始化完成（按需加载模式）');
   }
 
-  /// 获取NPC胜利时的对话
-  String getWinDialogue(String npcId, {String locale = 'zh_TW'}) {
-    final dialogueData = _dialogues[npcId];
+  /// 按需加载指定NPC的对话文件
+  Future<Map<String, dynamic>?> _loadDialogueForNPC(String npcId) async {
+    // 如果已缓存，直接返回
+    if (_dialogues.containsKey(npcId)) {
+      return _dialogues[npcId];
+    }
+
+    try {
+      // 优先尝试从云端加载
+      LoggerUtils.info('从云端加载NPC对话: $npcId');
+      
+      try {
+        final ref = _storage.ref('npcs/$npcId/dialogue_$npcId.json');
+        final data = await ref.getData(10000000); // 10MB限制
+        
+        if (data != null) {
+          final jsonString = utf8.decode(data);
+          final dialogueData = json.decode(jsonString) as Map<String, dynamic>;
+          _dialogues[npcId] = dialogueData;
+          LoggerUtils.info('成功从云端加载对话: $npcId');
+          return dialogueData;
+        }
+      } catch (e) {
+        LoggerUtils.warning('云端加载失败，尝试本地: $npcId - $e');
+      }
+
+      // 云端失败，回退到本地
+      try {
+        final String jsonString = await rootBundle.loadString(
+          'assets/dialogues/dialogue_$npcId.json'
+        );
+        final Map<String, dynamic> dialogueData = json.decode(jsonString);
+        _dialogues[npcId] = dialogueData;
+        LoggerUtils.info('从本地加载对话: $npcId');
+        return dialogueData;
+      } catch (e) {
+        LoggerUtils.error('本地加载也失败: $npcId - $e');
+      }
+      
+    } catch (e) {
+      LoggerUtils.error('加载NPC对话失败: $npcId - $e');
+    }
+    
+    return null;
+  }
+
+  /// 获取NPC胜利时的对话（改为异步）
+  Future<String> getWinDialogue(String npcId, {String locale = 'zh_TW'}) async {
+    // 按需加载对话
+    final dialogueData = await _loadDialogueForNPC(npcId);
     if (dialogueData == null) {
-      LoggerUtils.warning('未找到NPC $npcId 的对话数据。已加载的NPCs: ${_dialogues.keys.toList()}');
+      LoggerUtils.warning('未找到NPC $npcId 的对话数据');
       return _getDefaultWinDialogue();
     }
 
@@ -90,8 +115,8 @@ class DialogueService {
   }
 
   /// 获取NPC失败时的对话
-  String getLoseDialogue(String npcId, {String locale = 'zh_TW'}) {
-    final dialogueData = _dialogues[npcId];
+  Future<String> getLoseDialogue(String npcId, {String locale = 'zh_TW'}) async {
+    final dialogueData = await _loadDialogueForNPC(npcId);
     if (dialogueData == null) {
       LoggerUtils.warning('未找到NPC $npcId 的对话数据。已加载的NPCs: ${_dialogues.keys.toList()}');
       return _getDefaultLoseDialogue();
@@ -133,30 +158,30 @@ class DialogueService {
   }
 
   /// 获取嘲讽对话（随机从赢的对话中选择）
-  String getTaunt(String npcId, {String locale = 'zh_TW'}) {
+  Future<String> getTaunt(String npcId, {String locale = 'zh_TW'}) async {
     // 嘲讽时使用胜利对话的一部分
-    return getWinDialogue(npcId, locale: locale);
+    return await getWinDialogue(npcId, locale: locale);
   }
 
   /// 获取鼓励对话（随机从输的对话中选择）
-  String getEncouragement(String npcId, {String locale = 'zh_TW'}) {
+  Future<String> getEncouragement(String npcId, {String locale = 'zh_TW'}) async {
     // 鼓励时使用失败对话的一部分
-    return getLoseDialogue(npcId, locale: locale);
+    return await getLoseDialogue(npcId, locale: locale);
   }
 
   /// 根据游戏状态获取合适的对话
-  String getContextualDialogue(String npcId, {
+  Future<String> getContextualDialogue(String npcId, {
     required bool isWinning,
     required int roundNumber,
     String locale = 'zh_TW'
-  }) {
+  }) async {
     // 根据当前状态返回合适的对话
     if (isWinning) {
       // NPC赢了这一轮
-      return getWinDialogue(npcId, locale: locale);
+      return await getWinDialogue(npcId, locale: locale);
     } else {
       // NPC输了这一轮
-      return getLoseDialogue(npcId, locale: locale);
+      return await getLoseDialogue(npcId, locale: locale);
     }
   }
 
@@ -186,7 +211,6 @@ class DialogueService {
   /// 清除缓存
   void clear() {
     _dialogues.clear();
-    _isLoaded = false;
   }
 
   /// 重新加载对话
