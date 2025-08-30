@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import '../models/ai_personality.dart';
 import '../utils/logger_utils.dart';
@@ -74,31 +72,24 @@ class NPCConfigService {
     return languageCode;
   }
 
-  // 初始化：加载JSON配置
+  // 初始化：永远从云端加载最新配置
   Future<void> initialize() async {
     if (_isLoaded) return;
 
     try {
-      LoggerUtils.info('开始加载NPC配置...');
+      LoggerUtils.info('开始从云端加载NPC配置...');
       
-      // 优先从云端加载配置
+      // 永远从云端加载最新配置，不再使用本地文件
       List<NPCConfig> cloudConfigs;
       try {
-        // 始终获取最新配置
-        cloudConfigs = await CloudNPCService.fetchNPCConfigs();
-        LoggerUtils.info('获取到${cloudConfigs.length}个NPC配置');
+        // 强制获取最新配置（forceRefresh=true）
+        cloudConfigs = await CloudNPCService.fetchNPCConfigs(forceRefresh: true);
+        LoggerUtils.info('成功从云端获取${cloudConfigs.length}个NPC配置');
       } catch (e) {
-        LoggerUtils.warning('云端加载失败，回退到本地配置: $e');
-        // 如果云端加载失败，使用本地配置
-        final String jsonString = await rootBundle.loadString('assets/config/npc_config.json');
-        final Map<String, dynamic> jsonData = json.decode(jsonString);
-        final npcsData = jsonData['npcs'] as Map<String, dynamic>;
-        
-        // 转换为NPCConfig列表
-        cloudConfigs = [];
-        for (final entry in npcsData.entries) {
-          cloudConfigs.add(NPCConfig.fromJson(entry.key, entry.value));
-        }
+        LoggerUtils.error('云端加载失败: $e');
+        // 如果云端加载失败，CloudNPCService会自动使用缓存或默认配置
+        // 不再回退到本地assets文件
+        rethrow;
       }
       
       // 处理配置数据

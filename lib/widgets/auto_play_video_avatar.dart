@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'dart:io';
 import '../utils/logger_utils.dart';
 import '../models/ai_personality.dart';
+import '../services/cloud_npc_service.dart';
+import 'npc_image_widget.dart';
 import 'dart:math' as math;
 
 /// 自动轮播视频头像组件 - 视频播放完后自动切换到下一个随机视频
@@ -26,6 +29,7 @@ class AutoPlayVideoAvatar extends StatefulWidget {
 class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   VideoPlayerController? _controller;
   int _currentVideoIndex = 1;
+  int _lastVideoIndex = 0;  // 记录上一个视频索引，避免连续重复
   bool _isInitialized = false;
   final _random = math.Random();
   bool _isLoadingNext = false;  // 防止重复加载
@@ -38,61 +42,90 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   
   /// 加载并播放视频
   Future<void> _loadAndPlayVideo() async {
-    // 保存旧控制器，等新视频准备好后再释放
+    // 如果正在加载，避免重复加载
+    if (_isLoadingNext) return;
+    _isLoadingNext = true;
+    
+    // 保存旧控制器引用
     final oldController = _controller;
     
     try {
-      // 随机选择视频编号
+      // 随机选择视频编号，避免连续重复
       final videoCount = widget.personality?.videoCount ?? 4;
       LoggerUtils.info('视频数量配置: videoCount=$videoCount, personality=${widget.personality?.id}');
-      _currentVideoIndex = _random.nextInt(videoCount) + 1;
-      final fileName = '$_currentVideoIndex.mp4';
       
-      // 构建网络视频URL (不需要token，使用公开访问)
-      final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                        'npcs%2F${widget.characterId}%2F$fileName?alt=media';
+      // 如果只有一个视频，直接用它
+      if (videoCount == 1) {
+        _currentVideoIndex = 1;
+      } else {
+        // 避免连续播放同一个视频
+        do {
+          _currentVideoIndex = _random.nextInt(videoCount) + 1;
+        } while (_currentVideoIndex == _lastVideoIndex);
+      }
+      
+      _lastVideoIndex = _currentVideoIndex;
+      final fileName = '$_currentVideoIndex.mp4';
+      LoggerUtils.info('选择视频: $fileName (避免重复上一个: $_lastVideoIndex)');
+      
+      // 使用智能缓存机制获取视频路径
+      final videoPath = await CloudNPCService.getSmartResourcePath(widget.characterId, fileName);
       
       LoggerUtils.info('播放视频: ${widget.characterId}/$fileName (从$videoCount个视频中选择)');
       
-      // 创建新控制器
-      final newController = VideoPlayerController.networkUrl(
-        Uri.parse(networkUrl),
-        videoPlayerOptions: VideoPlayerOptions(
-          mixWithOthers: true,
-          allowBackgroundPlayback: false,
-        ),
-      );
+      // 创建新控制器 - 根据路径类型选择合适的控制器
+      VideoPlayerController newController;
+      if (videoPath.startsWith('http')) {
+        // 网络URL
+        newController = VideoPlayerController.networkUrl(
+          Uri.parse(videoPath),
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: false,
+          ),
+        );
+      } else {
+        // 本地文件路径
+        newController = VideoPlayerController.file(
+          File(videoPath),
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: false,
+          ),
+        );
+        LoggerUtils.info('使用本地缓存视频: $fileName');
+      }
       
       // 初始化新视频
       await newController.initialize();
       await newController.setVolume(0);
       
       // 添加监听器，视频播放完后自动播放下一个
-      _isLoadingNext = false;  // 重置标志位
-      newController.addListener(() {
-        if (!mounted || _isLoadingNext) return;
+      void videoEndListener() {
+        if (!mounted) return;
         
         final value = newController.value;
         // 确保视频真正播放到结尾（position接近duration）
         if (value.duration > Duration.zero && 
             value.position >= value.duration - const Duration(milliseconds: 100)) {
-          // 设置标志位，防止重复触发
-          _isLoadingNext = true;
+          // 移除监听器避免重复触发
+          newController.removeListener(videoEndListener);
           // 视频播放完成，播放下一个随机视频
           _loadAndPlayVideo();
         }
-      });
+      }
       
+      newController.addListener(videoEndListener);
       await newController.play();
       
-      // 新视频准备好了，现在可以切换
-      _controller = newController;
-      
-      // 释放旧控制器
+      // 先释放旧控制器
       if (oldController != null) {
         await oldController.pause();
-        oldController.dispose();
+        await oldController.dispose();
       }
+      
+      // 再设置新控制器
+      _controller = newController;
       
       if (mounted) {
         setState(() {
@@ -102,11 +135,19 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
     } catch (e) {
       LoggerUtils.error('视频加载失败: $e');
       
+      // 释放失败的控制器
+      if (oldController != null && oldController != _controller) {
+        await oldController.pause();
+        await oldController.dispose();
+      }
+      
       if (mounted) {
         setState(() {
           _isInitialized = false;
         });
       }
+    } finally {
+      _isLoadingNext = false;
     }
   }
   
@@ -118,40 +159,13 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   
   /// 构建后备静态图片
   Widget _buildFallbackImage() {
-    // 使用静态图片1.jpg作为后备
-    final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                      'npcs%2F${widget.characterId}%2F1.jpg?alt=media';
-    
-    return Image.network(
-      networkUrl,
+    // 使用统一的NPC图片组件
+    return NPCImageWidget(
+      npcId: widget.characterId,
+      fileName: '1.jpg',
       width: widget.size,
       height: widget.size,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Center(
-          child: SizedBox(
-            width: widget.size * 0.3,
-            height: widget.size * 0.3,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withValues(alpha: 0.7)),
-            ),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          width: widget.size,
-          height: widget.size,
-          color: Colors.grey[800],
-          child: Icon(
-            Icons.person,
-            size: widget.size * 0.6,
-            color: Colors.white30,
-          ),
-        );
-      },
     );
   }
   

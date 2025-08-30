@@ -20,6 +20,8 @@ import 'utils/logger_utils.dart';
 import 'services/share_tracking_service.dart';
 import 'services/purchase_service.dart';
 import 'services/analytics_service.dart';
+import 'services/rules_service.dart';
+import 'services/cloud_npc_service.dart';
 import 'widgets/app_lifecycle_observer.dart';
 
 void main() async {
@@ -56,6 +58,11 @@ void main() async {
   try {
     await NPCConfigService().initialize();
     LoggerUtils.info('NPC配置加载成功');
+    
+    // 智能清理NPC缓存（异步执行，不阻塞启动）
+    CloudNPCService.smartCleanCache().then((_) {
+      LoggerUtils.info('NPC缓存清理检查完成');
+    });
   } catch (e) {
     LoggerUtils.error('NPC配置加载失败: $e');
   }
@@ -90,6 +97,14 @@ void main() async {
     LoggerUtils.info('Analytics服务初始化成功');
   } catch (e) {
     LoggerUtils.error('Analytics服务初始化失败: $e');
+  }
+  
+  // Initialize Rules Service
+  try {
+    await RulesService().initialize();
+    LoggerUtils.info('规则服务初始化成功');
+  } catch (e) {
+    LoggerUtils.error('规则服务初始化失败: $e');
   }
   
   // Game Progress Service will be initialized after user login

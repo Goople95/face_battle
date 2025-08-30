@@ -1,11 +1,13 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../utils/logger_utils.dart';
+import '../services/cloud_npc_service.dart';
 
 /// 本地存储调试工具
 /// 用于读取和显示SharedPreferences中的所有数据
@@ -298,6 +300,143 @@ class LocalStorageDebugTool {
     }
   }
   
+  /// 获取NPC缓存详细信息
+  static Future<Map<String, dynamic>> getNPCCacheInfo() async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final npcsDir = Directory('${appDir.path}/npcs');
+      
+      if (!await npcsDir.exists()) {
+        return {
+          'totalSize': 0,
+          'totalSizeMB': 0.0,
+          'npcCount': 0,
+          'npcs': [],
+        };
+      }
+      
+      final List<Map<String, dynamic>> npcList = [];
+      int totalSize = 0;
+      
+      await for (final entity in npcsDir.list()) {
+        if (entity is Directory) {
+          final npcId = entity.path.split(Platform.pathSeparator).last;
+          final stat = await entity.stat();
+          
+          // 计算文件夹大小和文件列表
+          int folderSize = 0;
+          final List<Map<String, dynamic>> files = [];
+          
+          await for (final file in entity.list(recursive: true)) {
+            if (file is File) {
+              final fileSize = await file.length();
+              folderSize += fileSize;
+              
+              final fileName = file.path.split(Platform.pathSeparator).last;
+              files.add({
+                'name': fileName,
+                'size': fileSize,
+                'sizeText': _formatFileSize(fileSize),
+                'type': _getFileType(fileName),
+              });
+            }
+          }
+          
+          totalSize += folderSize;
+          
+          npcList.add({
+            'id': npcId,
+            'path': entity.path,
+            'size': folderSize,
+            'sizeText': _formatFileSize(folderSize),
+            'sizeMB': folderSize / (1024 * 1024),
+            'lastAccessed': stat.accessed.toIso8601String(),
+            'daysSinceAccess': DateTime.now().difference(stat.accessed).inDays,
+            'fileCount': files.length,
+            'files': files,
+          });
+        }
+      }
+      
+      // 按大小排序
+      npcList.sort((a, b) => (b['size'] as int).compareTo(a['size'] as int));
+      
+      return {
+        'totalSize': totalSize,
+        'totalSizeMB': totalSize / (1024 * 1024),
+        'totalSizeText': _formatFileSize(totalSize),
+        'npcCount': npcList.length,
+        'npcs': npcList,
+        'cacheDir': npcsDir.path,
+      };
+    } catch (e) {
+      LoggerUtils.error('获取NPC缓存信息失败: $e');
+      return {
+        'error': e.toString(),
+        'totalSize': 0,
+        'totalSizeMB': 0.0,
+        'npcCount': 0,
+        'npcs': [],
+      };
+    }
+  }
+  
+  static String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+  
+  static String _getFileType(String fileName) {
+    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png')) {
+      return '图片';
+    } else if (fileName.endsWith('.mp4')) {
+      return '视频';
+    } else if (fileName.endsWith('.json')) {
+      return '配置';
+    }
+    return '其他';
+  }
+  
+  /// 智能清理NPC缓存
+  static Future<void> smartCleanNPCCache() async {
+    try {
+      final cacheDir = await getApplicationDocumentsDirectory();
+      final npcCacheDir = Directory('${cacheDir.path}/npcs');
+      
+      if (!await npcCacheDir.exists()) {
+        LoggerUtils.info('NPC缓存目录不存在，无需清理');
+        return;
+      }
+      
+      // 调用CloudNPCService的智能清理方法
+      await CloudNPCService.smartCleanCache(
+        maxCacheSizeMB: 300.0,  // 清理到300MB以下
+        maxCacheDays: 14,       // 清理14天未使用的
+        minKeepNPCs: 3,         // 至少保留3个最近使用的
+      );
+      
+      LoggerUtils.info('NPC缓存智能清理完成');
+    } catch (e) {
+      LoggerUtils.error('智能清理NPC缓存失败: $e');
+    }
+  }
+  
+  /// 清除所有NPC缓存
+  static Future<void> clearAllNPCCache() async {
+    try {
+      final cacheDir = await getApplicationDocumentsDirectory();
+      final npcCacheDir = Directory('${cacheDir.path}/npcs');
+      
+      if (await npcCacheDir.exists()) {
+        await npcCacheDir.delete(recursive: true);
+        LoggerUtils.info('已清除所有NPC缓存');
+      }
+    } catch (e) {
+      LoggerUtils.error('清除NPC缓存失败: $e');
+    }
+  }
+  
   /// 从JSON字符串导入数据
   static Future<bool> importFromJson(String jsonString) async {
     try {
@@ -566,6 +705,12 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                 case 'share':
                   await LocalStorageDebugTool.saveAndShareJson(context);
                   break;
+                case 'npc_cache':
+                  final cacheInfo = await LocalStorageDebugTool.getNPCCacheInfo();
+                  if (mounted) {
+                    _showNPCCacheDialog(context, cacheInfo);
+                  }
+                  break;
                 case 'clear':
                   final confirm = await showDialog<bool>(
                     context: context,
@@ -607,6 +752,16 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                 child: ListTile(
                   leading: Icon(Icons.share),
                   title: Text('分享文件'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'npc_cache',
+                child: ListTile(
+                  leading: Icon(Icons.people_alt, color: Colors.blue),
+                  title: Text('NPC缓存'),
+                  subtitle: Text('查看NPC资源缓存'),
                   dense: true,
                 ),
               ),
@@ -701,6 +856,235 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
               ],
             ),
     );
+  }
+  
+  void _showNPCCacheDialog(BuildContext context, Map<String, dynamic> cacheInfo) {
+    final totalSize = cacheInfo['totalSize'] ?? 0;
+    final npcCount = cacheInfo['npcCount'] ?? 0;
+    final npcs = cacheInfo['npcs'] as List<dynamic>? ?? [];
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.people_alt, color: Colors.blue),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('NPC缓存详情'),
+                  Text(
+                    '总大小: ${LocalStorageDebugTool._formatFileSize(totalSize)} | 角色数: $npcCount',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Container(
+          constraints: const BoxConstraints(maxHeight: 400, maxWidth: 500),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (npcs.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text('暂无缓存的NPC资源'),
+                    ),
+                  )
+                else
+                  ...npcs.map((npcData) {
+                    final npcMap = npcData as Map<String, dynamic>;
+                    final npcId = npcMap['id'] ?? '';
+                    final sizeBytes = npcMap['size'] ?? 0;
+                    final fileCount = npcMap['fileCount'] ?? 0;
+                    final files = npcMap['files'] as List<dynamic>? ?? [];
+                    final lastAccessed = npcMap['lastAccessed'] as String?;
+                    
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          dividerColor: Colors.transparent,
+                        ),
+                        child: ExpansionTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                            child: Text(
+                              npcId.substring(0, min(2, npcId.length)),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            'NPC #$npcId',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('大小: ${LocalStorageDebugTool._formatFileSize(sizeBytes)}'),
+                              Text('文件数: $fileCount'),
+                              if (lastAccessed != null)
+                                Text(
+                                  '最后访问: ${_formatLastAccessed(lastAccessed)}',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                            ],
+                          ),
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '缓存文件列表:',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...files.map((file) {
+                                    final fileMap = file as Map<String, dynamic>;
+                                    final fileName = fileMap['name'] ?? '';
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 16, bottom: 4),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            _getFileIcon(fileName),
+                                            size: 16,
+                                            color: _getFileColor(fileName),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              fileName,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontFamily: 'monospace',
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await LocalStorageDebugTool.smartCleanNPCCache();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('NPC缓存已智能清理')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.cleaning_services, size: 16),
+                      label: const Text('智能清理'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('确认清除'),
+                            content: const Text('确定要清除所有NPC缓存吗？'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('取消'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('清除', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                        
+                        if (confirm == true && context.mounted) {
+                          await LocalStorageDebugTool.clearAllNPCCache();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('所有NPC缓存已清除')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                      label: const Text('清除全部', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _formatLastAccessed(String timestamp) {
+    try {
+      final date = DateTime.parse(timestamp);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+      
+      if (diff.inDays > 0) {
+        return '${diff.inDays}天前';
+      } else if (diff.inHours > 0) {
+        return '${diff.inHours}小时前';
+      } else if (diff.inMinutes > 0) {
+        return '${diff.inMinutes}分钟前';
+      } else {
+        return '刚刚';
+      }
+    } catch (e) {
+      return timestamp;
+    }
+  }
+  
+  IconData _getFileIcon(String fileName) {
+    if (fileName.endsWith('.mp4')) return Icons.videocam;
+    if (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return Icons.image;
+    if (fileName.endsWith('.json')) return Icons.code;
+    return Icons.insert_drive_file;
+  }
+  
+  Color _getFileColor(String fileName) {
+    if (fileName.endsWith('.mp4')) return Colors.purple;
+    if (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) return Colors.green;
+    if (fileName.endsWith('.json')) return Colors.orange;
+    return Colors.grey;
   }
 }
 

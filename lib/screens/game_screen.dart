@@ -25,6 +25,7 @@ import '../services/game_progress_service.dart';
 import '../services/purchase_service.dart';
 import '../services/analytics_service.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../widgets/rules_display.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
@@ -775,6 +776,103 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     
     // Don't show dialog anymore - result is shown on game board
   
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 80),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.black.withValues(alpha: 0.9),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+          child: IntrinsicHeight(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 标题栏 - 简洁设计
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // 居中标题
+                      Center(
+                        child: Text(
+                          AppLocalizations.of(context)!.gameInstructions,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      // 关闭按钮
+                      Positioned(
+                        right: 12,
+                        top: 0,
+                        bottom: 0,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // 规则内容
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: const RulesDisplay(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    // 记录Analytics事件
+    AnalyticsService().logDialogShow(
+      dialogName: 'game_rules',
+      params: {
+        'screen': 'game',
+        'npc_id': widget.aiPersonality.id,
+      },
+    );
+  }
+
   void _showReviewDialog() {
     if (_currentRound == null) return;
     
@@ -1763,6 +1861,35 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   child: Stack(
                     children: [
+                      // 游戏规则按钮 - 右上角
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: _showRulesDialog,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.help_outline,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
                       // 主要内容
                       Positioned.fill(
                         child: !_gameStarted 

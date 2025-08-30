@@ -20,10 +20,10 @@ class CloudNPCService {
   static const String _cacheVersionKey = 'npc_cache_version';
   static const String _cachedConfigsKey = 'npc_cached_configs';
   
-  /// 获取所有可用的NPC配置（始终使用云端最新配置）
+  /// 获取所有可用的NPC配置（始终使用云端最新配置，不缓存JSON）
   static Future<List<NPCConfig>> fetchNPCConfigs({bool forceRefresh = false}) async {
     try {
-      // 配置文件很小，始终从云端获取最新版本
+      // 始终从云端获取最新版本，JSON文件很小不需要缓存
       LoggerUtils.info('从云端获取最新NPC配置...');
       
       try {
@@ -36,9 +36,7 @@ class CloudNPCService {
           final jsonData = json.decode(jsonStr);
           final configs = _parseNPCConfigs(jsonData);
           
-          // 不再缓存，每次都使用最新配置
-          LoggerUtils.info('成功获取${configs.length}个NPC配置');
-          
+          LoggerUtils.info('成功获取${configs.length}个NPC配置（Firebase Storage）');
           return configs;
         }
       } catch (firebaseError) {
@@ -53,24 +51,17 @@ class CloudNPCService {
           final data = json.decode(response.body);
           final configs = _parseNPCConfigs(data);
           
-          // 不再缓存，每次都使用最新配置
-          LoggerUtils.info('通过HTTP成功获取${configs.length}个NPC配置');
-          
+          LoggerUtils.info('成功获取${configs.length}个NPC配置（HTTP）');
           return configs;
         }
       }
       
-      throw Exception('获取NPC配置失败');
+      throw Exception('无法从云端获取NPC配置');
       
     } catch (e) {
-      LoggerUtils.error('获取NPC配置出错: $e');
-      // 尝试使用本地缓存
-      final cached = await _loadCachedConfigs();
-      if (cached != null) {
-        return cached;
-      }
-      // 如果没有缓存，返回默认配置
-      return _getDefaultConfigs();
+      LoggerUtils.error('获取NPC配置失败: $e');
+      // JSON配置必须联网获取，没有网络就无法游戏
+      throw Exception('需要网络连接：NPC配置必须从云端获取');
     }
   }
   
@@ -132,24 +123,188 @@ class CloudNPCService {
     return localPath;
   }
   
-  /// 检查并更新NPC资源
-  static Future<void> checkForUpdates() async {
-    try {
-      // 暂时跳过版本检查，因为version.json可能不存在
-      // 可以通过检查npc_config.json的metadata来判断更新
-      final prefs = await SharedPreferences.getInstance();
-      final lastCheck = prefs.getInt('last_update_check') ?? 0;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      
-      // 每24小时检查一次
-      if (now - lastCheck > 86400000) {
-        LoggerUtils.info('检查NPC资源更新...');
-        await fetchNPCConfigs(forceRefresh: true);
-        await prefs.setInt('last_update_check', now);
-      }
-    } catch (e) {
-      LoggerUtils.error('检查更新失败: $e');
+  /// 智能获取NPC资源路径（优先本地，否则返回云端URL并后台下载）
+  static Future<String> getSmartResourcePath(String npcId, String resourcePath) async {
+    final dir = await _getNPCDirectory(npcId);
+    final localPath = '${dir.path}/$resourcePath';
+    final localFile = File(localPath);
+    
+    // 检查本地文件是否存在
+    if (await localFile.exists()) {
+      LoggerUtils.debug('使用本地缓存: $localPath');
+      return localPath;
     }
+    
+    // 构建云端URL
+    final encodedId = Uri.encodeComponent(npcId);
+    final encodedPath = Uri.encodeComponent(resourcePath);
+    final cloudUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
+                     'npcs%2F$encodedId%2F$encodedPath?alt=media';
+    
+    // 后台下载到本地（不阻塞返回）
+    _downloadFileInBackground(cloudUrl, localPath);
+    
+    // 立即返回云端URL供使用
+    LoggerUtils.debug('使用云端URL并后台缓存: $cloudUrl');
+    return cloudUrl;
+  }
+  
+  /// 后台下载文件（不阻塞）
+  static void _downloadFileInBackground(String url, String savePath) {
+    Future(() async {
+      try {
+        final file = File(savePath);
+        if (await file.exists()) return; // 双重检查
+        
+        // 创建目录
+        await file.parent.create(recursive: true);
+        
+        // 下载文件
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          await file.writeAsBytes(response.bodyBytes);
+          LoggerUtils.info('后台缓存成功: ${savePath.split('/').last}');
+        }
+      } catch (e) {
+        LoggerUtils.debug('后台缓存失败（不影响使用）: $e');
+      }
+    });
+  }
+  
+  /// 获取缓存大小（MB）
+  static Future<double> getCacheSize() async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final npcsDir = Directory('${appDir.path}/npcs');
+      
+      if (!await npcsDir.exists()) return 0.0;
+      
+      int totalBytes = 0;
+      await for (final entity in npcsDir.list(recursive: true)) {
+        if (entity is File) {
+          totalBytes += await entity.length();
+        }
+      }
+      
+      return totalBytes / (1024 * 1024); // 转换为MB
+    } catch (e) {
+      LoggerUtils.error('获取缓存大小失败: $e');
+      return 0.0;
+    }
+  }
+  
+  /// 智能清理缓存（基于大小和时间）
+  static Future<void> smartCleanCache({
+    double maxCacheSizeMB = 500.0,  // 最大缓存500MB
+    int maxCacheDays = 30,          // 最长保留30天
+    int minKeepNPCs = 5,            // 至少保留5个最近使用的NPC
+  }) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final npcsDir = Directory('${appDir.path}/npcs');
+      
+      if (!await npcsDir.exists()) return;
+      
+      // 获取当前缓存大小
+      final currentSizeMB = await getCacheSize();
+      LoggerUtils.info('当前NPC缓存大小: ${currentSizeMB.toStringAsFixed(2)}MB');
+      
+      // 如果缓存未超限，只清理过期的
+      if (currentSizeMB <= maxCacheSizeMB) {
+        await _cleanExpiredNPCs(maxCacheDays);
+        return;
+      }
+      
+      // 缓存超限，需要清理
+      LoggerUtils.warning('缓存超限，开始智能清理...');
+      
+      // 收集所有NPC信息
+      final npcInfoList = <Map<String, dynamic>>[];
+      await for (final entity in npcsDir.list()) {
+        if (entity is Directory) {
+          final npcId = entity.path.split('/').last;
+          final stat = await entity.stat();
+          
+          // 计算文件夹大小
+          int folderSize = 0;
+          await for (final file in entity.list(recursive: true)) {
+            if (file is File) {
+              folderSize += await file.length();
+            }
+          }
+          
+          npcInfoList.add({
+            'id': npcId,
+            'path': entity.path,
+            'accessed': stat.accessed,
+            'size': folderSize,
+            'sizeMB': folderSize / (1024 * 1024),
+          });
+        }
+      }
+      
+      // 按最后访问时间排序（最近的在前）
+      npcInfoList.sort((a, b) => 
+        (b['accessed'] as DateTime).compareTo(a['accessed'] as DateTime));
+      
+      // 保留最近使用的NPC，删除其他的直到缓存大小合适
+      double totalSizeMB = currentSizeMB;
+      final prefs = await SharedPreferences.getInstance();
+      final downloaded = prefs.getStringList('downloaded_npcs') ?? [];
+      
+      for (int i = 0; i < npcInfoList.length; i++) {
+        // 至少保留指定数量的NPC
+        if (i < minKeepNPCs) continue;
+        
+        // 如果缓存已经小于限制，停止清理
+        if (totalSizeMB <= maxCacheSizeMB * 0.8) break; // 清理到80%以下
+        
+        final npcInfo = npcInfoList[i];
+        final npcId = npcInfo['id'] as String;
+        final sizeMB = npcInfo['sizeMB'] as double;
+        
+        // 删除NPC资源
+        await Directory(npcInfo['path'] as String).delete(recursive: true);
+        downloaded.remove(npcId);
+        totalSizeMB -= sizeMB;
+        
+        LoggerUtils.info('清理NPC缓存: $npcId (${sizeMB.toStringAsFixed(2)}MB)');
+      }
+      
+      await prefs.setStringList('downloaded_npcs', downloaded);
+      LoggerUtils.info('缓存清理完成，当前大小: ${totalSizeMB.toStringAsFixed(2)}MB');
+      
+    } catch (e) {
+      LoggerUtils.error('智能清理缓存失败: $e');
+    }
+  }
+  
+  /// 清理过期的NPC（内部方法）
+  static Future<void> _cleanExpiredNPCs(int maxCacheDays) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final npcsDir = Directory('${appDir.path}/npcs');
+    
+    if (!await npcsDir.exists()) return;
+    
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    final downloaded = prefs.getStringList('downloaded_npcs') ?? [];
+    
+    await for (final entity in npcsDir.list()) {
+      if (entity is Directory) {
+        final stat = await entity.stat();
+        final age = now.difference(stat.accessed);
+        
+        if (age.inDays > maxCacheDays) {
+          final npcId = entity.path.split('/').last;
+          LoggerUtils.info('清理过期NPC: $npcId (${age.inDays}天未使用)');
+          await entity.delete(recursive: true);
+          downloaded.remove(npcId);
+        }
+      }
+    }
+    
+    await prefs.setStringList('downloaded_npcs', downloaded);
   }
   
   // ========== 私有方法 ==========
@@ -167,78 +322,7 @@ class CloudNPCService {
     return configs;
   }
   
-  /// 加载缓存的配置
-  static Future<List<NPCConfig>?> _loadCachedConfigs() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cached = prefs.getString(_cachedConfigsKey);
-      
-      if (cached != null) {
-        final data = json.decode(cached);
-        return _parseNPCConfigs(data);
-      }
-    } catch (e) {
-      LoggerUtils.error('加载缓存配置失败: $e');
-    }
-    return null;
-  }
-  
-  /// 缓存配置（保持现有JSON结构）
-  static Future<void> _cacheConfigs(List<NPCConfig> configs, {int? serverVersion}) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // 转换回原始的对象格式
-      final npcsMap = <String, dynamic>{};
-      for (final config in configs) {
-        npcsMap[config.id] = config.toJson();
-      }
-      
-      final data = {
-        'npcs': npcsMap,
-      };
-      
-      await prefs.setString(_cachedConfigsKey, json.encode(data));
-      
-      // 保存服务器版本
-      if (serverVersion != null) {
-        await prefs.setInt(_cacheVersionKey, serverVersion);
-        LoggerUtils.info('缓存配置成功，版本: $serverVersion');
-      }
-    } catch (e) {
-      LoggerUtils.error('缓存配置失败: $e');
-    }
-  }
-  
-  /// 检查缓存是否有效
-  /// 检查是否需要更新缓存（通过比较服务器版本）
-  static Future<bool> _shouldUpdateCache() async {
-    try {
-      // 获取服务器配置的版本
-      final ref = _storage.ref('npcs/npc_config.json');
-      final data = await ref.getData();
-      
-      if (data != null) {
-        final jsonStr = utf8.decode(data);
-        final jsonData = json.decode(jsonStr);
-        final serverVersion = jsonData['version'] ?? 1;
-        
-        // 获取本地缓存的版本
-        final prefs = await SharedPreferences.getInstance();
-        final cachedVersion = prefs.getInt(_cacheVersionKey) ?? 0;
-        
-        LoggerUtils.info('版本检查: 服务器版本=$serverVersion, 本地缓存版本=$cachedVersion');
-        
-        // 如果服务器版本更新，需要更新缓存
-        return serverVersion > cachedVersion;
-      }
-    } catch (e) {
-      LoggerUtils.error('检查服务器版本失败: $e');
-    }
-    
-    // 如果检查失败，默认需要更新
-    return true;
-  }
+  // 已移除配置文件缓存相关方法，因为JSON配置始终从云端获取
   
   /// 获取NPC目录
   static Future<Directory> _getNPCDirectory(String npcId) async {
