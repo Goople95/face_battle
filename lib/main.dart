@@ -18,6 +18,9 @@ import 'services/game_progress_service.dart';
 import 'services/temp_state_service.dart';
 import 'utils/logger_utils.dart';
 import 'services/share_tracking_service.dart';
+import 'services/purchase_service.dart';
+import 'services/analytics_service.dart';
+import 'widgets/app_lifecycle_observer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +76,22 @@ void main() async {
     LoggerUtils.error('分享追踪服务初始化失败: $e');
   }
   
+  // Initialize In-App Purchase
+  try {
+    await PurchaseService().initialize();
+    LoggerUtils.info('内购服务初始化成功');
+  } catch (e) {
+    LoggerUtils.error('内购服务初始化失败: $e');
+  }
+  
+  // Initialize Analytics
+  try {
+    await AnalyticsService().initialize();
+    LoggerUtils.info('Analytics服务初始化成功');
+  } catch (e) {
+    LoggerUtils.error('Analytics服务初始化失败: $e');
+  }
+  
   // Game Progress Service will be initialized after user login
   // to ensure we have a valid user ID for database operations
   LoggerUtils.info('游戏进度服务将在用户登录后初始化');
@@ -105,8 +124,9 @@ class MyApp extends StatelessWidget {
           ],
           child: Consumer<LanguageService>(
             builder: (context, languageService, _) {
-              return MaterialApp(
-                title: 'Dice Girls',
+              return AppLifecycleObserver(
+                child: MaterialApp(
+                  title: 'Dice Girls',
                 theme: ThemeData(
                   primarySwatch: Colors.blue,
                   useMaterial3: true,
@@ -200,6 +220,7 @@ class MyApp extends StatelessWidget {
           },
                 ),
                 debugShowCheckedModeBanner: false,
+                ),
               );
             },
           ),

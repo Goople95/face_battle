@@ -9,6 +9,7 @@ import 'device_info_service.dart';
 import 'game_progress_service.dart';
 import 'storage/local_storage_service.dart';
 import 'ip_location_service.dart';
+import 'analytics_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 认证服务 - 管理用户登录状态
@@ -30,6 +31,8 @@ class AuthService extends ChangeNotifier {
     // 监听认证状态变化
     _auth.authStateChanges().listen((User? user) {
       _user = user;
+      // 设置Analytics用户ID
+      AnalyticsService().setUserId(user?.uid);
       notifyListeners();
     });
     
@@ -277,6 +280,13 @@ class AuthService extends ChangeNotifier {
         LoggerUtils.info('匿名登录成功: ${_user!.uid}');
         LoggerUtils.info('  账号创建时间: ${_user!.metadata.creationTime}');
         LoggerUtils.info('  最后登录时间: ${_user!.metadata.lastSignInTime}');
+        
+        // 记录登录事件
+        final isNewUser = _user!.metadata.creationTime == _user!.metadata.lastSignInTime;
+        AnalyticsService().logLogin(
+          method: 'guest',
+          isNewUser: isNewUser,
+        );
         
         // 检查是否是重用的旧匿名账号
         if (_user!.metadata.creationTime != null && 

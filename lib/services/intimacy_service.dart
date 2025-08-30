@@ -1,6 +1,7 @@
 import '../models/intimacy_data.dart';
 import '../utils/logger_utils.dart';
 import 'game_progress_service.dart';
+import 'purchase_service.dart';
 
 /// 亲密度服务 - GameProgressService 的轻量级包装器
 /// 保持原有 API 不变，内部调用 GameProgressService
@@ -64,6 +65,13 @@ class IntimacyService {
     // 每分钟 = 1点亲密度
     // 20-60分钟对应20-60点亲密度
     int pointsToAdd = minutesSpentTogether;
+    
+    // 检查是否已购买该NPC（VIP特权：亲密度翻倍）
+    final purchaseService = PurchaseService();
+    if (purchaseService.isNPCPurchased(npcId)) {
+      pointsToAdd *= 2;
+      LoggerUtils.info('VIP特权生效：亲密度翻倍');
+    }
     
     // 使用 GameProgressService 更新亲密度（内部会处理升级日志）
     await GameProgressService.instance.addNpcIntimacy(npcId, pointsToAdd);

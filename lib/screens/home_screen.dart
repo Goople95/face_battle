@@ -23,6 +23,7 @@ import '../services/intimacy_service.dart';
 import '../models/intimacy_data.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../utils/local_storage_debug_tool.dart';
+import '../services/analytics_service.dart';
 import '../services/npc_config_service.dart';
 import '../services/storage/local_storage_service.dart';
 import '../utils/logger_utils.dart';
@@ -986,6 +987,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     
     return GestureDetector(
       onTap: () async {
+        // 记录NPC点击事件
+        AnalyticsService().logButtonClick(
+          buttonName: 'npc_card',
+          screen: 'home',
+          additionalParams: {
+            'npc_id': personality.id,
+            'npc_name': personality.name,
+            'is_vip': personality.isVIP ? 1 : 0,  // 转换为数字
+            'is_drunk': isUnavailable ? 1 : 0,     // 转换为数字
+          },
+        );
+        
         if (isUnavailable) {
           // AI醉了，显示醒酒对话框
           _showAISoberDialog(personality);

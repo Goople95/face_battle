@@ -20,6 +20,7 @@ dependencies:
   firebase_auth: ^5.0.0
   cloud_firestore: ^5.0.0
   firebase_storage: ^12.0.0
+  firebase_analytics: ^11.0.0
   google_sign_in: ^6.2.1
   flutter_facebook_auth: ^6.0.3
   google_mobile_ads: ^5.0.0
@@ -35,6 +36,7 @@ dependencies:
   url_launcher: ^6.2.6
   qr_flutter: ^4.1.0
   screenshot: ^3.0.0
+  in_app_purchase: ^3.1.13
 
 dev_dependencies:
   flutter_test:

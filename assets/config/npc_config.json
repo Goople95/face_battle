@@ -19,7 +19,6 @@
       "avatarPath": "assets/people/0001/",
       "videosPath": "assets/people/0001/videos/",
       "isVIP": false,
-      "unlocked": true,
       "personality": {
         "bluffRatio": 0.25,
         "challengeThreshold": 0.4,
@@ -48,7 +47,6 @@
       "avatarPath": "assets/people/0002/",
       "videosPath": "assets/people/0002/videos/",
       "isVIP": false,
-      "unlocked": true,
       "personality": {
         "bluffRatio": 0.4,
         "challengeThreshold": 0.38,
@@ -58,36 +56,6 @@
       "country": "Russia",
       "videoCount": 8
     },
-    "0003": {
-      "id": "0003",
-      "names": {
-        "en": "Lena",
-        "zh_TW": "Lena",
-        "es": "Lena",
-        "pt": "Lena",
-        "id": "Lena"
-      },
-      "descriptions": {
-        "en": "Her calm gaze hides a quiet allure.",
-        "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
-        "es": "Su mirada serena esconde un encanto silencioso.",
-        "pt": "Seu olhar calmo esconde um charme discreto.",
-        "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
-      },
-      "avatarPath": "assets/people/0003/",
-      "videosPath": "assets/people/0003/videos/",
-      "isVIP": false,
-      "unlocked": true,
-      "personality": {
-        "bluffRatio": 0.25,
-        "challengeThreshold": 0.4,
-        "riskAppetite": 0.3
-      },
-      "drinkCapacity": 6,
-      "country": "Germany",
-      "videoCount": 5
-    },
-
     "1001": {
       "id": "1001",
       "names": {
@@ -107,9 +75,7 @@
       "avatarPath": "assets/people/1001/",
       "videosPath": "assets/people/1001/videos/",
       "isVIP": true,
-      "unlocked": false,
-      "unlockPrice": 30,
-      "unlockItemId": "vip_1001_unlock",
+      "unlockItemId": "vip_npc_1001",
       "personality": {
         "bluffRatio": 0.48,
         "challengeThreshold": 0.42,
@@ -138,40 +104,7 @@
       "avatarPath": "assets/people/1002/",
       "videosPath": "assets/people/1002/videos/",
       "isVIP": true,
-      "unlocked": false,
-      "unlockPrice": 30,
-      "unlockItemId": "vip_1002_unlock",
-      "personality": {
-        "bluffRatio": 0.55,
-        "challengeThreshold": 0.45,
-        "riskAppetite": 0.7
-      },
-      "drinkCapacity": 6,
-      "country": "Brazil",
-      "videoCount": 5
-    },
-    "1003": {
-      "id": "1003",
-      "names": {
-        "en": "Isabella",
-        "zh_TW": "Isabella",
-        "es": "Isabella",
-        "pt": "Isabella",
-        "id": "Isabella"
-      },
-      "descriptions": {
-        "en": "Her words flow like music, impossible to resist.",
-        "zh_TW": "她的話語像音樂般流淌，令人難以抗拒。",
-        "es": "Sus palabras fluyen como música, imposibles de resistir.",
-        "pt": "Suas palavras fluem como música, impossíveis de resistir.",
-        "id": "Kata-katanya mengalir seperti musik, mustahil untuk ditolak."
-      },
-      "avatarPath": "assets/people/1003/",
-      "videosPath": "assets/people/1003/videos/",
-      "isVIP": true,
-      "unlocked": false,
-      "unlockPrice": 30,
-      "unlockItemId": "vip_1003_unlock",
+      "unlockItemId": "vip_npc_1002",
       "personality": {
         "bluffRatio": 0.55,
         "challengeThreshold": 0.45,
@@ -181,42 +114,40 @@
       "country": "Brazil",
       "videoCount": 5
     }
-
   },
   "vipConfig": {
     "adRequiredPerGame": true,
     "adRewardDuration": 1,
-    "unlockPriceGems": 30,
     "vipBenefits": {
       "en": [
         "No ads required",
-        "Unique dialogues and expressions",
-        "Higher game difficulty",
-        "Exclusive achievements"
+        "2x intimacy points per win",
+        "Free sobering when drunk",
+        "Exclusive dialogues"
       ],
       "zh_TW": [
         "無需觀看廣告",
-        "獨特的對話和表情",
-        "更高的遊戲難度",
-        "專屬成就獎勵"
+        "親密度獎勵翻倍",
+        "免費醒酒功能",
+        "專屬對話內容"
       ],
       "es": [
         "Sin anuncios requeridos",
-        "Diálogos y expresiones únicos",
-        "Mayor dificultad del juego",
-        "Logros exclusivos"
+        "2x puntos de intimidad por victoria",
+        "Desembriagar gratis",
+        "Diálogos exclusivos"
       ],
       "pt": [
         "Sem anúncios necessários",
-        "Diálogos e expressões únicos",
-        "Maior dificuldade do jogo",
-        "Conquistas exclusivas"
+        "2x pontos de intimidade por vitória",
+        "Deixar sóbrio gratuitamente",
+        "Diálogos exclusivos"
       ],
       "id": [
         "Tanpa iklan",
-        "Dialog dan ekspresi unik",
-        "Tingkat kesulitan lebih tinggi",
-        "Pencapaian eksklusif"
+        "2x poin keintiman per kemenangan",
+        "Sadarkan gratis saat mabuk",
+        "Dialog eksklusif"
       ]
     }
   }

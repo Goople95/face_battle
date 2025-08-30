@@ -22,6 +22,8 @@ import '../services/image_share_service.dart';
 import '../services/intimacy_service.dart';
 import '../services/dialogue_service.dart';
 import '../services/game_progress_service.dart';
+import '../services/purchase_service.dart';
+import '../services/analytics_service.dart';
 import '../l10n/generated/app_localizations.dart';
 
 class GameScreen extends StatefulWidget {
@@ -45,6 +47,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   bool _showDice = false;
   bool _gameStarted = false;  // Track if game has started
   bool _playerChallenged = false; // Track who challenged
+  DateTime? _sessionStartTime;  // 记录游戏开始时间用于Analytics
   
   // UI Controllers
   int _selectedQuantity = 2;  // 起叫最少2个
@@ -288,6 +291,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       vsync: this,
     );
     
+    // 记录屏幕查看事件
+    AnalyticsService().logScreenView(screenName: 'game_screen');
+    
     // 初始化酒杯变化动画控制器
     _drinkChangeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -323,6 +329,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _startNewRound() {
     final random = math.Random();
     
+    // 记录游戏开始时间
+    _sessionStartTime = DateTime.now();
+    
+    // 记录游戏开始事件（每次新游戏开始时）
+    AnalyticsService().logGameStart(
+      npcId: widget.aiPersonality.id,
+      npcName: widget.aiPersonality.name,
+      isVip: widget.aiPersonality.isVIP,  // 这个方法内部会处理
+      playerDrinks: _drinkingState?.drinksConsumed ?? 0,
+      npcDrinks: _drinkingState?.getAIDrinks(widget.aiPersonality.id) ?? 0,
+    );
     
     // Reset bid selector to minimum value 2×2
     setState(() {
@@ -628,6 +645,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     
     // 游戏结束，更新游戏进度和统计
     bool playerWon = winner == 'Player';
+    
+    // 记录游戏结束事件
+    AnalyticsService().logGameEnd(
+      npcId: widget.aiPersonality.id,
+      playerWon: playerWon,
+      rounds: 1,  // 当前只追踪单轮
+      duration: DateTime.now().difference(_sessionStartTime ?? DateTime.now()).inSeconds,
+      endReason: playerChallenged ? 
+        (playerWon ? 'challenge_win' : 'challenge_lose') : 
+        (playerWon ? 'ai_challenge_lose' : 'ai_challenge_win'),
+    );
     
     // 更新游戏进度统计（现在包含所有原PlayerProfile的功能）
     LoggerUtils.info('=== 调用 GameProgressService.updateGameResult ===');
@@ -1198,29 +1226,47 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               );
             },
           onRematch: () {
-            // 看广告让AI醒酒
-            AdHelper.showRewardedAdAfterDialogClose(
-              context: context,
-              onRewarded: (rewardAmount) {
-                setState(() {
-                  _drinkingState!.watchAdToSoberAI(widget.aiPersonality.id);
-                  _drinkingState!.save();
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppLocalizations.of(context)!.aiSoberedUp(_getLocalizedAIName(context))),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                _startNewRound();
-              },
-              onFailed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(AppLocalizations.of(context)!.adLoadFailed)),
-                );
-              },
-            );
+            // 检查是否已购买该NPC（VIP特权：免费醒酒）
+            final purchaseService = PurchaseService();
+            if (purchaseService.isNPCPurchased(widget.aiPersonality.id)) {
+              // VIP用户直接醒酒，无需看广告
+              setState(() {
+                _drinkingState!.watchAdToSoberAI(widget.aiPersonality.id);
+                _drinkingState!.save();
+              });
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('VIP特权：${_getLocalizedAIName(context)}已免费醒酒'),
+                  backgroundColor: Colors.purple,
+                ),
+              );
+              _startNewRound();
+            } else {
+              // 非VIP用户需要看广告
+              AdHelper.showRewardedAdAfterDialogClose(
+                context: context,
+                onRewarded: (rewardAmount) {
+                  setState(() {
+                    _drinkingState!.watchAdToSoberAI(widget.aiPersonality.id);
+                    _drinkingState!.save();
+                  });
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.aiSoberedUp(_getLocalizedAIName(context))),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  _startNewRound();
+                },
+                onFailed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.of(context)!.adLoadFailed)),
+                  );
+                },
+              );
+            }
           },
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
