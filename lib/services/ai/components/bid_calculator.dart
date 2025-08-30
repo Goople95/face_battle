@@ -98,7 +98,7 @@ class BidCalculator {
       for (int qty = current.quantity; qty <= math.min(10, current.quantity + 3); qty++) {
         for (int val = 1; val <= 6; val++) {
           Bid newBid = Bid(quantity: qty, value: val);
-          if (_isValidBid(newBid, current)) {
+          if (_isValidBid(newBid, current, onesAreCalled: round.onesAreCalled)) {
             candidates.add(newBid);
           }
         }
@@ -114,14 +114,9 @@ class BidCalculator {
   }
   
   /// 检查叫牌是否合法
-  static bool _isValidBid(Bid newBid, Bid currentBid) {
-    if (newBid.value > currentBid.value) {
-      return newBid.quantity >= currentBid.quantity;
-    }
-    if (newBid.value == currentBid.value) {
-      return newBid.quantity > currentBid.quantity;
-    }
-    return newBid.quantity > currentBid.quantity;
+  static bool _isValidBid(Bid newBid, Bid currentBid, {bool onesAreCalled = false}) {
+    // 使用Bid类自带的isHigherThan方法，它已经正确实现了1>6>5>4>3>2的规则
+    return newBid.isHigherThan(currentBid, onesAreCalled: onesAreCalled);
   }
   
   /// 根据成功率获取策略类型

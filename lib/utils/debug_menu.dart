@@ -271,13 +271,69 @@ class DebugMenu extends StatelessWidget {
   }
   
   void _showNPCCacheDialog(BuildContext context, Map<String, dynamic> cacheInfo) {
+    showDialog(
+      context: context,
+      builder: (context) => _NPCCacheDialog(initialCacheInfo: cacheInfo),
+    );
+  }
+}
+
+// NPC缓存对话框 - 改为StatefulWidget以支持刷新
+class _NPCCacheDialog extends StatefulWidget {
+  final Map<String, dynamic> initialCacheInfo;
+  
+  const _NPCCacheDialog({required this.initialCacheInfo});
+  
+  @override
+  State<_NPCCacheDialog> createState() => _NPCCacheDialogState();
+}
+
+class _NPCCacheDialogState extends State<_NPCCacheDialog> {
+  late Map<String, dynamic> cacheInfo;
+  bool isLoading = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    cacheInfo = widget.initialCacheInfo;
+  }
+  
+  // 刷新缓存信息
+  Future<void> _refreshCacheInfo() async {
+    setState(() {
+      isLoading = true;
+    });
+    
+    try {
+      final newCacheInfo = await LocalStorageDebugTool.getNPCCacheInfo();
+      if (mounted) {
+        setState(() {
+          cacheInfo = newCacheInfo;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+  
+  String _formatSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     final totalSize = cacheInfo['totalSizeBytes'] ?? 0;
     final npcCount = cacheInfo['npcCount'] ?? 0;
     final npcs = cacheInfo['npcs'] as Map<String, dynamic>? ?? {};
     
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+    return AlertDialog(
         title: Row(
           children: [
             const Icon(Icons.people_alt, color: Colors.blue),
@@ -298,18 +354,25 @@ class DebugMenu extends StatelessWidget {
         ),
         content: Container(
           constraints: const BoxConstraints(maxHeight: 400, maxWidth: 500),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (npcs.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text('暂无缓存的NPC资源'),
-                    ),
-                  )
-                else
+          child: isLoading 
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (npcs.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text('暂无缓存的NPC资源'),
+                        ),
+                      )
+                    else
                   ...npcs.entries.map((entry) {
                     final npcId = entry.key;
                     final npcData = entry.value as Map<String, dynamic>;
@@ -407,9 +470,10 @@ class DebugMenu extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: () async {
-                        Navigator.pop(context);
                         // 执行智能清理
                         await LocalStorageDebugTool.smartCleanNPCCache();
+                        // 刷新缓存信息显示
+                        await _refreshCacheInfo();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('NPC缓存已智能清理')),
@@ -421,7 +485,8 @@ class DebugMenu extends StatelessWidget {
                     ),
                     TextButton.icon(
                       onPressed: () async {
-                        Navigator.pop(context);
+                        LoggerUtils.info('点击清除全部按钮');
+                        
                         // 清除所有NPC缓存
                         final confirm = await showDialog<bool>(
                           context: context,
@@ -430,22 +495,59 @@ class DebugMenu extends StatelessWidget {
                             content: const Text('确定要清除所有NPC缓存吗？'),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context, false),
+                                onPressed: () {
+                                  LoggerUtils.info('用户点击取消');
+                                  Navigator.pop(context, false);
+                                },
                                 child: const Text('取消'),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.pop(context, true),
+                                onPressed: () {
+                                  LoggerUtils.info('用户点击确认清除');
+                                  Navigator.pop(context, true);
+                                },
                                 child: const Text('清除', style: TextStyle(color: Colors.red)),
                               ),
                             ],
                           ),
                         );
                         
-                        if (confirm == true && context.mounted) {
-                          await LocalStorageDebugTool.clearAllNPCCache();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('所有NPC缓存已清除')),
-                          );
+                        LoggerUtils.info('对话框返回值: $confirm');
+                        
+                        if (confirm == true) {
+                          if (!context.mounted) {
+                            LoggerUtils.error('context已卸载，无法执行清除操作');
+                            return;
+                          }
+                          
+                          LoggerUtils.info('开始执行清除NPC缓存');
+                          
+                          try {
+                            await LocalStorageDebugTool.clearAllNPCCache();
+                            LoggerUtils.info('清除操作完成，开始刷新UI');
+                            
+                            // 刷新缓存信息显示
+                            await _refreshCacheInfo();
+                            LoggerUtils.info('UI刷新完成');
+                            
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('所有NPC缓存已清除')),
+                              );
+                            }
+                          } catch (e) {
+                            LoggerUtils.error('清除缓存时出错: $e');
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('清除失败: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          LoggerUtils.info('用户取消清除NPC缓存');
                         }
                       },
                       icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),

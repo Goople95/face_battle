@@ -116,7 +116,7 @@ abstract class StrategyExecutor {
     }
     
     // 最终检查
-    if (!isValidBid(bid, currentBid)) {
+    if (!isValidBid(bid, currentBid, onesAreCalled: round.onesAreCalled)) {
       // 强制修正为合法叫牌
       return Bid(quantity: currentBid.quantity + 1, value: currentBid.value);
     }
@@ -125,17 +125,9 @@ abstract class StrategyExecutor {
   }
   
   /// 检查叫牌是否合法
-  bool isValidBid(Bid newBid, Bid currentBid) {
-    // 点数更大，数量相同或更多
-    if (newBid.value > currentBid.value) {
-      return newBid.quantity >= currentBid.quantity;
-    }
-    // 点数相同，数量必须更多
-    if (newBid.value == currentBid.value) {
-      return newBid.quantity > currentBid.quantity;
-    }
-    // 点数更小，数量必须更多
-    return newBid.quantity > currentBid.quantity;
+  bool isValidBid(Bid newBid, Bid currentBid, {bool onesAreCalled = false}) {
+    // 使用Bid类自带的isHigherThan方法，它已经正确实现了1>6>5>4>3>2的规则
+    return newBid.isHigherThan(currentBid, onesAreCalled: onesAreCalled);
   }
   
   /// 生成决策结果

@@ -152,7 +152,7 @@ class MasterAIEngine {
       for (int value = 1; value <= 6; value++) {
         if (value != current.value) {
           Bid newBid = Bid(quantity: current.quantity, value: value);
-          if (_isValidBid(newBid, current)) {
+          if (_isValidBid(newBid, current, onesAreCalled: round.onesAreCalled)) {
             candidates.add(newBid);
           } else {
             candidates.add(Bid(quantity: current.quantity + 1, value: value));
@@ -195,9 +195,9 @@ class MasterAIEngine {
   }
   
   /// 检查叫牌是否合法
-  bool _isValidBid(Bid newBid, Bid currentBid) {
+  bool _isValidBid(Bid newBid, Bid currentBid, {bool onesAreCalled = false}) {
     // 使用Bid类自带的isHigherThan方法，它已经正确实现了1>6>5>4>3>2的规则
-    return newBid.isHigherThan(currentBid);
+    return newBid.isHigherThan(currentBid, onesAreCalled: onesAreCalled);
   }
   
   /// 重置引擎（新游戏开始）

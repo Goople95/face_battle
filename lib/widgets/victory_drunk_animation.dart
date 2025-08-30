@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:math' as math;
+import 'dart:io';
 import '../models/ai_personality.dart';
 import '../models/drinking_state.dart';
 import '../services/intimacy_service.dart';
 import '../services/game_progress_service.dart';
+import '../services/cloud_npc_service.dart';
 import '../utils/logger_utils.dart';
 import '../l10n/generated/app_localizations.dart';
 
@@ -184,37 +186,43 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
       return;
     }
     
-    // 醉倒视频路径
-    String videoPath = 'assets/people/${widget.defeatedAI.id}/videos/drunk.mp4';
-    
-    LoggerUtils.debug('尝试加载醉倒视频: $videoPath');
+    LoggerUtils.debug('尝试加载醉倒视频: ${widget.defeatedAI.id}/drunk.mp4');
     
     try {
-      // 先尝试本地资源
-      await rootBundle.load(videoPath);
-      _videoController = VideoPlayerController.asset(videoPath);
-      LoggerUtils.debug('使用本地醉倒视频');
-    } catch (e) {
-      // 本地资源不存在，使用网络资源
-      final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                        'npcs%2F${widget.defeatedAI.id}%2Fdrunk.mp4?alt=media&token=adacfb99-9f79-4002-9aa3-e3a9a97db26b';
-      _videoController = VideoPlayerController.networkUrl(Uri.parse(networkUrl));
-      LoggerUtils.info('使用网络醉倒视频: $networkUrl');
-    }
-    
-    await _videoController!.initialize();
-    
-    LoggerUtils.debug('视频加载成功: ${_videoController!.value.size}');
-    
-    // 只有在组件仍然挂载时才更新状态
-    if (mounted) {
-      setState(() {
-        _videoInitialized = true;
-      });
+      // 使用智能缓存机制获取视频路径
+      final videoPath = await CloudNPCService.getSmartResourcePath(
+        widget.defeatedAI.id, 
+        'drunk.mp4'
+      );
       
-      // 播放视频
-      _videoController!.setLooping(false);
-      _videoController!.play();
+      // 根据路径类型创建合适的控制器
+      if (videoPath.startsWith('http')) {
+        // 网络URL
+        _videoController = VideoPlayerController.networkUrl(Uri.parse(videoPath));
+        LoggerUtils.info('使用网络醉倒视频（将后台缓存）: ${widget.defeatedAI.id}/drunk.mp4');
+      } else {
+        // 本地文件路径
+        _videoController = VideoPlayerController.file(File(videoPath));
+        LoggerUtils.debug('使用本地缓存醉倒视频: ${widget.defeatedAI.id}/drunk.mp4');
+      }
+      
+      await _videoController!.initialize();
+      
+      LoggerUtils.debug('视频加载成功: ${_videoController!.value.size}');
+      
+      // 只有在组件仍然挂载时才更新状态
+      if (mounted) {
+        setState(() {
+          _videoInitialized = true;
+        });
+        
+        // 播放视频
+        _videoController!.setLooping(false);
+        _videoController!.play();
+      }
+    } catch (e) {
+      LoggerUtils.error('醉倒视频加载失败: $e');
+      // 加载失败不影响动画展示，继续显示其他内容
     }
       
       // 视频播放完毕后显示亲密度场景

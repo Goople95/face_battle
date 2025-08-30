@@ -306,12 +306,18 @@ class LocalStorageDebugTool {
       final appDir = await getApplicationDocumentsDirectory();
       final npcsDir = Directory('${appDir.path}/npcs');
       
+      LoggerUtils.info('获取NPC缓存信息，路径: ${npcsDir.path}');
+      LoggerUtils.info('目录存在: ${await npcsDir.exists()}');
+      
       if (!await npcsDir.exists()) {
+        LoggerUtils.info('NPC缓存目录不存在');
         return {
           'totalSize': 0,
           'totalSizeMB': 0.0,
+          'totalSizeText': '0 B',
           'npcCount': 0,
           'npcs': [],
+          'cacheDir': npcsDir.path,
         };
       }
       
@@ -428,12 +434,80 @@ class LocalStorageDebugTool {
       final cacheDir = await getApplicationDocumentsDirectory();
       final npcCacheDir = Directory('${cacheDir.path}/npcs');
       
+      LoggerUtils.info('========== 开始清除NPC缓存 ==========');
+      LoggerUtils.info('缓存目录路径: ${npcCacheDir.path}');
+      LoggerUtils.info('目录是否存在: ${await npcCacheDir.exists()}');
+      
       if (await npcCacheDir.exists()) {
+        // 统计删除前的状态
+        int totalFiles = 0;
+        int totalSize = 0;
+        
+        // 先统计所有文件
+        await for (final entity in npcCacheDir.list(recursive: true)) {
+          if (entity is File) {
+            totalFiles++;
+            totalSize += await entity.length();
+            LoggerUtils.debug('找到文件: ${entity.path}');
+          }
+        }
+        
+        LoggerUtils.info('删除前统计: $totalFiles 个文件，总大小: ${(totalSize / 1024 / 1024).toStringAsFixed(2)} MB');
+        
+        // 使用递归删除整个目录
+        LoggerUtils.info('开始递归删除整个目录...');
         await npcCacheDir.delete(recursive: true);
-        LoggerUtils.info('已清除所有NPC缓存');
+        LoggerUtils.info('✓ 递归删除完成');
+        
+        // 验证删除结果
+        if (await npcCacheDir.exists()) {
+          LoggerUtils.error('❌ 错误：目录仍然存在！');
+          
+          // 列出残留文件
+          final remaining = npcCacheDir.listSync(recursive: true);
+          LoggerUtils.error('残留文件数: ${remaining.length}');
+          for (var item in remaining) {
+            LoggerUtils.error('残留: ${item.path}');
+          }
+        } else {
+          LoggerUtils.info('✅ NPC缓存目录已完全删除');
+        }
+      } else {
+        LoggerUtils.info('NPC缓存目录不存在，无需清理');
       }
-    } catch (e) {
+      
+      // 清除缓存元数据（如果有的话）
+      final prefs = await SharedPreferences.getInstance();
+      
+      // 列出所有与NPC相关的SharedPreferences键
+      final keys = prefs.getKeys();
+      int removedKeys = 0;
+      for (final key in keys) {
+        if (key.contains('npc') || key.contains('cache')) {
+          await prefs.remove(key);
+          removedKeys++;
+          LoggerUtils.debug('删除SharedPreferences键: $key');
+        }
+      }
+      
+      LoggerUtils.info('已清除 $removedKeys 个相关的SharedPreferences键');
+      
+      // 最终验证
+      LoggerUtils.info('========== 清除操作完成 ==========');
+      
+      // 再次检查目录状态
+      final finalCheck = await npcCacheDir.exists();
+      LoggerUtils.info('最终检查 - 目录存在: $finalCheck');
+      
+      if (!finalCheck) {
+        LoggerUtils.info('✅ 成功：NPC缓存已完全清除');
+      } else {
+        LoggerUtils.error('❌ 失败：NPC缓存目录仍然存在');
+      }
+      
+    } catch (e, stackTrace) {
       LoggerUtils.error('清除NPC缓存失败: $e');
+      LoggerUtils.error('堆栈跟踪: $stackTrace');
     }
   }
   
@@ -1008,30 +1082,64 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                     ),
                     TextButton.icon(
                       onPressed: () async {
+                        LoggerUtils.info('点击NPC缓存详情对话框的清除全部按钮');
+                        
+                        // 保存原始context，因为关闭对话框后context会失效
+                        final scaffoldContext = context;
+                        
+                        // 先关闭当前对话框
                         Navigator.pop(context);
+                        
                         final confirm = await showDialog<bool>(
-                          context: context,
+                          context: scaffoldContext,
                           builder: (context) => AlertDialog(
                             title: const Text('确认清除'),
                             content: const Text('确定要清除所有NPC缓存吗？'),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context, false),
+                                onPressed: () {
+                                  LoggerUtils.info('用户点击取消');
+                                  Navigator.pop(context, false);
+                                },
                                 child: const Text('取消'),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.pop(context, true),
+                                onPressed: () {
+                                  LoggerUtils.info('用户点击确认清除');
+                                  Navigator.pop(context, true);
+                                },
                                 child: const Text('清除', style: TextStyle(color: Colors.red)),
                               ),
                             ],
                           ),
                         );
                         
-                        if (confirm == true && context.mounted) {
-                          await LocalStorageDebugTool.clearAllNPCCache();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('所有NPC缓存已清除')),
-                          );
+                        LoggerUtils.info('确认对话框返回值: $confirm, context.mounted: ${scaffoldContext.mounted}');
+                        
+                        if (confirm == true) {
+                          LoggerUtils.info('开始清除所有NPC缓存...');
+                          try {
+                            await LocalStorageDebugTool.clearAllNPCCache();
+                            LoggerUtils.info('清除完成，显示提示');
+                            
+                            if (scaffoldContext.mounted) {
+                              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                                const SnackBar(content: Text('所有NPC缓存已清除')),
+                              );
+                            }
+                          } catch (e) {
+                            LoggerUtils.error('清除缓存失败: $e');
+                            if (scaffoldContext.mounted) {
+                              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                                SnackBar(
+                                  content: Text('清除失败: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          LoggerUtils.info('用户取消了清除操作');
                         }
                       },
                       icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),

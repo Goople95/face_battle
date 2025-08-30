@@ -138,7 +138,7 @@ class EliteAIEngine {
       // 后续叫牌
       for (int qty = currentBid.quantity; qty <= math.min(10, currentBid.quantity + 3); qty++) {
         for (int val = 1; val <= 6; val++) {
-          if (_isValidBid(Bid(quantity: qty, value: val), currentBid)) {
+          if (_isValidBid(Bid(quantity: qty, value: val), currentBid, onesAreCalled: round.onesAreCalled)) {
             candidates.add(Bid(quantity: qty, value: val));
           }
         }
@@ -309,14 +309,9 @@ class EliteAIEngine {
   }
   
   /// 检查叫牌是否合法
-  bool _isValidBid(Bid newBid, Bid currentBid) {
-    if (newBid.value > currentBid.value) {
-      return newBid.quantity >= currentBid.quantity;
-    }
-    if (newBid.value == currentBid.value) {
-      return newBid.quantity > currentBid.quantity;
-    }
-    return newBid.quantity > currentBid.quantity;
+  bool _isValidBid(Bid newBid, Bid currentBid, {bool onesAreCalled = false}) {
+    // 使用Bid类自带的isHigherThan方法，它已经正确实现了1>6>5>4>3>2的规则
+    return newBid.isHigherThan(currentBid, onesAreCalled: onesAreCalled);
   }
   
   /// 紧急降级

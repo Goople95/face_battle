@@ -401,7 +401,7 @@ class AnalyticsService {
   
   /// 记录应用进入后台
   Future<void> logAppBackground() async {
-    await _logEvent('app_background', {
+    await _logEvent('app_enter_background', {
       'last_screen': _lastEvent,
       'session_duration': _sessionStartTime != null 
           ? DateTime.now().difference(_sessionStartTime!).inSeconds 
@@ -412,7 +412,7 @@ class AnalyticsService {
   /// 记录应用进入前台
   Future<void> logAppForeground() async {
     _sessionStartTime = DateTime.now();
-    await _logEvent('app_foreground');
+    await _logEvent('app_enter_foreground');
   }
   
   /// 记录应用退出（重要：包含last_event）

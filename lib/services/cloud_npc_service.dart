@@ -65,43 +65,6 @@ class CloudNPCService {
     }
   }
   
-  /// 下载NPC资源（头像和视频）
-  static Future<void> downloadNPCResources(String npcId, {
-    Function(double)? onProgress,
-  }) async {
-    try {
-      final dir = await _getNPCDirectory(npcId);
-      
-      // 检查是否已下载
-      if (await _isNPCDownloaded(npcId)) {
-        LoggerUtils.info('NPC $npcId 资源已存在');
-        return;
-      }
-      
-      // 下载资源列表
-      final resources = await _getResourceList(npcId);
-      int downloaded = 0;
-      
-      for (final resource in resources) {
-        await _downloadFile(
-          url: resource['url']!,
-          savePath: '${dir.path}/${resource['path']}',
-        );
-        
-        downloaded++;
-        if (onProgress != null) {
-          onProgress(downloaded / resources.length);
-        }
-      }
-      
-      // 标记为已下载
-      await _markAsDownloaded(npcId);
-      
-    } catch (e) {
-      LoggerUtils.error('下载NPC资源失败: $e');
-      rethrow;
-    }
-  }
   
   /// 获取NPC资源的本地路径
   static Future<String> getNPCResourcePath(String npcId, String resourcePath) async {
@@ -249,8 +212,6 @@ class CloudNPCService {
       
       // 保留最近使用的NPC，删除其他的直到缓存大小合适
       double totalSizeMB = currentSizeMB;
-      final prefs = await SharedPreferences.getInstance();
-      final downloaded = prefs.getStringList('downloaded_npcs') ?? [];
       
       for (int i = 0; i < npcInfoList.length; i++) {
         // 至少保留指定数量的NPC
@@ -265,13 +226,11 @@ class CloudNPCService {
         
         // 删除NPC资源
         await Directory(npcInfo['path'] as String).delete(recursive: true);
-        downloaded.remove(npcId);
         totalSizeMB -= sizeMB;
         
         LoggerUtils.info('清理NPC缓存: $npcId (${sizeMB.toStringAsFixed(2)}MB)');
       }
       
-      await prefs.setStringList('downloaded_npcs', downloaded);
       LoggerUtils.info('缓存清理完成，当前大小: ${totalSizeMB.toStringAsFixed(2)}MB');
       
     } catch (e) {
@@ -287,8 +246,6 @@ class CloudNPCService {
     if (!await npcsDir.exists()) return;
     
     final now = DateTime.now();
-    final prefs = await SharedPreferences.getInstance();
-    final downloaded = prefs.getStringList('downloaded_npcs') ?? [];
     
     await for (final entity in npcsDir.list()) {
       if (entity is Directory) {
@@ -299,12 +256,9 @@ class CloudNPCService {
           final npcId = entity.path.split('/').last;
           LoggerUtils.info('清理过期NPC: $npcId (${age.inDays}天未使用)');
           await entity.delete(recursive: true);
-          downloaded.remove(npcId);
         }
       }
     }
-    
-    await prefs.setStringList('downloaded_npcs', downloaded);
   }
   
   // ========== 私有方法 ==========
@@ -336,22 +290,6 @@ class CloudNPCService {
     return npcDir;
   }
   
-  /// 检查NPC是否已下载
-  static Future<bool> _isNPCDownloaded(String npcId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final downloaded = prefs.getStringList('downloaded_npcs') ?? [];
-    return downloaded.contains(npcId);
-  }
-  
-  /// 标记NPC为已下载
-  static Future<void> _markAsDownloaded(String npcId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final downloaded = prefs.getStringList('downloaded_npcs') ?? [];
-    if (!downloaded.contains(npcId)) {
-      downloaded.add(npcId);
-      await prefs.setStringList('downloaded_npcs', downloaded);
-    }
-  }
   
   /// 获取资源列表（根据实际Storage结构）
   static Future<List<Map<String, String>>> _getResourceList(String npcId) async {
@@ -470,9 +408,7 @@ class CloudNPCService {
         await npcDir.delete(recursive: true);
       }
       
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('npc_configs');
-      await prefs.remove('downloaded_npcs');
+      // 不再需要清除SharedPreferences中的记录
       
     } catch (e) {
       LoggerUtils.error('清理缓存失败: $e');
