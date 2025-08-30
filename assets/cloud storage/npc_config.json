@@ -16,15 +16,15 @@
         "pt": "Seu olhar calmo esconde um charme discreto.",
         "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
       },
-      "avatarPath": "assets/people/0001/",
-      "videosPath": "assets/people/0001/videos/",
+      "avatarPath": "assets/npcs/0001/1/",
+      "videosPath": "assets/npcs/0001/1/",
       "isVIP": false,
       "personality": {
         "bluffRatio": 0.25,
         "challengeThreshold": 0.4,
         "riskAppetite": 0.3
       },
-      "drinkCapacity": 6,
+      "drinkCapacity": 2,
       "country": "Germany",
       "videoCount": 5
     },
@@ -41,18 +41,18 @@
         "en": "Graceful and distant, she draws you closer without a word.",
         "zh_TW": "高貴而疏離，她無聲地吸引著你靠近。",
         "es": "Elegante y distante, te atrae sin decir una palabra.",
-        "pt": "Elegante e distante, ela te atrai sem dizer uma palavra.",
+        "pt": "Elegante e distante, ela te atrai sem dizer una palabra.",
         "id": "Anggun dan berjarak, ia menarikmu tanpa sepatah kata pun."
       },
-      "avatarPath": "assets/people/0002/",
-      "videosPath": "assets/people/0002/videos/",
+      "avatarPath": "assets/npcs/0002/1/",
+      "videosPath": "assets/npcs/0002/1/",
       "isVIP": false,
       "personality": {
         "bluffRatio": 0.4,
         "challengeThreshold": 0.38,
         "riskAppetite": 0.5
       },
-      "drinkCapacity": 6,
+      "drinkCapacity": 8,
       "country": "Russia",
       "videoCount": 8
     },
@@ -72,8 +72,8 @@
         "pt": "Seu doce sorriso faz você imaginar o que ela realmente pensa.",
         "id": "Senyum manisnya membuatmu bertanya-tanya apa yang sebenarnya ia pikirkan."
       },
-      "avatarPath": "assets/people/1001/",
-      "videosPath": "assets/people/1001/videos/",
+      "avatarPath": "assets/npcs/1001/1/",
+      "videosPath": "assets/npcs/1001/1/",
       "isVIP": true,
       "unlockItemId": "vip_npc_1001",
       "personality": {
@@ -81,7 +81,7 @@
         "challengeThreshold": 0.42,
         "riskAppetite": 0.65
       },
-      "drinkCapacity": 6,
+      "drinkCapacity": 2,
       "country": "Japan",
       "videoCount": 4
     },
@@ -101,8 +101,8 @@
         "pt": "Suas palavras fluem como música, impossíveis de resistir.",
         "id": "Kata-katanya mengalir seperti musik, mustahil untuk ditolak."
       },
-      "avatarPath": "assets/people/1002/",
-      "videosPath": "assets/people/1002/videos/",
+      "avatarPath": "assets/npcs/1002/1/",
+      "videosPath": "assets/npcs/1002/1/",
       "isVIP": true,
       "unlockItemId": "vip_npc_1002",
       "personality": {
@@ -110,7 +110,7 @@
         "challengeThreshold": 0.45,
         "riskAppetite": 0.7
       },
-      "drinkCapacity": 6,
+      "drinkCapacity": 2,
       "country": "Brazil",
       "videoCount": 5
     }

@@ -271,5 +271,25 @@
   "gameSlogan": "100+ esperando tu desafío",
   "youGotDrunk": "¡Te emborrachaste!",
   "watchAdToSoberSubtitle": "Gratis, sobrio al instante",
-  "goHomeToRest": "Ir a Casa a Descansar"
+  "goHomeToRest": "Ir a Casa a Descansar",
+  "loadingNPCResources": "Cargando recursos del personaje...",
+  "npcResourcesReady": "Personaje listo",
+  
+  "npcDefaultGreeting": "¡Hola!",
+  "npcDefaultWinDialogue": "¡Es tu turno de beber!",
+  "npcDefaultLoseDialogue": "¡Eres increíble!",
+  "npcDefaultThinking": "...",
+  "npcActionChallenge": "¡Lo desafío!",
+  "npcActionValueBet": "Apuesto por valor.",
+  "npcActionBluff": "Veamos si lo crees...",
+  "npcActionReverseTrap": "¿Cayendo en mi trampa?",
+  "npcActionPressurePlay": "¡Siente la presión!",
+  "npcActionSafePlay": "Jugando a lo seguro.",
+  "npcActionPatternBreak": "¡Hora de cambiar las cosas!",
+  "npcActionInduceAggressive": "¡Vamos, sé valiente!",
+  
+  "intimacyProgressTitle": "Progreso de Intimidad",
+  "intimacyProgressFormat": "Progreso: {current} / {total}",
+  "intimacyTooltip": "💕 Embriágame para aumentar la intimidad",
+  "intimacyMaxLevel": "Nivel máximo alcanzado ({points} pts)"
 }

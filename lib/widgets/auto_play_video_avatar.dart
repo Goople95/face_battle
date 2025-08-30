@@ -4,6 +4,7 @@ import 'dart:io';
 import '../utils/logger_utils.dart';
 import '../models/ai_personality.dart';
 import '../services/cloud_npc_service.dart';
+import '../services/npc_resource_loader.dart';
 import 'npc_image_widget.dart';
 import 'dart:math' as math;
 
@@ -68,8 +69,22 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
       final fileName = '$_currentVideoIndex.mp4';
       LoggerUtils.info('选择视频: $fileName (避免重复上一个: $_lastVideoIndex)');
       
-      // 使用智能缓存机制获取视频路径
-      final videoPath = await CloudNPCService.getSmartResourcePath(widget.characterId, fileName);
+      // 根据personality判断资源类型并获取正确路径
+      String videoPath;
+      if (widget.personality != null && widget.personality!.avatarPath.startsWith('assets/')) {
+        // 本地打包资源，使用NPCResourceLoader
+        // avatarPath 类似 "assets/npcs/0001/1/"，视频直接在该目录下
+        videoPath = await NPCResourceLoader.getVideoPath(
+          widget.characterId,
+          widget.personality!.avatarPath,
+          _currentVideoIndex,
+        );
+        LoggerUtils.info('使用本地资源加载器: $videoPath');
+      } else {
+        // 云端资源，使用智能缓存机制
+        videoPath = await CloudNPCService.getSmartResourcePath(widget.characterId, fileName);
+        LoggerUtils.info('使用云端资源加载器: $videoPath');
+      }
       
       LoggerUtils.info('播放视频: ${widget.characterId}/$fileName (从$videoCount个视频中选择)');
       
@@ -84,8 +99,18 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
             allowBackgroundPlayback: false,
           ),
         );
+      } else if (videoPath.startsWith('assets/')) {
+        // 本地asset资源
+        newController = VideoPlayerController.asset(
+          videoPath,
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: false,
+          ),
+        );
+        LoggerUtils.info('使用本地asset视频: $fileName');
       } else {
-        // 本地文件路径
+        // 本地文件路径（缓存的文件）
         newController = VideoPlayerController.file(
           File(videoPath),
           videoPlayerOptions: VideoPlayerOptions(

@@ -66,9 +66,9 @@ class CloudNPCService {
   }
   
   
-  /// 获取NPC资源的本地路径
-  static Future<String> getNPCResourcePath(String npcId, String resourcePath) async {
-    final dir = await _getNPCDirectory(npcId);
+  /// 获取NPC资源的本地路径（支持皮肤ID）
+  static Future<String> getNPCResourcePath(String npcId, String resourcePath, {int skinId = 1}) async {
+    final dir = await _getNPCDirectory(npcId, skinId: skinId);
     final localPath = '${dir.path}/$resourcePath';
     
     // 检查本地文件是否存在
@@ -79,7 +79,7 @@ class CloudNPCService {
     // 如果不存在，尝试从云端下载
     final encodedPath = Uri.encodeComponent(resourcePath);
     await _downloadFile(
-      url: '$_baseUrl/npcs%2F$npcId%2F$encodedPath?alt=media&token=$_accessToken',
+      url: '$_baseUrl/npcs%2F$npcId%2F$skinId%2F$encodedPath?alt=media&token=$_accessToken',
       savePath: localPath,
     );
     
@@ -87,8 +87,9 @@ class CloudNPCService {
   }
   
   /// 智能获取NPC资源路径（优先本地，否则返回云端URL并后台下载）
-  static Future<String> getSmartResourcePath(String npcId, String resourcePath) async {
-    final dir = await _getNPCDirectory(npcId);
+  /// @param skinId 皮肤ID，默认为1（第一套皮肤）
+  static Future<String> getSmartResourcePath(String npcId, String resourcePath, {int skinId = 1}) async {
+    final dir = await _getNPCDirectory(npcId, skinId: skinId);
     final localPath = '${dir.path}/$resourcePath';
     final localFile = File(localPath);
     
@@ -98,11 +99,12 @@ class CloudNPCService {
       return localPath;
     }
     
-    // 构建云端URL
+    // 构建云端URL（添加皮肤ID子目录）
     final encodedId = Uri.encodeComponent(npcId);
+    final encodedSkinId = Uri.encodeComponent(skinId.toString());
     final encodedPath = Uri.encodeComponent(resourcePath);
     final cloudUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                     'npcs%2F$encodedId%2F$encodedPath?alt=media';
+                     'npcs%2F$encodedId%2F$encodedSkinId%2F$encodedPath?alt=media';
     
     // 后台下载到本地（不阻塞返回）
     _downloadFileInBackground(cloudUrl, localPath);
@@ -181,28 +183,36 @@ class CloudNPCService {
       // 缓存超限，需要清理
       LoggerUtils.warning('缓存超限，开始智能清理...');
       
-      // 收集所有NPC信息
+      // 收集所有NPC信息（支持皮肤子目录）
       final npcInfoList = <Map<String, dynamic>>[];
-      await for (final entity in npcsDir.list()) {
-        if (entity is Directory) {
-          final npcId = entity.path.split('/').last;
-          final stat = await entity.stat();
+      await for (final npcEntity in npcsDir.list()) {
+        if (npcEntity is Directory) {
+          final npcId = npcEntity.path.split('/').last;
           
-          // 计算文件夹大小
-          int folderSize = 0;
-          await for (final file in entity.list(recursive: true)) {
-            if (file is File) {
-              folderSize += await file.length();
+          // 遍历皮肤子目录
+          await for (final skinEntity in npcEntity.list()) {
+            if (skinEntity is Directory) {
+              final skinId = skinEntity.path.split('/').last;
+              final stat = await skinEntity.stat();
+              
+              // 计算皮肤文件夹大小
+              int folderSize = 0;
+              await for (final file in skinEntity.list(recursive: true)) {
+                if (file is File) {
+                  folderSize += await file.length();
+                }
+              }
+              
+              npcInfoList.add({
+                'id': npcId,
+                'skinId': skinId,
+                'path': skinEntity.path,
+                'accessed': stat.accessed,
+                'size': folderSize,
+                'sizeMB': folderSize / (1024 * 1024),
+              });
             }
           }
-          
-          npcInfoList.add({
-            'id': npcId,
-            'path': entity.path,
-            'accessed': stat.accessed,
-            'size': folderSize,
-            'sizeMB': folderSize / (1024 * 1024),
-          });
         }
       }
       
@@ -222,13 +232,14 @@ class CloudNPCService {
         
         final npcInfo = npcInfoList[i];
         final npcId = npcInfo['id'] as String;
+        final skinId = npcInfo['skinId'] as String;
         final sizeMB = npcInfo['sizeMB'] as double;
         
-        // 删除NPC资源
+        // 删除NPC皮肤资源
         await Directory(npcInfo['path'] as String).delete(recursive: true);
         totalSizeMB -= sizeMB;
         
-        LoggerUtils.info('清理NPC缓存: $npcId (${sizeMB.toStringAsFixed(2)}MB)');
+        LoggerUtils.info('清理NPC缓存: $npcId/皮肤$skinId (${sizeMB.toStringAsFixed(2)}MB)');
       }
       
       LoggerUtils.info('缓存清理完成，当前大小: ${totalSizeMB.toStringAsFixed(2)}MB');
@@ -238,7 +249,7 @@ class CloudNPCService {
     }
   }
   
-  /// 清理过期的NPC（内部方法）
+  /// 清理过期的NPC（内部方法，支持皮肤子目录）
   static Future<void> _cleanExpiredNPCs(int maxCacheDays) async {
     final appDir = await getApplicationDocumentsDirectory();
     final npcsDir = Directory('${appDir.path}/npcs');
@@ -247,15 +258,27 @@ class CloudNPCService {
     
     final now = DateTime.now();
     
-    await for (final entity in npcsDir.list()) {
-      if (entity is Directory) {
-        final stat = await entity.stat();
-        final age = now.difference(stat.accessed);
+    await for (final npcEntity in npcsDir.list()) {
+      if (npcEntity is Directory) {
+        final npcId = npcEntity.path.split('/').last;
         
-        if (age.inDays > maxCacheDays) {
-          final npcId = entity.path.split('/').last;
-          LoggerUtils.info('清理过期NPC: $npcId (${age.inDays}天未使用)');
-          await entity.delete(recursive: true);
+        // 遍历皮肤子目录
+        await for (final skinEntity in npcEntity.list()) {
+          if (skinEntity is Directory) {
+            final skinId = skinEntity.path.split('/').last;
+            final stat = await skinEntity.stat();
+            final age = now.difference(stat.accessed);
+            
+            if (age.inDays > maxCacheDays) {
+              LoggerUtils.info('清理过期NPC: $npcId/皮肤$skinId (${age.inDays}天未使用)');
+              await skinEntity.delete(recursive: true);
+            }
+          }
+        }
+        
+        // 如果NPC目录空了，删除它
+        if (await npcEntity.list().isEmpty) {
+          await npcEntity.delete();
         }
       }
     }
@@ -278,10 +301,11 @@ class CloudNPCService {
   
   // 已移除配置文件缓存相关方法，因为JSON配置始终从云端获取
   
-  /// 获取NPC目录
-  static Future<Directory> _getNPCDirectory(String npcId) async {
+  /// 获取NPC目录（支持皮肤ID）
+  static Future<Directory> _getNPCDirectory(String npcId, {int skinId = 1}) async {
     final appDir = await getApplicationDocumentsDirectory();
-    final npcDir = Directory('${appDir.path}/npcs/$npcId');
+    // 添加皮肤ID子目录：npcs/1001/1/
+    final npcDir = Directory('${appDir.path}/npcs/$npcId/$skinId');
     
     if (!await npcDir.exists()) {
       await npcDir.create(recursive: true);
@@ -432,13 +456,13 @@ class CloudNPCService {
           'en': 'Her calm gaze hides a quiet allure.',
           'zh_TW': '冷靜的眼神裡，藏著低調的魅力。',
         },
-        avatarPath: 'assets/people/0001/',
-        videosPath: 'assets/people/0001/videos/',
+        avatarPath: 'assets/npcs/0001/1/',
+        videosPath: 'assets/npcs/0001/1/',
         personality: AIPersonality(
           id: '0001',
           name: 'Lena',
           description: 'Her calm gaze hides a quiet allure.',
-          avatarPath: 'assets/people/0001/',
+          avatarPath: 'assets/npcs/0001/1/',
           bluffRatio: 0.25,
           challengeThreshold: 0.4,
           riskAppetite: 0.3,
@@ -464,13 +488,13 @@ class CloudNPCService {
           'en': 'Graceful and distant, she draws you closer without a word.',
           'zh_TW': '高貴而疏離，她無聲地吸引著你靠近。',
         },
-        avatarPath: 'assets/people/0002/',
-        videosPath: 'assets/people/0002/videos/',
+        avatarPath: 'assets/npcs/0002/1/',
+        videosPath: 'assets/npcs/0002/1/',
         personality: AIPersonality(
           id: '0002',
           name: 'Katerina',
           description: 'Graceful and distant, she draws you closer without a word.',
-          avatarPath: 'assets/people/0002/',
+          avatarPath: 'assets/npcs/0002/1/',
           bluffRatio: 0.4,
           challengeThreshold: 0.38,
           riskAppetite: 0.5,
@@ -531,7 +555,7 @@ class NPCConfig {
       names: Map<String, String>.from(json['names'] ?? {}),
       descriptions: Map<String, String>.from(json['descriptions'] ?? {}),
       avatarPath: json['avatarPath'] ?? 'assets/people/$id/',
-      videosPath: json['videosPath'] ?? 'assets/people/$id/videos/',
+      videosPath: json['videosPath'] ?? 'assets/npcs/$id/1/',
       isVIP: json['isVIP'] ?? false,
       unlocked: json['unlocked'] ?? true,
       unlockPrice: json['unlockPrice'],

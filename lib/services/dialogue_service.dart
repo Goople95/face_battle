@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../utils/logger_utils.dart';
+import '../models/ai_personality.dart';
+import 'npc_resource_loader.dart';
 
 /// 对话服务 - 管理NPC的对话内容
 class DialogueService {
@@ -20,43 +23,64 @@ class DialogueService {
   }
 
   /// 按需加载指定NPC的对话文件
-  Future<Map<String, dynamic>?> _loadDialogueForNPC(String npcId) async {
+  Future<Map<String, dynamic>?> _loadDialogueForNPC(String npcId, {AIPersonality? personality}) async {
     // 如果已缓存，直接返回
     if (_dialogues.containsKey(npcId)) {
       return _dialogues[npcId];
     }
 
     try {
-      // 优先尝试从云端加载
-      LoggerUtils.info('从云端加载NPC对话: $npcId');
+      // 使用NPCResourceLoader统一处理本地和云端资源
+      String dialoguePath;
       
-      try {
-        final ref = _storage.ref('npcs/$npcId/dialogue_$npcId.json');
-        final data = await ref.getData(10000000); // 10MB限制
-        
-        if (data != null) {
-          final jsonString = utf8.decode(data);
-          final dialogueData = json.decode(jsonString) as Map<String, dynamic>;
-          _dialogues[npcId] = dialogueData;
-          LoggerUtils.info('成功从云端加载对话: $npcId');
-          return dialogueData;
-        }
-      } catch (e) {
-        LoggerUtils.warning('云端加载失败，尝试本地: $npcId - $e');
-      }
-
-      // 云端失败，回退到本地
-      try {
-        final String jsonString = await rootBundle.loadString(
-          'assets/dialogues/dialogue_$npcId.json'
+      // 如果有personality，使用其avatarPath作为basePath
+      if (personality != null && personality.avatarPath.isNotEmpty) {
+        dialoguePath = await NPCResourceLoader.getDialoguePath(
+          npcId, 
+          personality.avatarPath,
+          skinId: 1,  // 默认使用第一套皮肤
         );
-        final Map<String, dynamic> dialogueData = json.decode(jsonString);
-        _dialogues[npcId] = dialogueData;
-        LoggerUtils.info('从本地加载对话: $npcId');
-        return dialogueData;
-      } catch (e) {
-        LoggerUtils.error('本地加载也失败: $npcId - $e');
+      } else {
+        // 没有personality，假设是云端资源
+        dialoguePath = await NPCResourceLoader.getDialoguePath(
+          npcId, 
+          '',  // 空basePath表示云端资源
+          skinId: 1,
+        );
       }
+      
+      LoggerUtils.info('加载NPC对话: $npcId from $dialoguePath');
+      
+      // 根据路径类型加载文件
+      String jsonString;
+      if (dialoguePath.startsWith('assets/')) {
+        // 本地asset资源
+        jsonString = await rootBundle.loadString(dialoguePath);
+        LoggerUtils.info('从本地asset加载对话: $npcId');
+      } else if (dialoguePath.startsWith('http')) {
+        // 网络URL（云端资源）- 直接使用HTTP获取
+        final ref = _storage.ref('npcs/$npcId/1/dialogue_$npcId.json');
+        final data = await ref.getData(10000000); // 10MB限制
+        if (data != null) {
+          jsonString = utf8.decode(data);
+          LoggerUtils.info('从云端URL加载对话: $npcId');
+        } else {
+          throw Exception('云端对话文件为空');
+        }
+      } else {
+        // 本地文件路径（缓存的文件）
+        final file = File(dialoguePath);
+        if (await file.exists()) {
+          jsonString = await file.readAsString();
+          LoggerUtils.info('从本地缓存加载对话: $npcId');
+        } else {
+          throw Exception('本地缓存文件不存在');
+        }
+      }
+      
+      final Map<String, dynamic> dialogueData = json.decode(jsonString);
+      _dialogues[npcId] = dialogueData;
+      return dialogueData;
       
     } catch (e) {
       LoggerUtils.error('加载NPC对话失败: $npcId - $e');
@@ -66,12 +90,12 @@ class DialogueService {
   }
 
   /// 获取NPC胜利时的对话（改为异步）
-  Future<String> getWinDialogue(String npcId, {String locale = 'zh_TW'}) async {
+  Future<String> getWinDialogue(String npcId, {String locale = 'zh_TW', AIPersonality? personality}) async {
     // 按需加载对话
-    final dialogueData = await _loadDialogueForNPC(npcId);
+    final dialogueData = await _loadDialogueForNPC(npcId, personality: personality);
     if (dialogueData == null) {
       LoggerUtils.warning('未找到NPC $npcId 的对话数据');
-      return _getDefaultWinDialogue();
+      return _getDefaultWinDialogue(locale);
     }
 
     // 处理locale代码（移除zh简体中文，统一使用zh_TW繁体）
@@ -108,18 +132,18 @@ class DialogueService {
     final winDialogues = dialogueData['win_dialogues'] as List<dynamic>?;
     if (winDialogues != null && winDialogues.isNotEmpty) {
       final dialogue = winDialogues[_random.nextInt(winDialogues.length)];
-      return dialogue[localeCode] ?? dialogue['zh_TW'] ?? _getDefaultWinDialogue();
+      return dialogue[localeCode] ?? dialogue['zh_TW'] ?? _getDefaultWinDialogue(locale);
     }
 
-    return _getDefaultWinDialogue();
+    return _getDefaultWinDialogue(locale);
   }
 
   /// 获取NPC失败时的对话
-  Future<String> getLoseDialogue(String npcId, {String locale = 'zh_TW'}) async {
-    final dialogueData = await _loadDialogueForNPC(npcId);
+  Future<String> getLoseDialogue(String npcId, {String locale = 'zh_TW', AIPersonality? personality}) async {
+    final dialogueData = await _loadDialogueForNPC(npcId, personality: personality);
     if (dialogueData == null) {
       LoggerUtils.warning('未找到NPC $npcId 的对话数据。已加载的NPCs: ${_dialogues.keys.toList()}');
-      return _getDefaultLoseDialogue();
+      return _getDefaultLoseDialogue(locale);
     }
 
     // 处理locale代码
@@ -151,43 +175,90 @@ class DialogueService {
     final loseDialogues = dialogueData['lose_dialogues'] as List<dynamic>?;
     if (loseDialogues != null && loseDialogues.isNotEmpty) {
       final dialogue = loseDialogues[_random.nextInt(loseDialogues.length)];
-      return dialogue[localeCode] ?? dialogue['zh_TW'] ?? _getDefaultLoseDialogue();
+      return dialogue[localeCode] ?? dialogue['zh_TW'] ?? _getDefaultLoseDialogue(locale);
     }
 
-    return _getDefaultLoseDialogue();
+    return _getDefaultLoseDialogue(locale);
   }
 
   /// 获取嘲讽对话（随机从赢的对话中选择）
-  Future<String> getTaunt(String npcId, {String locale = 'zh_TW'}) async {
+  Future<String> getTaunt(String npcId, {String locale = 'zh_TW', AIPersonality? personality}) async {
     // 嘲讽时使用胜利对话的一部分
-    return await getWinDialogue(npcId, locale: locale);
+    return await getWinDialogue(npcId, locale: locale, personality: personality);
   }
 
   /// 获取鼓励对话（随机从输的对话中选择）
-  Future<String> getEncouragement(String npcId, {String locale = 'zh_TW'}) async {
+  Future<String> getEncouragement(String npcId, {String locale = 'zh_TW', AIPersonality? personality}) async {
     // 鼓励时使用失败对话的一部分
-    return await getLoseDialogue(npcId, locale: locale);
+    return await getLoseDialogue(npcId, locale: locale, personality: personality);
   }
 
   /// 根据游戏状态获取合适的对话
   Future<String> getContextualDialogue(String npcId, {
     required bool isWinning,
     required int roundNumber,
-    String locale = 'zh_TW'
+    String locale = 'zh_TW',
+    AIPersonality? personality,
   }) async {
     // 根据当前状态返回合适的对话
     if (isWinning) {
       // NPC赢了这一轮
-      return await getWinDialogue(npcId, locale: locale);
+      return await getWinDialogue(npcId, locale: locale, personality: personality);
     } else {
       // NPC输了这一轮
-      return await getLoseDialogue(npcId, locale: locale);
+      return await getLoseDialogue(npcId, locale: locale, personality: personality);
     }
   }
 
-  // 默认对话
-  String _getDefaultWinDialogue() => '該你喝酒了！';
-  String _getDefaultLoseDialogue() => '你好厉害啊！';
+  // 默认对话（根据语言返回）
+  String _getDefaultWinDialogue(String locale) {
+    switch (_normalizeLocale(locale)) {
+      case 'zh_TW':
+        return '該你喝了！';
+      case 'es':
+        return '¡Es tu turno de beber!';
+      case 'pt':
+        return 'É sua vez de beber!';
+      case 'id':
+        return 'Giliranmu minum!';
+      default:
+        return "It's your turn to drink!";
+    }
+  }
+  
+  String _getDefaultLoseDialogue(String locale) {
+    switch (_normalizeLocale(locale)) {
+      case 'zh_TW':
+        return '你真厲害！';
+      case 'es':
+        return '¡Eres increíble!';
+      case 'pt':
+        return 'Você é incrível!';
+      case 'id':
+        return 'Kamu luar biasa!';
+      default:
+        return "You're amazing!";
+    }
+  }
+  
+  String _getDefaultGreeting(String locale) {
+    switch (_normalizeLocale(locale)) {
+      case 'zh_TW':
+        return '你好！';
+      case 'es':
+        return '¡Hola!';
+      case 'pt':
+        return 'Olá!';
+      case 'id':
+        return 'Halo!';
+      default:
+        return _getDefaultGreeting(locale);
+    }
+  }
+  
+  String _getDefaultThinking(String locale) {
+    return _getDefaultThinking(locale);  // 所有语言都一样
+  }
   
   // 标准化locale代码
   String _normalizeLocale(String locale) {
@@ -222,7 +293,7 @@ class DialogueService {
   /// 获取问候语
   String getGreeting(String npcId, {String locale = 'zh_TW'}) {
     final dialogueData = _dialogues[npcId];
-    if (dialogueData == null) return '你好！';
+    if (dialogueData == null) return _getDefaultGreeting(locale);
     
     String localeCode = _normalizeLocale(locale);
     final dialogues = dialogueData['dialogues'] as Map<String, dynamic>?;
@@ -244,7 +315,7 @@ class DialogueService {
       }
     }
     
-    return '你好！';
+    return _getDefaultGreeting(locale);
   }
   
   /// 获取情绪对话
@@ -275,7 +346,7 @@ class DialogueService {
   /// 获取思考对话
   String getThinkingDialogue(String npcId, {String locale = 'zh_TW'}) {
     final dialogueData = _dialogues[npcId];
-    if (dialogueData == null) return '...';
+    if (dialogueData == null) return _getDefaultThinking(locale);
     
     String localeCode = _normalizeLocale(locale);
     final dialogues = dialogueData['dialogues'] as Map<String, dynamic>?;
@@ -341,45 +412,112 @@ class DialogueService {
   }
   
   String _getDefaultStrategyDialogue(String strategy, {String locale = 'en'}) {
-    // 返回特殊标记，让调用方使用ARB本地化
-    // 这些会在game_screen中被处理
+    // 根据策略和语言返回本地化的默认对话
+    String normalizedLocale = _normalizeLocale(locale);
+    
     switch (strategy) {
       case 'challenge_action':
-        return '__DEFAULT_CHALLENGE__';
+        return _getActionDialogue('challenge', normalizedLocale);
       case 'value_bet':
-        return '__DEFAULT_VALUE_BET__';
+        return _getActionDialogue('valueBet', normalizedLocale);
       case 'semi_bluff':
-        return '__DEFAULT_SEMI_BLUFF__';
       case 'bluff':
       case 'pure_bluff':
-        return '__DEFAULT_BLUFF__';
-      case 'reverse_trap':
-        return '__DEFAULT_REVERSE_TRAP__';
-      case 'pressure_play':
-        return '__DEFAULT_PRESSURE_PLAY__';
-      case 'safe_play':
-        return '__DEFAULT_SAFE_PLAY__';
-      case 'pattern_break':
-        return '__DEFAULT_PATTERN_BREAK__';
-      case 'reverse_trap_alt':
-        return '__DEFAULT_REVERSE_TRAP__';  // 使用相同的默認值
-      case 'pressure_escalation':
-        return '__DEFAULT_PRESSURE_PLAY__';  // 使用相似的默認值
-      case 'late_pressure':
-        return '__DEFAULT_PRESSURE_PLAY__';  // 使用相似的默認值
       case 'aggressive_bait':
-        return '__DEFAULT_BLUFF__';  // 使用相似的默認值
+        return _getActionDialogue('bluff', normalizedLocale);
+      case 'reverse_trap':
+      case 'reverse_trap_alt':
+        return _getActionDialogue('reverseTrap', normalizedLocale);
+      case 'pressure_play':
+      case 'pressure_escalation':
+      case 'late_pressure':
+        return _getActionDialogue('pressurePlay', normalizedLocale);
+      case 'safe_play':
+        return _getActionDialogue('safePlay', normalizedLocale);
+      case 'pattern_break':
+        return _getActionDialogue('patternBreak', normalizedLocale);
       case 'induce_aggressive':
-        return '__DEFAULT_INDUCE_AGGRESSIVE__';
+        return _getActionDialogue('induceAggressive', normalizedLocale);
+      default:
+        return _getDefaultThinking(locale);
+    }
+  }
+  
+  String _getActionDialogue(String action, String locale) {
+    switch (action) {
+      case 'challenge':
+        switch (locale) {
+          case 'zh_TW': return '我要挑戰！';
+          case 'es': return '¡Lo desafío!';
+          case 'pt': return 'Eu desafio isso!';
+          case 'id': return 'Aku tantang itu!';
+          default: return 'I challenge that!';
+        }
+      case 'valueBet':
+        switch (locale) {
+          case 'zh_TW': return '我押實力牌。';
+          case 'es': return 'Apuesto por valor.';
+          case 'pt': return 'Apostando em valor.';
+          case 'id': return 'Bertaruh pada nilai.';
+          default: return "I'm betting on value.";
+        }
+      case 'bluff':
+        switch (locale) {
+          case 'zh_TW': return '看你信不信...';
+          case 'es': return 'Veamos si lo crees...';
+          case 'pt': return 'Vamos ver se você acredita...';
+          case 'id': return 'Mari lihat apa kamu percaya...';
+          default: return "Let's see if you believe this...";
+        }
+      case 'reverseTrap':
+        switch (locale) {
+          case 'zh_TW': return '掉進我的陷阱了？';
+          case 'es': return '¿Cayendo en mi trampa?';
+          case 'pt': return 'Caindo na minha armadilha?';
+          case 'id': return 'Masuk ke jebakanku?';
+          default: return 'Walking into my trap?';
+        }
+      case 'pressurePlay':
+        switch (locale) {
+          case 'zh_TW': return '感受壓力吧！';
+          case 'es': return '¡Siente la presión!';
+          case 'pt': return 'Sinta a pressão!';
+          case 'id': return 'Rasakan tekanannya!';
+          default: return 'Feel the pressure!';
+        }
+      case 'safePlay':
+        switch (locale) {
+          case 'zh_TW': return '穩妥為上。';
+          case 'es': return 'Jugando a lo seguro.';
+          case 'pt': return 'Jogando seguro.';
+          case 'id': return 'Bermain aman.';
+          default: return 'Playing it safe.';
+        }
+      case 'patternBreak':
+        switch (locale) {
+          case 'zh_TW': return '該改變策略了！';
+          case 'es': return '¡Hora de cambiar las cosas!';
+          case 'pt': return 'Hora de mudar as coisas!';
+          case 'id': return 'Saatnya mengubah segalanya!';
+          default: return 'Time to change things up!';
+        }
+      case 'induceAggressive':
+        switch (locale) {
+          case 'zh_TW': return '來吧，大膽一點！';
+          case 'es': return '¡Vamos, sé valiente!';
+          case 'pt': return 'Vamos, seja ousado!';
+          case 'id': return 'Ayo, beranilah!';
+          default: return 'Come on, be bold!';
+        }
       default:
         return '...';
     }
   }
   
   /// 获取醉酒对话
-  String getDrunkDialogue(String npcId, bool isHeavy, {String locale = 'zh_TW'}) {
-    final dialogueData = _dialogues[npcId];
-    if (dialogueData == null) return '...';
+  Future<String> getDrunkDialogue(String npcId, bool isHeavy, {String locale = 'zh_TW', AIPersonality? personality}) async {
+    final dialogueData = await _loadDialogueForNPC(npcId, personality: personality);
+    if (dialogueData == null) return _getDefaultThinking(locale);
     
     String localeCode = _normalizeLocale(locale);
     final dialogues = dialogueData['dialogues'] as Map<String, dynamic>?;
@@ -404,6 +542,6 @@ class DialogueService {
       }
     }
     
-    return '...';
+    return _getDefaultThinking(locale);
   }
 }

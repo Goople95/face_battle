@@ -272,5 +272,25 @@
   "gameSlogan": "100+等你來挑戰",
   "youGotDrunk": "你醉倒了！",
   "watchAdToSoberSubtitle": "免費，立即完全清醒",
-  "goHomeToRest": "回家休息"
+  "goHomeToRest": "回家休息",
+  "loadingNPCResources": "正在載入角色資源...",
+  "npcResourcesReady": "角色準備就緒",
+  
+  "npcDefaultGreeting": "你好！",
+  "npcDefaultWinDialogue": "該你喝了！",
+  "npcDefaultLoseDialogue": "你真厲害！",
+  "npcDefaultThinking": "...",
+  "npcActionChallenge": "我要挑戰！",
+  "npcActionValueBet": "我押實力牌。",
+  "npcActionBluff": "看你信不信...",
+  "npcActionReverseTrap": "掉進我的陷阱了？",
+  "npcActionPressurePlay": "感受壓力吧！",
+  "npcActionSafePlay": "穩妥為上。",
+  "npcActionPatternBreak": "該改變策略了！",
+  "npcActionInduceAggressive": "來吧，大膽一點！",
+  
+  "intimacyProgressTitle": "親密度進度",
+  "intimacyProgressFormat": "進度：{current} / {total}",
+  "intimacyTooltip": "💕 灌醉我，就能增加親密度",
+  "intimacyMaxLevel": "已達最高級 ({points} pts)"
 }

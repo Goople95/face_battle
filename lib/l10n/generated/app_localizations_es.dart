@@ -941,8 +941,60 @@ class AppLocalizationsEs extends AppLocalizations {
   String get goHomeToRest => 'Ir a Casa a Descansar';
 
   @override
-  String get loadingNPCResources => 'Loading character resources...';
+  String get loadingNPCResources => 'Cargando recursos del personaje...';
 
   @override
-  String get npcResourcesReady => 'Character ready';
+  String get npcResourcesReady => 'Personaje listo';
+
+  @override
+  String get npcDefaultGreeting => '¡Hola!';
+
+  @override
+  String get npcDefaultWinDialogue => '¡Es tu turno de beber!';
+
+  @override
+  String get npcDefaultLoseDialogue => '¡Eres increíble!';
+
+  @override
+  String get npcDefaultThinking => '...';
+
+  @override
+  String get npcActionChallenge => '¡Lo desafío!';
+
+  @override
+  String get npcActionValueBet => 'Apuesto por valor.';
+
+  @override
+  String get npcActionBluff => 'Veamos si lo crees...';
+
+  @override
+  String get npcActionReverseTrap => '¿Cayendo en mi trampa?';
+
+  @override
+  String get npcActionPressurePlay => '¡Siente la presión!';
+
+  @override
+  String get npcActionSafePlay => 'Jugando a lo seguro.';
+
+  @override
+  String get npcActionPatternBreak => '¡Hora de cambiar las cosas!';
+
+  @override
+  String get npcActionInduceAggressive => '¡Vamos, sé valiente!';
+
+  @override
+  String get intimacyProgressTitle => 'Progreso de Intimidad';
+
+  @override
+  String intimacyProgressFormat(int current, int total) {
+    return 'Progreso: $current / $total';
+  }
+
+  @override
+  String get intimacyTooltip => '💕 Embriágame para aumentar la intimidad';
+
+  @override
+  String intimacyMaxLevel(int points) {
+    return 'Nivel máximo alcanzado ($points pts)';
+  }
 }

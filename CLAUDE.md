@@ -145,3 +145,4 @@ The project includes comprehensive logging:
 - Video expressions may have loading delays on first play
 - AI API calls have 60/minute rate limit (free tier)
 - 永远可以读取screen shots子目录和logs子目录，无需我每一次授权
+- 我把本地的json文件都放到了assets/cloud storage/目录。都是需要用到storage的2个文件，本地已经不用了，因此，你修改npc_config.json直接就在这个目录修改就可以了，然后通知我上传

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../services/cloud_npc_service.dart';
+import '../services/npc_resource_loader.dart';
 import '../utils/logger_utils.dart';
 
 /// 统一的NPC图片组件 - 自动处理缓存和加载
@@ -28,8 +29,13 @@ class NPCImageWidget extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    // 判断是否为本地打包的NPC（0001, 0002等）
+    final isLocalNPC = ['0001', '0002'].contains(npcId);
+    
     return FutureBuilder<String>(
-      future: CloudNPCService.getSmartResourcePath(npcId, fileName),
+      future: isLocalNPC 
+        ? NPCResourceLoader.getAvatarPath(npcId, 'assets/npcs/$npcId/1/', skinId: 1)
+        : CloudNPCService.getSmartResourcePath(npcId, fileName, skinId: 1),
       builder: (context, snapshot) {
         // 加载中
         if (!snapshot.hasData) {
@@ -62,15 +68,29 @@ class NPCImageWidget extends StatelessWidget {
               );
             },
           );
+        } else if (imagePath.startsWith('assets/')) {
+          // 本地asset资源
+          imageWidget = Image.asset(
+            imagePath,
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: (context, error, stackTrace) {
+              LoggerUtils.error('NPC asset图片加载失败: $imagePath - $error');
+              return _buildContainer(
+                child: errorWidget ?? _buildDefaultError(),
+              );
+            },
+          );
         } else {
-          // 本地缓存图片
+          // 本地缓存图片文件
           imageWidget = Image.file(
             File(imagePath),
             width: width,
             height: height,
             fit: fit,
             errorBuilder: (context, error, stackTrace) {
-              LoggerUtils.error('NPC本地图片加载失败: $imagePath - $error');
+              LoggerUtils.error('NPC本地文件加载失败: $imagePath - $error');
               // 本地文件失败，尝试重新从网络加载
               return _buildNetworkFallback();
             },

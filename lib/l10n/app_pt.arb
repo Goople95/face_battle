@@ -310,5 +310,25 @@
   "gameSlogan": "100+ esperando seu desafio",
   "youGotDrunk": "Você ficou bêbado!",
   "watchAdToSoberSubtitle": "Grátis, sóbrio instantaneamente",
-  "goHomeToRest": "Ir para Casa Descansar"
+  "goHomeToRest": "Ir para Casa Descansar",
+  "loadingNPCResources": "Carregando recursos do personagem...",
+  "npcResourcesReady": "Personagem pronto",
+  
+  "npcDefaultGreeting": "Olá!",
+  "npcDefaultWinDialogue": "É sua vez de beber!",
+  "npcDefaultLoseDialogue": "Você é incrível!",
+  "npcDefaultThinking": "...",
+  "npcActionChallenge": "Eu desafio isso!",
+  "npcActionValueBet": "Apostando em valor.",
+  "npcActionBluff": "Vamos ver se você acredita...",
+  "npcActionReverseTrap": "Caindo na minha armadilha?",
+  "npcActionPressurePlay": "Sinta a pressão!",
+  "npcActionSafePlay": "Jogando seguro.",
+  "npcActionPatternBreak": "Hora de mudar as coisas!",
+  "npcActionInduceAggressive": "Vamos, seja ousado!",
+  
+  "intimacyProgressTitle": "Progresso de Intimidade",
+  "intimacyProgressFormat": "Progresso: {current} / {total}",
+  "intimacyTooltip": "💕 Me deixe tonta para aumentar a intimidade",
+  "intimacyMaxLevel": "Nível máximo alcançado ({points} pts)"
 }

@@ -1711,7 +1711,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   color: Colors.white,
                                   size: 24,
                                 ),
-                                tooltip: '返回主页',
                               ),
                             ),
                           ),
@@ -1770,7 +1769,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          '亲密度进度',
+                                          AppLocalizations.of(context)!.intimacyProgressTitle,
                                           style: TextStyle(
                                             color: Colors.pink.shade400,
                                             fontSize: 14,
@@ -1793,9 +1792,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                       },
                                     ),
                                     const SizedBox(height: 6),
-                                    const Text(
-                                      '💕 每次赢她都会增加亲密度',
-                                      style: TextStyle(
+                                    Text(
+                                      AppLocalizations.of(context)!.intimacyTooltip,
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 11,
                                       ),
@@ -3617,10 +3616,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final pointsNeeded = nextLevelThreshold - currentLevelThreshold;
     
     if (intimacy.intimacyLevel >= 10) {
-      return '已达最高级 (${intimacy.intimacyPoints} pts)';
+      return AppLocalizations.of(context)!.intimacyMaxLevel(intimacy.intimacyPoints);
     }
     
-    return '进度：$currentLevelPoints / $pointsNeeded';
+    return AppLocalizations.of(context)!.intimacyProgressFormat(currentLevelPoints, pointsNeeded);
   }
 
   // 播放酒杯飞行动画

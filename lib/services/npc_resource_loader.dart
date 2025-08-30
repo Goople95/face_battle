@@ -9,10 +9,13 @@ class NPCResourceLoader {
   static final Map<String, Future<void>> _loadingFutures = {};
   
   /// 获取NPC头像路径（自动处理云端资源）
-  static Future<String> getAvatarPath(String npcId, String basePath) async {
+  /// @param skinId 皮肤ID，默认为1
+  static Future<String> getAvatarPath(String npcId, String basePath, {int skinId = 1}) async {
     // 如果是本地资源路径
     if (basePath.startsWith('assets/')) {
-      final localPath = '$basePath/avatar.jpg';
+      // 确保路径没有多余的斜杠
+      final cleanPath = basePath.endsWith('/') ? basePath.substring(0, basePath.length - 1) : basePath;
+      final localPath = '$cleanPath/1.jpg';  // 本地也使用1.jpg，不是avatar.jpg
       
       // 检查本地资源是否存在
       try {
@@ -22,17 +25,18 @@ class NPCResourceLoader {
       } catch (e) {
         // 本地不存在，尝试从云端获取
         LoggerUtils.info('本地资源不存在 $localPath，尝试云端获取');
-        return await CloudNPCService.getSmartResourcePath(npcId, '1.jpg');  // 云端使用1.jpg
+        return await CloudNPCService.getSmartResourcePath(npcId, '1.jpg', skinId: skinId);  // 云端使用1.jpg
       }
     }
     
     // 云端资源，检查是否已下载
-    await _ensureResourcesLoaded(npcId);
-    return await CloudNPCService.getNPCResourcePath(npcId, '1.jpg');  // 云端使用1.jpg
+    await _ensureResourcesLoaded(npcId, skinId: skinId);
+    return await CloudNPCService.getNPCResourcePath(npcId, '1.jpg', skinId: skinId);  // 云端使用1.jpg
   }
   
   /// 获取NPC视频路径（自动处理云端资源）
-  static Future<String> getVideoPath(String npcId, String basePath, dynamic indexOrEmotion) async {
+  /// @param skinId 皮肤ID，默认为1
+  static Future<String> getVideoPath(String npcId, String basePath, dynamic indexOrEmotion, {int skinId = 1}) async {
     // 处理文件名
     String fileName;
     if (indexOrEmotion == 'drunk') {
@@ -46,7 +50,9 @@ class NPCResourceLoader {
     
     // 如果是本地资源路径
     if (basePath.startsWith('assets/')) {
-      final localPath = '$basePath/$fileName';
+      // 确保路径没有多余的斜杠
+      final cleanPath = basePath.endsWith('/') ? basePath.substring(0, basePath.length - 1) : basePath;
+      final localPath = '$cleanPath/$fileName';
       
       // 检查本地资源是否存在
       try {
@@ -56,20 +62,24 @@ class NPCResourceLoader {
       } catch (e) {
         // 本地不存在，尝试从云端获取
         LoggerUtils.info('本地视频不存在 $localPath，尝试云端获取');
-        return await CloudNPCService.getSmartResourcePath(npcId, fileName);
+        return await CloudNPCService.getSmartResourcePath(npcId, fileName, skinId: skinId);
       }
     }
     
     // 云端资源，检查是否已下载
-    await _ensureResourcesLoaded(npcId);
-    return await CloudNPCService.getNPCResourcePath(npcId, fileName);
+    await _ensureResourcesLoaded(npcId, skinId: skinId);
+    return await CloudNPCService.getNPCResourcePath(npcId, fileName, skinId: skinId);
   }
   
   /// 获取NPC对话文件路径（云端新增）
-  static Future<String> getDialoguePath(String npcId, String basePath) async {
+  /// @param skinId 皮肤ID，默认为1
+  static Future<String> getDialoguePath(String npcId, String basePath, {int skinId = 1}) async {
     // 如果是本地资源路径
     if (basePath.startsWith('assets/')) {
-      final localPath = 'assets/dialogues/dialogue_$npcId.json';
+      // 统一后，对话文件也在NPC目录下，与其他资源在一起
+      // basePath 类似 "assets/npcs/0001/1/"
+      final cleanPath = basePath.endsWith('/') ? basePath.substring(0, basePath.length - 1) : basePath;
+      final localPath = '$cleanPath/dialogue_$npcId.json';
       
       // 检查本地资源是否存在
       try {
@@ -79,42 +89,45 @@ class NPCResourceLoader {
       } catch (e) {
         // 本地不存在，尝试从云端获取
         LoggerUtils.info('本地对话文件不存在 $localPath，尝试云端获取');
-        return await CloudNPCService.getSmartResourcePath(npcId, 'dialogue_$npcId.json');
+        return await CloudNPCService.getSmartResourcePath(npcId, 'dialogue_$npcId.json', skinId: skinId);
       }
     }
     
     // 云端资源
-    await _ensureResourcesLoaded(npcId);
-    return await CloudNPCService.getNPCResourcePath(npcId, 'dialogue_$npcId.json');
+    await _ensureResourcesLoaded(npcId, skinId: skinId);
+    return await CloudNPCService.getNPCResourcePath(npcId, 'dialogue_$npcId.json', skinId: skinId);
   }
   
   /// 确保NPC资源已加载
-  static Future<void> _ensureResourcesLoaded(String npcId) async {
+  static Future<void> _ensureResourcesLoaded(String npcId, {int skinId = 1}) async {
+    // 使用npcId和skinId组合作为键
+    final key = '${npcId}_$skinId';
+    
     // 如果正在加载，等待加载完成
-    if (_loadingFutures.containsKey(npcId)) {
-      await _loadingFutures[npcId];
+    if (_loadingFutures.containsKey(key)) {
+      await _loadingFutures[key];
       return;
     }
     
     // 如果已加载，直接返回
-    if (_loadingStatus[npcId] == true) {
+    if (_loadingStatus[key] == true) {
       return;
     }
     
     // 开始加载资源（使用空Future，因为getSmartResourcePath会自动处理下载）
-    LoggerUtils.info('标记NPC资源为加载中: $npcId');
+    LoggerUtils.info('标记NPC资源为加载中: $npcId/皮肤$skinId');
     final future = Future.value();
-    _loadingFutures[npcId] = future;
+    _loadingFutures[key] = future;
     
     try {
       await future;
-      _loadingStatus[npcId] = true;
-      LoggerUtils.info('NPC资源加载完成: $npcId');
+      _loadingStatus[key] = true;
+      LoggerUtils.info('NPC资源加载完成: $npcId/皮肤$skinId');
     } catch (e) {
-      LoggerUtils.error('NPC资源加载失败: $npcId - $e');
+      LoggerUtils.error('NPC资源加载失败: $npcId/皮肤$skinId - $e');
       rethrow;
     } finally {
-      _loadingFutures.remove(npcId);
+      _loadingFutures.remove(key);
     }
   }
   

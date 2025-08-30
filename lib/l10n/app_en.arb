@@ -850,5 +850,98 @@
   "watchAdToSoberSubtitle": "Free, instantly sober",
   "goHomeToRest": "Go Home to Rest",
   "loadingNPCResources": "Loading character resources...",
-  "npcResourcesReady": "Character ready"
+  "npcResourcesReady": "Character ready",
+  
+  "@npcDefaultGreeting": {
+    "description": "Default NPC greeting when no dialogue data is found"
+  },
+  "npcDefaultGreeting": "Hello!",
+  
+  "@npcDefaultWinDialogue": {
+    "description": "Default NPC win dialogue"
+  },
+  "npcDefaultWinDialogue": "It's your turn to drink!",
+  
+  "@npcDefaultLoseDialogue": {
+    "description": "Default NPC lose dialogue"
+  },
+  "npcDefaultLoseDialogue": "You're amazing!",
+  
+  "@npcDefaultThinking": {
+    "description": "Default NPC thinking placeholder"
+  },
+  "npcDefaultThinking": "...",
+  
+  "@npcActionChallenge": {
+    "description": "Default challenge action dialogue"
+  },
+  "npcActionChallenge": "I challenge that!",
+  
+  "@npcActionValueBet": {
+    "description": "Default value bet action dialogue"
+  },
+  "npcActionValueBet": "I'm betting on value.",
+  
+  "@npcActionBluff": {
+    "description": "Default bluff action dialogue"
+  },
+  "npcActionBluff": "Let's see if you believe this...",
+  
+  "@npcActionReverseTrap": {
+    "description": "Default reverse trap action dialogue"
+  },
+  "npcActionReverseTrap": "Walking into my trap?",
+  
+  "@npcActionPressurePlay": {
+    "description": "Default pressure play action dialogue"
+  },
+  "npcActionPressurePlay": "Feel the pressure!",
+  
+  "@npcActionSafePlay": {
+    "description": "Default safe play action dialogue"
+  },
+  "npcActionSafePlay": "Playing it safe.",
+  
+  "@npcActionPatternBreak": {
+    "description": "Default pattern break action dialogue"
+  },
+  "npcActionPatternBreak": "Time to change things up!",
+  
+  "@npcActionInduceAggressive": {
+    "description": "Default induce aggressive action dialogue"
+  },
+  "npcActionInduceAggressive": "Come on, be bold!",
+  
+  "@intimacyProgressTitle": {
+    "description": "Intimacy progress title"
+  },
+  "intimacyProgressTitle": "Intimacy Progress",
+  
+  "@intimacyProgressFormat": {
+    "description": "Intimacy progress format",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "intimacyProgressFormat": "Progress: {current} / {total}",
+  
+  "@intimacyTooltip": {
+    "description": "Intimacy increase tooltip"
+  },
+  "intimacyTooltip": "💕 Get me tipsy to grow our intimacy",
+  
+  "@intimacyMaxLevel": {
+    "description": "Max intimacy level reached",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "intimacyMaxLevel": "Max level reached ({points} pts)"
 }

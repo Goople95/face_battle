@@ -1717,6 +1717,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Character ready'**
   String get npcResourcesReady;
+
+  /// Default NPC greeting when no dialogue data is found
+  ///
+  /// In en, this message translates to:
+  /// **'Hello!'**
+  String get npcDefaultGreeting;
+
+  /// Default NPC win dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s your turn to drink!'**
+  String get npcDefaultWinDialogue;
+
+  /// Default NPC lose dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re amazing!'**
+  String get npcDefaultLoseDialogue;
+
+  /// Default NPC thinking placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'...'**
+  String get npcDefaultThinking;
+
+  /// Default challenge action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'I challenge that!'**
+  String get npcActionChallenge;
+
+  /// Default value bet action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m betting on value.'**
+  String get npcActionValueBet;
+
+  /// Default bluff action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s see if you believe this...'**
+  String get npcActionBluff;
+
+  /// Default reverse trap action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'Walking into my trap?'**
+  String get npcActionReverseTrap;
+
+  /// Default pressure play action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'Feel the pressure!'**
+  String get npcActionPressurePlay;
+
+  /// Default safe play action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'Playing it safe.'**
+  String get npcActionSafePlay;
+
+  /// Default pattern break action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'Time to change things up!'**
+  String get npcActionPatternBreak;
+
+  /// Default induce aggressive action dialogue
+  ///
+  /// In en, this message translates to:
+  /// **'Come on, be bold!'**
+  String get npcActionInduceAggressive;
+
+  /// Intimacy progress title
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy Progress'**
+  String get intimacyProgressTitle;
+
+  /// Intimacy progress format
+  ///
+  /// In en, this message translates to:
+  /// **'Progress: {current} / {total}'**
+  String intimacyProgressFormat(int current, int total);
+
+  /// Intimacy increase tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'💕 Get me tipsy to grow our intimacy'**
+  String get intimacyTooltip;
+
+  /// Max intimacy level reached
+  ///
+  /// In en, this message translates to:
+  /// **'Max level reached ({points} pts)'**
+  String intimacyMaxLevel(int points);
 }
 
 class _AppLocalizationsDelegate

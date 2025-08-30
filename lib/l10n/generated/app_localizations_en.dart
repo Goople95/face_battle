@@ -941,4 +941,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get npcResourcesReady => 'Character ready';
+
+  @override
+  String get npcDefaultGreeting => 'Hello!';
+
+  @override
+  String get npcDefaultWinDialogue => 'It\'s your turn to drink!';
+
+  @override
+  String get npcDefaultLoseDialogue => 'You\'re amazing!';
+
+  @override
+  String get npcDefaultThinking => '...';
+
+  @override
+  String get npcActionChallenge => 'I challenge that!';
+
+  @override
+  String get npcActionValueBet => 'I\'m betting on value.';
+
+  @override
+  String get npcActionBluff => 'Let\'s see if you believe this...';
+
+  @override
+  String get npcActionReverseTrap => 'Walking into my trap?';
+
+  @override
+  String get npcActionPressurePlay => 'Feel the pressure!';
+
+  @override
+  String get npcActionSafePlay => 'Playing it safe.';
+
+  @override
+  String get npcActionPatternBreak => 'Time to change things up!';
+
+  @override
+  String get npcActionInduceAggressive => 'Come on, be bold!';
+
+  @override
+  String get intimacyProgressTitle => 'Intimacy Progress';
+
+  @override
+  String intimacyProgressFormat(int current, int total) {
+    return 'Progress: $current / $total';
+  }
+
+  @override
+  String get intimacyTooltip => '💕 Get me tipsy to grow our intimacy';
+
+  @override
+  String intimacyMaxLevel(int points) {
+    return 'Max level reached ($points pts)';
+  }
 }

@@ -310,5 +310,25 @@
   "gameSlogan": "100+ menunggu tantangan Anda",
   "youGotDrunk": "Anda mabuk!",
   "watchAdToSoberSubtitle": "Gratis, langsung sadar",
-  "goHomeToRest": "Pulang untuk Istirahat"
+  "goHomeToRest": "Pulang untuk Istirahat",
+  "loadingNPCResources": "Memuat sumber daya karakter...",
+  "npcResourcesReady": "Karakter siap",
+  
+  "npcDefaultGreeting": "Halo!",
+  "npcDefaultWinDialogue": "Giliranmu minum!",
+  "npcDefaultLoseDialogue": "Kamu luar biasa!",
+  "npcDefaultThinking": "...",
+  "npcActionChallenge": "Aku tantang itu!",
+  "npcActionValueBet": "Bertaruh pada nilai.",
+  "npcActionBluff": "Mari lihat apa kamu percaya...",
+  "npcActionReverseTrap": "Masuk ke jebakanku?",
+  "npcActionPressurePlay": "Rasakan tekanannya!",
+  "npcActionSafePlay": "Bermain aman.",
+  "npcActionPatternBreak": "Saatnya mengubah segalanya!",
+  "npcActionInduceAggressive": "Ayo, beranilah!",
+  
+  "intimacyProgressTitle": "Progres Keintiman",
+  "intimacyProgressFormat": "Progres: {current} / {total}",
+  "intimacyTooltip": "💕 Bikin aku sedikit mabuk untuk meningkatkan keintiman",
+  "intimacyMaxLevel": "Level maksimum tercapai ({points} poin)"
 }

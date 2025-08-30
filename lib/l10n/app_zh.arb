@@ -274,5 +274,23 @@
   "watchAdToSoberSubtitle": "免費，立即完全清醒",
   "goHomeToRest": "回家休息",
   "loadingNPCResources": "正在載入角色資源...",
-  "npcResourcesReady": "角色已就緒"
+  "npcResourcesReady": "角色已就緒",
+  
+  "npcDefaultGreeting": "你好！",
+  "npcDefaultWinDialogue": "该你喝了！",
+  "npcDefaultLoseDialogue": "你真厉害！",
+  "npcDefaultThinking": "...",
+  "npcActionChallenge": "我要挑战！",
+  "npcActionValueBet": "我押实力牌。",
+  "npcActionBluff": "看你信不信...",
+  "npcActionReverseTrap": "掉进我的陷阱了？",
+  "npcActionPressurePlay": "感受压力吧！",
+  "npcActionSafePlay": "稳妥为上。",
+  "npcActionPatternBreak": "该改变策略了！",
+  "npcActionInduceAggressive": "来吧，大胆一点！",
+  
+  "intimacyProgressTitle": "亲密度进度",
+  "intimacyProgressFormat": "进度：{current} / {total}",
+  "intimacyTooltip": "💕 灌醉我，就能增加亲密度",
+  "intimacyMaxLevel": "已达最高级 ({points} pts)"
 }

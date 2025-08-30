@@ -50,18 +50,13 @@ flutter:
   assets:
     - assets/dice/
     - assets/icons/
-    - assets/config/
-    - assets/dialogues/
-    # 注释掉不存在的本地资源目录，现在使用云端资源
-    # - assets/people/
-    # - assets/people/0001/
-    # - assets/people/0001/videos/
-    # - assets/people/0002/
-    # - assets/people/0002/videos/
-    # - assets/people/1001/
-    # - assets/people/1001/videos/
-    # - assets/people/1002/
-    # - assets/people/1002/videos/
+    # - assets/config/
+    # 统一的本地资源目录结构 npcs/[npcId]/[skinId]/
+    - assets/npcs/0001/1/
+    - assets/npcs/0002/1/
+    # VIP NPC暂时使用云端资源
+    # - assets/npcs/1001/1/
+    # - assets/npcs/1002/1/
 
 
 flutter_launcher_icons:

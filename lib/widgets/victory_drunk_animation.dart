@@ -13,6 +13,7 @@ import '../models/drinking_state.dart';
 import '../services/intimacy_service.dart';
 import '../services/game_progress_service.dart';
 import '../services/cloud_npc_service.dart';
+import '../services/npc_resource_loader.dart';
 import '../utils/logger_utils.dart';
 import '../l10n/generated/app_localizations.dart';
 
@@ -189,19 +190,37 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     LoggerUtils.debug('尝试加载醉倒视频: ${widget.defeatedAI.id}/drunk.mp4');
     
     try {
-      // 使用智能缓存机制获取视频路径
-      final videoPath = await CloudNPCService.getSmartResourcePath(
-        widget.defeatedAI.id, 
-        'drunk.mp4'
-      );
+      // 根据personality判断资源类型并获取正确路径
+      String videoPath;
+      if (widget.defeatedAI.avatarPath.startsWith('assets/')) {
+        // 本地打包资源，使用NPCResourceLoader
+        // avatarPath 类似 "assets/npcs/0001/1/"，视频直接在该目录下
+        videoPath = await NPCResourceLoader.getVideoPath(
+          widget.defeatedAI.id,
+          widget.defeatedAI.avatarPath,
+          'drunk',
+        );
+        LoggerUtils.info('使用本地drunk视频: $videoPath');
+      } else {
+        // 云端资源，使用智能缓存机制
+        videoPath = await CloudNPCService.getSmartResourcePath(
+          widget.defeatedAI.id, 
+          'drunk.mp4'
+        );
+        LoggerUtils.info('使用云端drunk视频: $videoPath');
+      }
       
       // 根据路径类型创建合适的控制器
       if (videoPath.startsWith('http')) {
         // 网络URL
         _videoController = VideoPlayerController.networkUrl(Uri.parse(videoPath));
         LoggerUtils.info('使用网络醉倒视频（将后台缓存）: ${widget.defeatedAI.id}/drunk.mp4');
+      } else if (videoPath.startsWith('assets/')) {
+        // 本地asset资源
+        _videoController = VideoPlayerController.asset(videoPath);
+        LoggerUtils.debug('使用本地asset醉倒视频: ${widget.defeatedAI.id}/drunk.mp4');
       } else {
-        // 本地文件路径
+        // 本地文件路径（缓存的文件）
         _videoController = VideoPlayerController.file(File(videoPath));
         LoggerUtils.debug('使用本地缓存醉倒视频: ${widget.defeatedAI.id}/drunk.mp4');
       }

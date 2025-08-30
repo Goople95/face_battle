@@ -938,8 +938,61 @@ class AppLocalizationsId extends AppLocalizations {
   String get goHomeToRest => 'Pulang untuk Istirahat';
 
   @override
-  String get loadingNPCResources => 'Loading character resources...';
+  String get loadingNPCResources => 'Memuat sumber daya karakter...';
 
   @override
-  String get npcResourcesReady => 'Character ready';
+  String get npcResourcesReady => 'Karakter siap';
+
+  @override
+  String get npcDefaultGreeting => 'Halo!';
+
+  @override
+  String get npcDefaultWinDialogue => 'Giliranmu minum!';
+
+  @override
+  String get npcDefaultLoseDialogue => 'Kamu luar biasa!';
+
+  @override
+  String get npcDefaultThinking => '...';
+
+  @override
+  String get npcActionChallenge => 'Aku tantang itu!';
+
+  @override
+  String get npcActionValueBet => 'Bertaruh pada nilai.';
+
+  @override
+  String get npcActionBluff => 'Mari lihat apa kamu percaya...';
+
+  @override
+  String get npcActionReverseTrap => 'Masuk ke jebakanku?';
+
+  @override
+  String get npcActionPressurePlay => 'Rasakan tekanannya!';
+
+  @override
+  String get npcActionSafePlay => 'Bermain aman.';
+
+  @override
+  String get npcActionPatternBreak => 'Saatnya mengubah segalanya!';
+
+  @override
+  String get npcActionInduceAggressive => 'Ayo, beranilah!';
+
+  @override
+  String get intimacyProgressTitle => 'Progres Keintiman';
+
+  @override
+  String intimacyProgressFormat(int current, int total) {
+    return 'Progres: $current / $total';
+  }
+
+  @override
+  String get intimacyTooltip =>
+      '💕 Bikin aku sedikit mabuk untuk meningkatkan keintiman';
+
+  @override
+  String intimacyMaxLevel(int points) {
+    return 'Level maksimum tercapai ($points poin)';
+  }
 }

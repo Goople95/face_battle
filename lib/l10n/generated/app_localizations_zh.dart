@@ -935,6 +935,58 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get npcResourcesReady => '角色已就緒';
+
+  @override
+  String get npcDefaultGreeting => '你好！';
+
+  @override
+  String get npcDefaultWinDialogue => '该你喝了！';
+
+  @override
+  String get npcDefaultLoseDialogue => '你真厉害！';
+
+  @override
+  String get npcDefaultThinking => '...';
+
+  @override
+  String get npcActionChallenge => '我要挑战！';
+
+  @override
+  String get npcActionValueBet => '我押实力牌。';
+
+  @override
+  String get npcActionBluff => '看你信不信...';
+
+  @override
+  String get npcActionReverseTrap => '掉进我的陷阱了？';
+
+  @override
+  String get npcActionPressurePlay => '感受压力吧！';
+
+  @override
+  String get npcActionSafePlay => '稳妥为上。';
+
+  @override
+  String get npcActionPatternBreak => '该改变策略了！';
+
+  @override
+  String get npcActionInduceAggressive => '来吧，大胆一点！';
+
+  @override
+  String get intimacyProgressTitle => '亲密度进度';
+
+  @override
+  String intimacyProgressFormat(int current, int total) {
+    return '进度：$current / $total';
+  }
+
+  @override
+  String get intimacyTooltip => '💕 灌醉我，就能增加亲密度';
+
+  @override
+  String intimacyMaxLevel(int points) {
+    return '已达最高级 ($points pts)';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -1862,4 +1914,62 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get goHomeToRest => '回家休息';
+
+  @override
+  String get loadingNPCResources => '正在載入角色資源...';
+
+  @override
+  String get npcResourcesReady => '角色準備就緒';
+
+  @override
+  String get npcDefaultGreeting => '你好！';
+
+  @override
+  String get npcDefaultWinDialogue => '該你喝了！';
+
+  @override
+  String get npcDefaultLoseDialogue => '你真厲害！';
+
+  @override
+  String get npcDefaultThinking => '...';
+
+  @override
+  String get npcActionChallenge => '我要挑戰！';
+
+  @override
+  String get npcActionValueBet => '我押實力牌。';
+
+  @override
+  String get npcActionBluff => '看你信不信...';
+
+  @override
+  String get npcActionReverseTrap => '掉進我的陷阱了？';
+
+  @override
+  String get npcActionPressurePlay => '感受壓力吧！';
+
+  @override
+  String get npcActionSafePlay => '穩妥為上。';
+
+  @override
+  String get npcActionPatternBreak => '該改變策略了！';
+
+  @override
+  String get npcActionInduceAggressive => '來吧，大膽一點！';
+
+  @override
+  String get intimacyProgressTitle => '親密度進度';
+
+  @override
+  String intimacyProgressFormat(int current, int total) {
+    return '進度：$current / $total';
+  }
+
+  @override
+  String get intimacyTooltip => '💕 灌醉我，就能增加親密度';
+
+  @override
+  String intimacyMaxLevel(int points) {
+    return '已達最高級 ($points pts)';
+  }
 }
