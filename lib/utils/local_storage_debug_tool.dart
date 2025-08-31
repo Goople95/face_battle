@@ -300,7 +300,7 @@ class LocalStorageDebugTool {
     }
   }
   
-  /// 获取NPC缓存详细信息
+  /// 获取NPC缓存详细信息（包含版本信息）
   static Future<Map<String, dynamic>> getNPCCacheInfo() async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
@@ -308,6 +308,35 @@ class LocalStorageDebugTool {
       
       LoggerUtils.info('获取NPC缓存信息，路径: ${npcsDir.path}');
       LoggerUtils.info('目录存在: ${await npcsDir.exists()}');
+      
+      // 获取所有资源的版本信息
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, int> localVersions = {};
+      final Map<String, int> remoteVersions = {};
+      
+      // 获取远程版本配置
+      try {
+        final remoteVersionsStr = prefs.getString('resource_versions_cache');
+        if (remoteVersionsStr != null) {
+          final data = json.decode(remoteVersionsStr);
+          if (data['versions'] != null) {
+            data['versions'].forEach((key, value) {
+              remoteVersions[key] = value as int;
+            });
+          }
+        }
+      } catch (e) {
+        LoggerUtils.debug('获取远程版本信息失败: $e');
+      }
+      
+      // 获取所有本地保存的版本号
+      for (String key in prefs.getKeys()) {
+        if (key.startsWith('res_ver_')) {
+          final resourcePath = key.substring(8); // 移除 'res_ver_' 前缀
+          final version = prefs.getInt(key) ?? 0;
+          localVersions[resourcePath] = version;
+        }
+      }
       
       if (!await npcsDir.exists()) {
         LoggerUtils.info('NPC缓存目录不存在');
@@ -318,6 +347,8 @@ class LocalStorageDebugTool {
           'npcCount': 0,
           'npcs': [],
           'cacheDir': npcsDir.path,
+          'localVersions': localVersions,
+          'remoteVersions': remoteVersions,
         };
       }
       
@@ -333,18 +364,38 @@ class LocalStorageDebugTool {
           int folderSize = 0;
           final List<Map<String, dynamic>> files = [];
           
-          await for (final file in entity.list(recursive: true)) {
-            if (file is File) {
-              final fileSize = await file.length();
-              folderSize += fileSize;
+          // 遍历皮肤ID子目录
+          await for (final skinEntity in entity.list()) {
+            if (skinEntity is Directory) {
+              final skinId = skinEntity.path.split(Platform.pathSeparator).last;
               
-              final fileName = file.path.split(Platform.pathSeparator).last;
-              files.add({
-                'name': fileName,
-                'size': fileSize,
-                'sizeText': _formatFileSize(fileSize),
-                'type': _getFileType(fileName),
-              });
+              await for (final file in skinEntity.list()) {
+                if (file is File) {
+                  final fileSize = await file.length();
+                  folderSize += fileSize;
+                  
+                  final fileName = file.path.split(Platform.pathSeparator).last;
+                  final resourcePath = 'npcs/$npcId/$skinId/$fileName';
+                  
+                  // 获取版本信息
+                  final localVersion = localVersions[resourcePath] ?? 0;
+                  final remoteVersion = remoteVersions[resourcePath] ?? 0;
+                  final needsUpdate = remoteVersion > localVersion;
+                  
+                  files.add({
+                    'name': fileName,
+                    'size': fileSize,
+                    'sizeText': _formatFileSize(fileSize),
+                    'type': _getFileType(fileName),
+                    'skinId': skinId,
+                    'resourcePath': resourcePath,
+                    'localVersion': localVersion,
+                    'remoteVersion': remoteVersion,
+                    'needsUpdate': needsUpdate,
+                    'versionText': localVersion > 0 ? 'v$localVersion' : '未记录',
+                  });
+                }
+              }
             }
           }
           
@@ -374,6 +425,8 @@ class LocalStorageDebugTool {
         'npcCount': npcList.length,
         'npcs': npcList,
         'cacheDir': npcsDir.path,
+        'localVersions': localVersions,
+        'remoteVersions': remoteVersions,
       };
     } catch (e) {
       LoggerUtils.error('获取NPC缓存信息失败: $e');
@@ -936,6 +989,17 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
     final totalSize = cacheInfo['totalSize'] ?? 0;
     final npcCount = cacheInfo['npcCount'] ?? 0;
     final npcs = cacheInfo['npcs'] as List<dynamic>? ?? [];
+    final localVersions = cacheInfo['localVersions'] as Map<String, int>? ?? {};
+    final remoteVersions = cacheInfo['remoteVersions'] as Map<String, int>? ?? {};
+    
+    // 统计需要更新的资源数量
+    int needUpdateCount = 0;
+    remoteVersions.forEach((key, remoteVer) {
+      final localVer = localVersions[key] ?? 0;
+      if (remoteVer > localVer) {
+        needUpdateCount++;
+      }
+    });
     
     showDialog(
       context: context,
@@ -948,9 +1012,31 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('NPC缓存详情'),
+                  Row(
+                    children: [
+                      const Text('NPC缓存详情'),
+                      if (needUpdateCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '$needUpdateCount个待更新',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   Text(
-                    '总大小: ${LocalStorageDebugTool._formatFileSize(totalSize)} | 角色数: $npcCount',
+                    '总大小: ${LocalStorageDebugTool._formatFileSize(totalSize)} | 角色数: $npcCount | 版本记录: ${localVersions.length}个',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
@@ -1031,6 +1117,12 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                                   ...files.map((file) {
                                     final fileMap = file as Map<String, dynamic>;
                                     final fileName = fileMap['name'] ?? '';
+                                    final fileSize = fileMap['size'] ?? 0;
+                                    final localVersion = fileMap['localVersion'] ?? 0;
+                                    final remoteVersion = fileMap['remoteVersion'] ?? 0;
+                                    final needsUpdate = fileMap['needsUpdate'] ?? false;
+                                    final versionText = fileMap['versionText'] ?? '';
+                                    
                                     return Padding(
                                       padding: const EdgeInsets.only(left: 16, bottom: 4),
                                       child: Row(
@@ -1049,6 +1141,39 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                                                 fontFamily: 'monospace',
                                               ),
                                               overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          // 版本标签
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: needsUpdate 
+                                                ? Colors.orange.withValues(alpha: 0.2)
+                                                : (localVersion > 0 
+                                                  ? Colors.green.withValues(alpha: 0.2) 
+                                                  : Colors.grey.withValues(alpha: 0.2)),
+                                              borderRadius: BorderRadius.circular(3),
+                                            ),
+                                            child: Text(
+                                              needsUpdate 
+                                                ? 'v$localVersion→v$remoteVersion'
+                                                : versionText,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: needsUpdate 
+                                                  ? Colors.orange 
+                                                  : (localVersion > 0 ? Colors.green : Colors.grey),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            LocalStorageDebugTool._formatFileSize(fileSize),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey,
                                             ),
                                           ),
                                         ],

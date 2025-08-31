@@ -10,6 +10,7 @@ import 'game_progress_service.dart';
 import 'storage/local_storage_service.dart';
 import 'ip_location_service.dart';
 import 'analytics_service.dart';
+import 'cloud_npc_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 认证服务 - 管理用户登录状态
@@ -139,9 +140,8 @@ class AuthService extends ChangeNotifier {
       LoggerUtils.info('Facebook登录开始');
       
       // 触发Facebook登录流程
-      // 注意：email权限需要Facebook应用审核，开发阶段只使用public_profile
       final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['public_profile'],  // 只使用公开资料权限
+        permissions: ['public_profile'],  // 只请求公开资料权限
       );
       
       // 检查登录状态
@@ -431,6 +431,13 @@ class AuthService extends ChangeNotifier {
       
       // 4. 初始化游戏进度服务
       await GameProgressService.instance.initialize();
+      
+      // 5. 检查资源版本更新（后台静默）
+      CloudNPCService.refreshResourceVersions().then((_) {
+        LoggerUtils.info('资源版本检查完成');
+      }).catchError((e) {
+        LoggerUtils.debug('资源版本检查失败（不影响使用）: $e');
+      });
       
       LoggerUtils.info('用户登录处理完成: ${user.uid} (版本: $appVersion)');
     } catch (e) {

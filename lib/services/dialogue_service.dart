@@ -252,12 +252,12 @@ class DialogueService {
       case 'id':
         return 'Halo!';
       default:
-        return _getDefaultGreeting(locale);
+        return 'Hello!';
     }
   }
   
   String _getDefaultThinking(String locale) {
-    return _getDefaultThinking(locale);  // 所有语言都一样
+    return '...';  // 所有语言都一样
   }
   
   // 标准化locale代码

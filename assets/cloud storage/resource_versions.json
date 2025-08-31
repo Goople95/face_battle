@@ -1,0 +1,10 @@
+{
+  "comment": "资源版本控制文件 - 当需要强制更新某个资源时，增加其版本号",
+  "versions": {
+    "npcs/1001/1/1.mp4": 2,
+    "npcs/1001/1/drunk.mp4": 1,
+    "_example_": "添加任何需要版本控制的文件路径和版本号"
+  },
+  "globalVersion": 1,
+  "lastUpdate": "2025-08-31"
+}

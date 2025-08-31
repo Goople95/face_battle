@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,10 @@ class CloudNPCService {
   static const String _accessToken = 'adacfb99-9f79-4002-9aa3-e3a9a97db26b';
   static const String _cacheVersionKey = 'npc_cache_version';
   static const String _cachedConfigsKey = 'npc_cached_configs';
+  
+  // 资源版本缓存（仅在应用启动时加载一次）
+  static Map<String, int>? _resourceVersions;
+  static bool _hasCheckedCloudVersions = false;  // 标记是否已检查云端版本
   
   /// 获取所有可用的NPC配置（始终使用云端最新配置，不缓存JSON）
   static Future<List<NPCConfig>> fetchNPCConfigs({bool forceRefresh = false}) async {
@@ -86,6 +91,144 @@ class CloudNPCService {
     return localPath;
   }
   
+  /// 获取资源版本信息
+  static Future<Map<String, int>> _getResourceVersions() async {
+    // 如果已缓存，直接返回
+    if (_resourceVersions != null) {
+      // 应用启动后首次访问资源时，后台检查云端版本
+      if (!_hasCheckedCloudVersions) {
+        _hasCheckedCloudVersions = true;
+        _checkCloudVersionsInBackground();
+      }
+      return _resourceVersions!;
+    }
+    
+    try {
+      // 优先从SharedPreferences读取上次保存的云端版本
+      final prefs = await SharedPreferences.getInstance();
+      final cachedVersionsStr = prefs.getString('resource_versions_cache');
+      if (cachedVersionsStr != null) {
+        try {
+          final cachedData = json.decode(cachedVersionsStr);
+          _resourceVersions = Map<String, int>.from(cachedData['versions'] ?? {});
+          LoggerUtils.info('使用缓存的云端资源版本配置');
+        } catch (e) {
+          LoggerUtils.debug('缓存版本解析失败: $e');
+        }
+      }
+      
+      // 如果没有缓存，使用空配置
+      if (_resourceVersions == null) {
+        LoggerUtils.info('首次启动，等待云端版本信息');
+        _resourceVersions = {};
+      }
+      
+      // 标记需要检查云端版本
+      if (!_hasCheckedCloudVersions) {
+        _hasCheckedCloudVersions = true;
+        _checkCloudVersionsInBackground();
+      }
+      
+      return _resourceVersions!;
+    } catch (e) {
+      LoggerUtils.error('获取资源版本信息失败: $e');
+      return {};
+    }
+  }
+  
+  /// 后台检查云端版本（不阻塞）
+  static void _checkCloudVersionsInBackground() {
+    Future(() async {
+      try {
+        LoggerUtils.info('后台检查云端资源版本更新...');
+        
+        // 尝试从Firebase Storage获取
+        try {
+          final ref = _storage.ref('npcs/resource_versions.json');
+          final data = await ref.getData();
+          if (data != null) {
+            final jsonStr = utf8.decode(data);
+            final cloudData = json.decode(jsonStr);
+            _resourceVersions = Map<String, int>.from(cloudData['versions'] ?? {});
+            
+            // 保存到本地缓存
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('resource_versions_cache', jsonStr);
+            
+            LoggerUtils.info('云端资源版本更新成功（Firebase Storage）');
+            return;
+          }
+        } catch (e) {
+          LoggerUtils.debug('Firebase Storage获取版本失败，尝试HTTP: $e');
+        }
+        
+        // 回退到HTTP方式
+        final response = await http.get(
+          Uri.parse('$_baseUrl/npcs%2Fresource_versions.json?alt=media&token=$_accessToken')
+        );
+        
+        if (response.statusCode == 200) {
+          final cloudData = json.decode(response.body);
+          _resourceVersions = Map<String, int>.from(cloudData['versions'] ?? {});
+          
+          // 保存到本地缓存
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('resource_versions_cache', response.body);
+          
+          LoggerUtils.info('云端资源版本更新成功（HTTP）');
+        }
+      } catch (e) {
+        LoggerUtils.debug('后台更新版本信息失败（使用本地版本）: $e');
+      }
+    });
+  }
+  
+  /// 主动刷新版本信息（可在特定时机调用，如用户登录、进入游戏等）
+  static Future<void> refreshResourceVersions() async {
+    LoggerUtils.info('主动刷新资源版本信息...');
+    _resourceVersions = null;  // 清除缓存
+    _hasCheckedCloudVersions = false;  // 重置检查标记
+    await _getResourceVersions();  // 重新获取
+  }
+  
+  /// 检查资源是否需要更新
+  static Future<bool> _needsUpdate(String npcId, String resourcePath, int skinId, File localFile) async {
+    if (!await localFile.exists()) return true;
+    
+    // 构建资源路径key
+    final resourceKey = 'npcs/$npcId/$skinId/$resourcePath';
+    final versions = await _getResourceVersions();
+    
+    if (!versions.containsKey(resourceKey)) {
+      // 没有版本信息，不需要更新
+      return false;
+    }
+    
+    // 获取本地保存的版本号
+    final prefs = await SharedPreferences.getInstance();
+    final localVersionKey = 'res_ver_$resourceKey';
+    final localVersion = prefs.getInt(localVersionKey) ?? 0;
+    final remoteVersion = versions[resourceKey] ?? 0;
+    
+    if (remoteVersion > localVersion) {
+      LoggerUtils.info('资源需要更新: $resourceKey (本地v$localVersion -> 远程v$remoteVersion)');
+      return true;
+    }
+    
+    return false;
+  }
+  
+  /// 保存资源版本号
+  static Future<void> _saveResourceVersion(String npcId, String resourcePath, int skinId) async {
+    final resourceKey = 'npcs/$npcId/$skinId/$resourcePath';
+    final versions = await _getResourceVersions();
+    final version = versions[resourceKey] ?? 1;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final localVersionKey = 'res_ver_$resourceKey';
+    await prefs.setInt(localVersionKey, version);
+  }
+  
   /// 智能获取NPC资源路径（优先本地，否则返回云端URL并后台下载）
   /// @param skinId 皮肤ID，默认为1（第一套皮肤）
   static Future<String> getSmartResourcePath(String npcId, String resourcePath, {int skinId = 1}) async {
@@ -93,10 +236,23 @@ class CloudNPCService {
     final localPath = '${dir.path}/$resourcePath';
     final localFile = File(localPath);
     
-    // 检查本地文件是否存在
-    if (await localFile.exists()) {
+    // 检查是否需要更新（版本控制）
+    final needsUpdate = await _needsUpdate(npcId, resourcePath, skinId, localFile);
+    
+    // 如果本地文件存在且不需要更新，直接使用
+    if (await localFile.exists() && !needsUpdate) {
       LoggerUtils.debug('使用本地缓存: $localPath');
       return localPath;
+    }
+    
+    // 如果需要更新，先删除旧文件
+    if (needsUpdate && await localFile.exists()) {
+      try {
+        await localFile.delete();
+        LoggerUtils.info('删除旧版本资源: $resourcePath');
+      } catch (e) {
+        LoggerUtils.warning('删除旧资源失败: $e');
+      }
     }
     
     // 构建云端URL（添加皮肤ID子目录）
@@ -107,7 +263,7 @@ class CloudNPCService {
                      'npcs%2F$encodedId%2F$encodedSkinId%2F$encodedPath?alt=media';
     
     // 后台下载到本地（不阻塞返回）
-    _downloadFileInBackground(cloudUrl, localPath);
+    _downloadFileInBackgroundWithVersion(cloudUrl, localPath, npcId, resourcePath, skinId);
     
     // 立即返回云端URL供使用
     LoggerUtils.debug('使用云端URL并后台缓存: $cloudUrl');
@@ -129,6 +285,37 @@ class CloudNPCService {
         if (response.statusCode == 200) {
           await file.writeAsBytes(response.bodyBytes);
           LoggerUtils.info('后台缓存成功: ${savePath.split('/').last}');
+        }
+      } catch (e) {
+        LoggerUtils.debug('后台缓存失败（不影响使用）: $e');
+      }
+    });
+  }
+  
+  /// 后台下载文件并保存版本（不阻塞）
+  static void _downloadFileInBackgroundWithVersion(
+    String url, 
+    String savePath, 
+    String npcId, 
+    String resourcePath, 
+    int skinId
+  ) {
+    Future(() async {
+      try {
+        final file = File(savePath);
+        
+        // 创建目录
+        await file.parent.create(recursive: true);
+        
+        // 下载文件
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          await file.writeAsBytes(response.bodyBytes);
+          
+          // 保存版本号
+          await _saveResourceVersion(npcId, resourcePath, skinId);
+          
+          LoggerUtils.info('后台缓存成功(带版本): ${savePath.split('/').last}');
         }
       } catch (e) {
         LoggerUtils.debug('后台缓存失败（不影响使用）: $e');
