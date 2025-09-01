@@ -11,6 +11,7 @@ import 'services/auth_service.dart';
 import 'services/user_service.dart';
 import 'services/admob_service.dart';
 import 'services/npc_config_service.dart';
+import 'services/npc_raw_config_service.dart';
 import 'services/dialogue_service.dart';
 import 'services/language_service.dart';
 import 'services/storage/local_storage_service.dart';
@@ -60,6 +61,10 @@ void main() async {
     await NPCConfigService().initialize();
     LoggerUtils.info('NPC配置加载成功');
     
+    // 初始化NPC原始配置服務（用於皮膚系統）
+    await NPCRawConfigService.instance.initialize();
+    LoggerUtils.info('NPC原始配置服務初始化成功');
+    
     // 智能清理NPC缓存（异步执行，不阻塞启动）
     CloudNPCService.smartCleanCache().then((_) {
       LoggerUtils.info('NPC缓存清理检查完成');
@@ -101,6 +106,9 @@ void main() async {
   } catch (e) {
     LoggerUtils.error('内购服务初始化失败: $e');
   }
+  
+  // Initialize NPC Skin Service (after Purchase Service)
+  // 皮膚服務在用戶登錄後初始化，因為需要LocalStorage的用戶ID
   
   // Initialize Analytics
   try {

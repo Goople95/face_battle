@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import '../services/cloud_npc_service.dart';
 import '../services/npc_resource_loader.dart';
+import '../services/npc_skin_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 统一的NPC图片组件 - 自动处理缓存和加载
@@ -50,12 +51,18 @@ class _NPCImageWidgetState extends State<NPCImageWidget> {
   }
   
   void _initPathFuture() {
+    // 獲取當前選擇的皮膚ID
+    final skinId = NPCSkinService.instance.getSelectedSkinId(widget.npcId);
+    
+    // 獲取皮膚對應的路徑
+    final avatarPath = NPCSkinService.instance.getAvatarPath(widget.npcId);
+    
     // 判断是否为本地打包的NPC（0001, 0002等）
     final isLocalNPC = ['0001', '0002'].contains(widget.npcId);
     
     _pathFuture = isLocalNPC 
-      ? NPCResourceLoader.getAvatarPath(widget.npcId, 'assets/npcs/${widget.npcId}/1/', skinId: 1)
-      : CloudNPCService.getSmartResourcePath(widget.npcId, widget.fileName, skinId: 1);
+      ? NPCResourceLoader.getAvatarPath(widget.npcId, avatarPath, skinId: skinId)
+      : CloudNPCService.getSmartResourcePath(widget.npcId, widget.fileName, skinId: skinId);
   }
   
   @override

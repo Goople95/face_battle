@@ -24,8 +24,10 @@ import '../services/dialogue_service.dart';
 import '../services/game_progress_service.dart';
 import '../services/purchase_service.dart';
 import '../services/analytics_service.dart';
+import '../services/npc_skin_service.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/rules_display.dart';
+import '../widgets/skin_selector_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
@@ -671,15 +673,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       
       // 不在这里更新亲密度，只在NPC喝醉时更新
       
-      // 执行酒杯飞行动画
-      await _playDrinkFlyAnimation(!playerWon);
+      // 先设置动画参数（在飞行动画之前）
+      bool needRecordNPCDrunk = false;
+      bool needRecordPlayerDrunk = false;
       
-      // 更新饮酒状态
       if (_drinkingState != null) {
-        bool needRecordNPCDrunk = false;
-        bool needRecordPlayerDrunk = false;
-        
-        // 先设置动画参数（在更新状态之前）
         if (playerWon) {
           // AI输了，AI的下一个空杯子将变化
           _isAnimatingAIDrink = true;
@@ -689,18 +687,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           _isAnimatingAIDrink = false;
           _animatingDrinkIndex = _drinkingState!.drinksConsumed;
         }
-        
-        // 获取对话（异步）
+      }
+      
+      // 执行酒杯飞行动画（不等待完成）
+      final flyAnimationFuture = _playDrinkFlyAnimation(!playerWon);
+      
+      // 提前开始获取对话（异步，不等待）
+      Future<String>? dialogueFuture;
+      if (_drinkingState != null) {
         final dialogueService = DialogueService();
         final locale = Localizations.localeOf(context);
         final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
         
-        String dialogue;
         if (playerWon) {
-          dialogue = await dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
+          dialogueFuture = dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
         } else {
-          dialogue = await dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
+          dialogueFuture = dialogueService.getWinDialogue(widget.aiPersonality.id, locale: localeCode);
         }
+      }
+      
+      // 在飞行动画进行到80%时开始酒杯变化动画
+      await Future.delayed(const Duration(milliseconds: 1200)); // 1500ms * 0.8 = 1200ms
+      
+      // 更新饮酒状态
+      if (_drinkingState != null) {
+        // 等待对话加载完成
+        String dialogue = await dialogueFuture!;
         
         // 在setState中更新饮酒状态，确保界面立即刷新
         setState(() {
@@ -749,6 +761,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           // 等待动画显示
           await Future.delayed(const Duration(milliseconds: 800));
         }
+        
+        // 确保飞行动画完成
+        await flyAnimationFuture;
         
         // 在setState外处理异步操作
         if (needRecordNPCDrunk) {
@@ -1718,27 +1733,57 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           Positioned(
                             top: 10,
                             right: 10,
-                            child: AnimatedIntimacyDisplay(
-                              npcId: widget.aiPersonality.id,
-                              showDetails: false,
-                              onTap: () {
-                                setState(() {
-                                  _showIntimacyTip = !_showIntimacyTip;
-                                  if (_showIntimacyTip) {
-                                    // 显示NPC对话
-                                    _aiDialogue = AppLocalizations.of(context)!.intimacyTip;
-                                    // 3秒后自动隐藏
-                                    Future.delayed(const Duration(seconds: 3), () {
-                                      if (mounted) {
-                                        setState(() {
-                                          _showIntimacyTip = false;
-                                          _aiDialogue = '';
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                AnimatedIntimacyDisplay(
+                                  npcId: widget.aiPersonality.id,
+                                  showDetails: false,
+                                  onTap: () {
+                                    setState(() {
+                                      _showIntimacyTip = !_showIntimacyTip;
+                                      if (_showIntimacyTip) {
+                                        // 显示NPC对话
+                                        _aiDialogue = AppLocalizations.of(context)!.intimacyTip;
+                                        // 3秒后自动隐藏
+                                        Future.delayed(const Duration(seconds: 3), () {
+                                          if (mounted) {
+                                            setState(() {
+                                              _showIntimacyTip = false;
+                                              _aiDialogue = '';
+                                            });
+                                          }
                                         });
                                       }
                                     });
-                                  }
-                                });
-                              },
+                                  },
+                                ),
+                                const SizedBox(height: 8),
+                                // 皮膚切換按鈕
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _showSkinSelector,
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.amber.withValues(alpha: 0.5),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.palette_outlined,
+                                        color: Colors.amber,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           // 亲密度进度提示
@@ -3620,6 +3665,25 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
     
     return AppLocalizations.of(context)!.intimacyProgressFormat(currentLevelPoints, pointsNeeded);
+  }
+  
+  // 顯示皮膚選擇器
+  Future<void> _showSkinSelector() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => SkinSelectorDialog(
+        npcId: widget.aiPersonality.id,
+        npcName: _getLocalizedAIName(context),
+      ),
+    );
+    
+    // 如果選擇了新皮膚，刷新界面
+    if (result == true && mounted) {
+      setState(() {
+        // 觸發界面重繪以顯示新皮膚
+      });
+    }
   }
 
   // 播放酒杯飞行动画

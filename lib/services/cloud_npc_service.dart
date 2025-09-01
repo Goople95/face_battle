@@ -71,6 +71,45 @@ class CloudNPCService {
     }
   }
   
+  /// 獲取原始的NPC配置JSON數據（供NPCRawConfigService使用）
+  static Future<Map<String, dynamic>?> fetchRawNPCConfig() async {
+    try {
+      LoggerUtils.info('從雲端獲取原始NPC配置...');
+      
+      try {
+        // 使用Firebase Storage API
+        final ref = _storage.ref('npcs/npc_config.json');
+        final data = await ref.getData();
+        
+        if (data != null) {
+          final jsonStr = utf8.decode(data);
+          final jsonData = json.decode(jsonStr) as Map<String, dynamic>;
+          LoggerUtils.info('成功獲取原始NPC配置（Firebase Storage）');
+          return jsonData;
+        }
+      } catch (firebaseError) {
+        LoggerUtils.warning('Firebase Storage訪問失敗，嘗試HTTP: $firebaseError');
+        
+        // 回退到HTTP方式
+        final response = await http.get(
+          Uri.parse('$_baseUrl/npcs%2Fnpc_config.json?alt=media&token=$_accessToken')
+        );
+        
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body) as Map<String, dynamic>;
+          LoggerUtils.info('成功獲取原始NPC配置（HTTP）');
+          return data;
+        }
+      }
+      
+      return null;
+      
+    } catch (e) {
+      LoggerUtils.error('獲取原始NPC配置失敗: $e');
+      return null;
+    }
+  }
+  
   
   /// 获取NPC资源的本地路径（支持皮肤ID）
   static Future<String> getNPCResourcePath(String npcId, String resourcePath, {int skinId = 1}) async {

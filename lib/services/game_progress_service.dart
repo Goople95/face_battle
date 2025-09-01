@@ -28,6 +28,9 @@ class GameProgressService {
   /// 获取当前用户ID
   String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
   
+  /// 获取当前缓存的游戏进度
+  GameProgressData? getProgress() => _cachedProgress;
+  
   /// 设置用户ID（同步设置到LocalStorageService）
   void setUserId(String userId) {
     _local.setUserId(userId);
@@ -684,6 +687,10 @@ class GameProgressData {
   // 与每个NPC的战绩统计
   Map<String, Map<String, int>> vsNPCRecords; // NPC ID -> 战绩数据
   
+  // NPC皮肤系统
+  Map<String, int> selectedNPCSkins;    // NPC ID -> 选中的皮肤ID
+  Map<String, List<int>> unlockedNPCSkins; // NPC ID -> 已解锁的皮肤ID列表
+  
   // 关键时间戳字段
   DateTime lastUpdated;      // 数据最后修改时间（用于同步判断）
   DateTime? lastSyncTime;    // 最后成功同步的时间
@@ -708,6 +715,8 @@ class GameProgressData {
     this.totalChallenges = 0,
     this.successfulChallenges = 0,
     Map<String, Map<String, int>>? vsNPCRecords,
+    Map<String, int>? selectedNPCSkins,
+    Map<String, List<int>>? unlockedNPCSkins,
     DateTime? lastUpdated,
     this.lastSyncTime,
     this.lastSyncDirection,
@@ -715,6 +724,8 @@ class GameProgressData {
        unlockedNPCs = unlockedNPCs ?? [],
        achievements = achievements ?? [],
        vsNPCRecords = vsNPCRecords ?? {},
+       selectedNPCSkins = selectedNPCSkins ?? {},
+       unlockedNPCSkins = unlockedNPCSkins ?? {},
        lastUpdated = lastUpdated ?? DateTime.now();
   
   // 本地存储序列化（使用 UTC 字符串）
@@ -737,6 +748,8 @@ class GameProgressData {
     'totalChallenges': totalChallenges,
     'successfulChallenges': successfulChallenges,
     'vsNPCRecords': vsNPCRecords,
+    'selectedNPCSkins': selectedNPCSkins,
+    'unlockedNPCSkins': unlockedNPCSkins,
     // 使用 UTC 时间存储，避免时区问题
     'lastUpdated': lastUpdated.toUtc().toIso8601String(),
     'lastSyncTime': lastSyncTime?.toUtc().toIso8601String(),
@@ -763,6 +776,8 @@ class GameProgressData {
     'totalChallenges': totalChallenges,
     'successfulChallenges': successfulChallenges,
     'vsNPCRecords': vsNPCRecords,
+    'selectedNPCSkins': selectedNPCSkins,
+    'unlockedNPCSkins': unlockedNPCSkins,
     // Firestore 会自动处理 DateTime 对象
     'lastUpdated': lastUpdated,
     'lastSyncTime': lastSyncTime,
@@ -778,6 +793,20 @@ class GameProgressData {
       json.forEach((key, value) {
         if (value is Map) {
           result[key] = Map<String, int>.from(value);
+        }
+      });
+    }
+    return result;
+  }
+  
+  static Map<String, List<int>> _parseUnlockedSkins(dynamic json) {
+    if (json == null) return {};
+    
+    Map<String, List<int>> result = {};
+    if (json is Map<String, dynamic>) {
+      json.forEach((key, value) {
+        if (value is List) {
+          result[key] = List<int>.from(value);
         }
       });
     }
@@ -895,6 +924,8 @@ class GameProgressData {
       totalChallenges: json['totalChallenges'] ?? 0,
       successfulChallenges: json['successfulChallenges'] ?? 0,
       vsNPCRecords: _parseVsNPCRecords(json['vsNPCRecords']),
+      selectedNPCSkins: Map<String, int>.from(json['selectedNPCSkins'] ?? {}),
+      unlockedNPCSkins: _parseUnlockedSkins(json['unlockedNPCSkins']),
       lastUpdated: _parseDateTime(json['lastUpdated']) ?? DateTime.now(),
       lastSyncTime: _parseDateTime(json['lastSyncTime']),
       lastSyncDirection: json['lastSyncDirection'],
