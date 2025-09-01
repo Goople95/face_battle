@@ -391,7 +391,7 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                           leading: CircleAvatar(
                             backgroundColor: Colors.blue.withValues(alpha: 0.1),
                             child: Text(
-                              npcId.substring(0, 2),
+                              npcId.startsWith('0') ? npcId.substring(2, 4) : npcId.substring(0, 2),
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -429,33 +429,75 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  ...files.map((file) {
-                                    final fileName = file.toString().split('/').last;
-                                    final fileType = _getFileType(fileName);
-                                    return Padding(
-                                      padding: const EdgeInsets.only(left: 16, bottom: 4),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            _getFileIcon(fileType),
-                                            size: 16,
-                                            color: _getFileColor(fileType),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              fileName,
-                                              style: const TextStyle(
-                                                fontSize: 11,
-                                                fontFamily: 'monospace',
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                  // 按皮膚ID分組顯示文件
+                                  ...() {
+                                    // 將文件按皮膚ID分組
+                                    final Map<String, List<String>> filesBySkin = {};
+                                    
+                                    for (final file in files) {
+                                      final filePath = file.toString();
+                                      final pathParts = filePath.split('/');
+                                      
+                                      String skinId = '1';  // 默認皮膚ID
+                                      String fileName = pathParts.last;
+                                      
+                                      if (pathParts.length >= 2) {
+                                        skinId = pathParts[pathParts.length - 2];
+                                      }
+                                      
+                                      filesBySkin.putIfAbsent(skinId, () => []).add(fileName);
+                                    }
+                                    
+                                    // 按皮膚ID排序並生成UI
+                                    final sortedSkins = filesBySkin.keys.toList()..sort();
+                                    final List<Widget> widgets = [];
+                                    
+                                    for (final skinId in sortedSkins) {
+                                      // 添加皮膚標題
+                                      widgets.add(
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 8, top: 4, bottom: 2),
+                                          child: Text(
+                                            '皮膚 $skinId:',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue.withValues(alpha: 0.8),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
+                                        ),
+                                      );
+                                      
+                                      // 添加該皮膚的文件列表
+                                      for (final fileName in filesBySkin[skinId]!) {
+                                        final fileType = _getFileType(fileName);
+                                        widgets.add(
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 24, bottom: 2),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _getFileIcon(fileType),
+                                                  size: 14,
+                                                  color: _getFileColor(fileType),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  fileName,
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontFamily: 'monospace',
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                    
+                                    return widgets;
+                                  }(),
                                 ],
                               ),
                             ),

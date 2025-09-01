@@ -239,10 +239,11 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                 borderRadius: BorderRadius.circular(7),
                 child: Stack(
                   children: [
-                    // 預覽圖（未來可以根據皮膚ID顯示不同圖片）
+                    // 預覽圖 - 使用每個皮膚自己的圖片
                     NPCImageWidget(
                       npcId: widget.npcId,
                       fileName: '1.jpg',
+                      skinId: skin.id,  // 傳入皮膚ID以顯示對應皮膚的預覽圖
                       width: 80,
                       height: 80,
                       fit: BoxFit.cover,

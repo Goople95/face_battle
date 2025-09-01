@@ -9,6 +9,7 @@ import '../utils/logger_utils.dart';
 class NPCImageWidget extends StatefulWidget {
   final String npcId;
   final String fileName;  // 默认 '1.jpg'
+  final int? skinId;  // 可選的皮膚ID，用於預覽特定皮膚
   final double? width;
   final double? height;
   final BoxFit fit;
@@ -20,6 +21,7 @@ class NPCImageWidget extends StatefulWidget {
     super.key,
     required this.npcId,
     this.fileName = '1.jpg',
+    this.skinId,  // 新增參數
     this.width,
     this.height,
     this.fit = BoxFit.cover,
@@ -45,14 +47,16 @@ class _NPCImageWidgetState extends State<NPCImageWidget> {
   void didUpdateWidget(NPCImageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     // 只有当关键属性改变时才重新加载
-    if (oldWidget.npcId != widget.npcId || oldWidget.fileName != widget.fileName) {
+    if (oldWidget.npcId != widget.npcId || 
+        oldWidget.fileName != widget.fileName ||
+        oldWidget.skinId != widget.skinId) {
       _initPathFuture();
     }
   }
   
   void _initPathFuture() {
-    // 獲取當前選擇的皮膚ID
-    final skinId = NPCSkinService.instance.getSelectedSkinId(widget.npcId);
+    // 使用傳入的skinId或獲取當前選擇的皮膚ID
+    final skinId = widget.skinId ?? NPCSkinService.instance.getSelectedSkinId(widget.npcId);
     
     // 獲取皮膚對應的路徑
     final avatarPath = NPCSkinService.instance.getAvatarPath(widget.npcId);

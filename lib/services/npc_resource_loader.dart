@@ -13,9 +13,8 @@ class NPCResourceLoader {
   static Future<String> getAvatarPath(String npcId, String basePath, {int skinId = 1}) async {
     // 如果是本地资源路径
     if (basePath.startsWith('assets/')) {
-      // 确保路径没有多余的斜杠
-      final cleanPath = basePath.endsWith('/') ? basePath.substring(0, basePath.length - 1) : basePath;
-      final localPath = '$cleanPath/1.jpg';  // 本地也使用1.jpg，不是avatar.jpg
+      // 构建包含皮肤ID的完整路径
+      final localPath = 'assets/npcs/$npcId/$skinId/1.jpg';
       
       // 检查本地资源是否存在
       try {
@@ -23,9 +22,9 @@ class NPCResourceLoader {
         LoggerUtils.debug('使用本地打包资源: $localPath');
         return localPath;
       } catch (e) {
-        // 本地不存在，尝试从云端获取
+        // 本地不存在，直接尝试从云端获取（不回退到默认皮肤）
         LoggerUtils.info('本地资源不存在 $localPath，尝试云端获取');
-        return await CloudNPCService.getSmartResourcePath(npcId, '1.jpg', skinId: skinId);  // 云端使用1.jpg
+        return await CloudNPCService.getSmartResourcePath(npcId, '1.jpg', skinId: skinId);
       }
     }
     
@@ -50,9 +49,8 @@ class NPCResourceLoader {
     
     // 如果是本地资源路径
     if (basePath.startsWith('assets/')) {
-      // 确保路径没有多余的斜杠
-      final cleanPath = basePath.endsWith('/') ? basePath.substring(0, basePath.length - 1) : basePath;
-      final localPath = '$cleanPath/$fileName';
+      // 构建包含皮肤ID的完整路径
+      final localPath = 'assets/npcs/$npcId/$skinId/$fileName';
       
       // 检查本地资源是否存在
       try {
@@ -60,7 +58,7 @@ class NPCResourceLoader {
         LoggerUtils.debug('使用本地打包视频: $localPath');
         return localPath;
       } catch (e) {
-        // 本地不存在，尝试从云端获取
+        // 本地不存在，直接尝试从云端获取（不回退到默认皮肤）
         LoggerUtils.info('本地视频不存在 $localPath，尝试云端获取');
         return await CloudNPCService.getSmartResourcePath(npcId, fileName, skinId: skinId);
       }

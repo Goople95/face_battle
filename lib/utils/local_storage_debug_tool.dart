@@ -383,7 +383,7 @@ class LocalStorageDebugTool {
                   final needsUpdate = remoteVersion > localVersion;
                   
                   files.add({
-                    'name': fileName,
+                    'name': '$skinId/$fileName',  // 包含皮肤ID的相对路径
                     'size': fileSize,
                     'sizeText': _formatFileSize(fileSize),
                     'type': _getFileType(fileName),
@@ -1073,16 +1073,6 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                           dividerColor: Colors.transparent,
                         ),
                         child: ExpansionTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                            child: Text(
-                              npcId.substring(0, min(2, npcId.length)),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                           title: Text(
                             'NPC #$npcId',
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -1114,72 +1104,125 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  ...files.map((file) {
-                                    final fileMap = file as Map<String, dynamic>;
-                                    final fileName = fileMap['name'] ?? '';
-                                    final fileSize = fileMap['size'] ?? 0;
-                                    final localVersion = fileMap['localVersion'] ?? 0;
-                                    final remoteVersion = fileMap['remoteVersion'] ?? 0;
-                                    final needsUpdate = fileMap['needsUpdate'] ?? false;
-                                    final versionText = fileMap['versionText'] ?? '';
+                                  // 按皮肤ID分组显示文件
+                                  ...() {
+                                    // 将文件按皮肤ID分组
+                                    final Map<String, List<Map<String, dynamic>>> filesBySkin = {};
                                     
-                                    return Padding(
-                                      padding: const EdgeInsets.only(left: 16, bottom: 4),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            _getFileIcon(fileName),
-                                            size: 16,
-                                            color: _getFileColor(fileName),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              fileName,
-                                              style: const TextStyle(
-                                                fontSize: 11,
-                                                fontFamily: 'monospace',
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                    for (final file in files) {
+                                      final fileMap = file as Map<String, dynamic>;
+                                      final fileName = fileMap['name'] ?? '';
+                                      
+                                      // 从文件名中提取皮肤ID（假设格式为 skinId/fileName）
+                                      String skinId = '1';  // 默认皮肤ID
+                                      String displayName = fileName;
+                                      
+                                      if (fileName.contains('/')) {
+                                        final parts = fileName.split('/');
+                                        if (parts.length >= 2) {
+                                          skinId = parts[parts.length - 2];
+                                          displayName = parts.last;
+                                          fileMap['displayName'] = displayName;
+                                        }
+                                      } else {
+                                        fileMap['displayName'] = fileName;
+                                      }
+                                      
+                                      filesBySkin.putIfAbsent(skinId, () => []).add(fileMap);
+                                    }
+                                    
+                                    // 按皮肤ID排序并生成UI
+                                    final sortedSkins = filesBySkin.keys.toList()..sort();
+                                    final List<Widget> widgets = [];
+                                    
+                                    for (final skinId in sortedSkins) {
+                                      // 添加皮肤标题
+                                      widgets.add(
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 8, top: 4, bottom: 2),
+                                          child: Text(
+                                            '皮肤 $skinId:',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue.withValues(alpha: 0.8),
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
-                                          // 版本标签
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: needsUpdate 
-                                                ? Colors.orange.withValues(alpha: 0.2)
-                                                : (localVersion > 0 
-                                                  ? Colors.green.withValues(alpha: 0.2) 
-                                                  : Colors.grey.withValues(alpha: 0.2)),
-                                              borderRadius: BorderRadius.circular(3),
-                                            ),
-                                            child: Text(
-                                              needsUpdate 
-                                                ? 'v$localVersion→v$remoteVersion'
-                                                : versionText,
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color: needsUpdate 
-                                                  ? Colors.orange 
-                                                  : (localVersion > 0 ? Colors.green : Colors.grey),
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                        ),
+                                      );
+                                      
+                                      // 添加该皮肤的文件列表
+                                      for (final fileMap in filesBySkin[skinId]!) {
+                                        final displayName = fileMap['displayName'] ?? '';
+                                        final fileSize = fileMap['size'] ?? 0;
+                                        final localVersion = fileMap['localVersion'] ?? 0;
+                                        final remoteVersion = fileMap['remoteVersion'] ?? 0;
+                                        final needsUpdate = fileMap['needsUpdate'] ?? false;
+                                        final versionText = fileMap['versionText'] ?? '';
+                                        
+                                        widgets.add(
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 24, bottom: 4),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _getFileIcon(displayName),
+                                                  size: 14,
+                                                  color: _getFileColor(displayName),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    displayName,
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      fontFamily: 'monospace',
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                // 版本标签
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                  decoration: BoxDecoration(
+                                                    color: needsUpdate 
+                                                      ? Colors.orange.withValues(alpha: 0.2)
+                                                      : (localVersion > 0 
+                                                        ? Colors.green.withValues(alpha: 0.2) 
+                                                        : Colors.grey.withValues(alpha: 0.2)),
+                                                    borderRadius: BorderRadius.circular(3),
+                                                  ),
+                                                  child: Text(
+                                                    needsUpdate 
+                                                      ? 'v$localVersion→v$remoteVersion'
+                                                      : versionText,
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: needsUpdate 
+                                                        ? Colors.orange 
+                                                        : (localVersion > 0 ? Colors.green : Colors.grey),
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  LocalStorageDebugTool._formatFileSize(fileSize),
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            LocalStorageDebugTool._formatFileSize(fileSize),
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
+                                        );
+                                      }
+                                    }
+                                    
+                                    return widgets;
+                                  }(),
                                 ],
                               ),
                             ),
