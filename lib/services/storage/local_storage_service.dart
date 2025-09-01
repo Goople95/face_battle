@@ -15,6 +15,9 @@ class LocalStorageService {
   
   /// 设置当前用户ID
   void setUserId(String? userId) {
+    // 避免重复设置相同的用户ID
+    if (_currentUserId == userId) return;
+    
     _currentUserId = userId;
     if (userId != null) {
       LoggerUtils.info('LocalStorageService: 设置用户ID为 $userId');
@@ -308,6 +311,37 @@ class LocalStorageService {
     
     for (final key in keys) {
       await migrateKey(key, key);
+    }
+  }
+  
+  // === 全局存储方法（设备级别，不依赖用户ID）===
+  
+  /// 保存全局JSON对象（设备级别）
+  Future<bool> setGlobalJson(String key, Map<String, dynamic> json) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = jsonEncode(json);
+      final result = await prefs.setString(key, jsonString);
+      LoggerUtils.debug('保存全局JSON: $key');
+      return result;
+    } catch (e) {
+      LoggerUtils.error('保存全局JSON失败 [$key]: $e');
+      return false;
+    }
+  }
+  
+  /// 获取全局JSON对象（设备级别）
+  Future<Map<String, dynamic>?> getGlobalJson(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(key);
+      if (jsonString != null) {
+        return jsonDecode(jsonString) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      LoggerUtils.error('获取全局JSON失败 [$key]: $e');
+      return null;
     }
   }
 }

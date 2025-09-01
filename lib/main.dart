@@ -22,6 +22,7 @@ import 'services/purchase_service.dart';
 import 'services/analytics_service.dart';
 import 'services/rules_service.dart';
 import 'services/cloud_npc_service.dart';
+import 'services/resource_version_manager.dart';
 import 'widgets/app_lifecycle_observer.dart';
 
 void main() async {
@@ -46,15 +47,15 @@ void main() async {
     LoggerUtils.error('Firebase初始化失败: $e');
   }
   
-  // Initialize AdMob
-  try {
-    await AdMobService.initialize();
-    LoggerUtils.info('AdMob初始化成功');
-  } catch (e) {
-    LoggerUtils.error('AdMob初始化失败: $e');
-  }
+  // AdMob异步初始化（不阻塞启动）
+  // 节省约2.1秒的启动时间
+  AdMobService.initialize().then((_) {
+    LoggerUtils.info('AdMob初始化成功（异步）');
+  }).catchError((e) {
+    LoggerUtils.error('AdMob初始化失败（异步）: $e');
+  });
   
-  // Initialize NPC Config
+  // 初始化NPC配置（必须在启动时加载，因为HomeScreen立即需要）
   try {
     await NPCConfigService().initialize();
     LoggerUtils.info('NPC配置加载成功');
@@ -62,9 +63,19 @@ void main() async {
     // 智能清理NPC缓存（异步执行，不阻塞启动）
     CloudNPCService.smartCleanCache().then((_) {
       LoggerUtils.info('NPC缓存清理检查完成');
+    }).catchError((e) {
+      LoggerUtils.debug('NPC缓存清理失败: $e');
     });
   } catch (e) {
     LoggerUtils.error('NPC配置加载失败: $e');
+  }
+  
+  // 初始化资源版本管理器（设备级别，不需要用户ID）
+  try {
+    await ResourceVersionManager.instance.load();
+    LoggerUtils.info('资源版本管理器初始化成功（设备级别）');
+  } catch (e) {
+    LoggerUtils.error('资源版本管理器初始化失败: $e');
   }
   
   // Initialize Dialogue Service
@@ -99,13 +110,13 @@ void main() async {
     LoggerUtils.error('Analytics服务初始化失败: $e');
   }
   
-  // Initialize Rules Service
-  try {
-    await RulesService().initialize();
-    LoggerUtils.info('规则服务初始化成功');
-  } catch (e) {
+  // 异步初始化规则服务（不阻塞启动）
+  // 规则在实际使用时会检查是否已加载完成
+  RulesService().initialize().then((_) {
+    LoggerUtils.info('规则服务初始化成功（异步）');
+  }).catchError((e) {
     LoggerUtils.error('规则服务初始化失败: $e');
-  }
+  });
   
   // Game Progress Service will be initialized after user login
   // to ensure we have a valid user ID for database operations

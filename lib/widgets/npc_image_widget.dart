@@ -5,7 +5,7 @@ import '../services/npc_resource_loader.dart';
 import '../utils/logger_utils.dart';
 
 /// 统一的NPC图片组件 - 自动处理缓存和加载
-class NPCImageWidget extends StatelessWidget {
+class NPCImageWidget extends StatefulWidget {
   final String npcId;
   final String fileName;  // 默认 '1.jpg'
   final double? width;
@@ -28,19 +28,45 @@ class NPCImageWidget extends StatelessWidget {
   });
   
   @override
-  Widget build(BuildContext context) {
+  State<NPCImageWidget> createState() => _NPCImageWidgetState();
+}
+
+class _NPCImageWidgetState extends State<NPCImageWidget> {
+  late Future<String> _pathFuture;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initPathFuture();
+  }
+  
+  @override
+  void didUpdateWidget(NPCImageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 只有当关键属性改变时才重新加载
+    if (oldWidget.npcId != widget.npcId || oldWidget.fileName != widget.fileName) {
+      _initPathFuture();
+    }
+  }
+  
+  void _initPathFuture() {
     // 判断是否为本地打包的NPC（0001, 0002等）
-    final isLocalNPC = ['0001', '0002'].contains(npcId);
+    final isLocalNPC = ['0001', '0002'].contains(widget.npcId);
     
+    _pathFuture = isLocalNPC 
+      ? NPCResourceLoader.getAvatarPath(widget.npcId, 'assets/npcs/${widget.npcId}/1/', skinId: 1)
+      : CloudNPCService.getSmartResourcePath(widget.npcId, widget.fileName, skinId: 1);
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: isLocalNPC 
-        ? NPCResourceLoader.getAvatarPath(npcId, 'assets/npcs/$npcId/1/', skinId: 1)
-        : CloudNPCService.getSmartResourcePath(npcId, fileName, skinId: 1),
+      future: _pathFuture,
       builder: (context, snapshot) {
         // 加载中
         if (!snapshot.hasData) {
           return _buildContainer(
-            child: placeholder ?? _buildDefaultPlaceholder(),
+            child: widget.placeholder ?? _buildDefaultPlaceholder(),
           );
         }
         
@@ -52,19 +78,19 @@ class NPCImageWidget extends StatelessWidget {
           // 网络图片
           imageWidget = Image.network(
             imagePath,
-            width: width,
-            height: height,
-            fit: fit,
+            width: widget.width,
+            height: widget.height,
+            fit: widget.fit,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return _buildContainer(
-                child: placeholder ?? _buildDefaultPlaceholder(),
+                child: widget.placeholder ?? _buildDefaultPlaceholder(),
               );
             },
             errorBuilder: (context, error, stackTrace) {
-              LoggerUtils.error('NPC图片加载失败: $npcId/$fileName - $error');
+              LoggerUtils.error('NPC图片加载失败: ${widget.npcId}/${widget.fileName} - $error');
               return _buildContainer(
-                child: errorWidget ?? _buildDefaultError(),
+                child: widget.errorWidget ?? _buildDefaultError(),
               );
             },
           );
@@ -72,23 +98,26 @@ class NPCImageWidget extends StatelessWidget {
           // 本地asset资源
           imageWidget = Image.asset(
             imagePath,
-            width: width,
-            height: height,
-            fit: fit,
+            width: widget.width,
+            height: widget.height,
+            fit: widget.fit,
             errorBuilder: (context, error, stackTrace) {
               LoggerUtils.error('NPC asset图片加载失败: $imagePath - $error');
               return _buildContainer(
-                child: errorWidget ?? _buildDefaultError(),
+                child: widget.errorWidget ?? _buildDefaultError(),
               );
             },
           );
         } else {
           // 本地缓存图片文件
+          final file = File(imagePath);
           imageWidget = Image.file(
-            File(imagePath),
-            width: width,
-            height: height,
-            fit: fit,
+            file,
+            // 使用文件修改时间作为key，当文件更新时强制刷新图片
+            key: ValueKey('${imagePath}_${file.existsSync() ? file.lastModifiedSync().millisecondsSinceEpoch : 0}'),
+            width: widget.width,
+            height: widget.height,
+            fit: widget.fit,
             errorBuilder: (context, error, stackTrace) {
               LoggerUtils.error('NPC本地文件加载失败: $imagePath - $error');
               // 本地文件失败，尝试重新从网络加载
@@ -98,9 +127,9 @@ class NPCImageWidget extends StatelessWidget {
         }
         
         // 应用圆角
-        if (borderRadius != null) {
+        if (widget.borderRadius != null) {
           return ClipRRect(
-            borderRadius: borderRadius!,
+            borderRadius: widget.borderRadius!,
             child: imageWidget,
           );
         }
@@ -112,8 +141,8 @@ class NPCImageWidget extends StatelessWidget {
   
   Widget _buildContainer({required Widget child}) {
     return Container(
-      width: width,
-      height: height,
+      width: widget.width,
+      height: widget.height,
       child: child,
     );
   }
@@ -121,8 +150,8 @@ class NPCImageWidget extends StatelessWidget {
   Widget _buildDefaultPlaceholder() {
     return Center(
       child: SizedBox(
-        width: (width ?? 100) * 0.3,
-        height: (height ?? 100) * 0.3,
+        width: (widget.width ?? 100) * 0.3,
+        height: (widget.height ?? 100) * 0.3,
         child: CircularProgressIndicator(
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(
@@ -135,12 +164,12 @@ class NPCImageWidget extends StatelessWidget {
   
   Widget _buildDefaultError() {
     return Container(
-      width: width,
-      height: height,
+      width: widget.width,
+      height: widget.height,
       color: Colors.grey[800],
       child: Icon(
         Icons.person,
-        size: (width ?? height ?? 100) * 0.5,
+        size: (widget.width ?? widget.height ?? 100) * 0.5,
         color: Colors.white30,
       ),
     );
@@ -149,16 +178,16 @@ class NPCImageWidget extends StatelessWidget {
   Widget _buildNetworkFallback() {
     // 本地文件损坏时，直接使用网络URL
     final networkUrl = 'https://firebasestorage.googleapis.com/v0/b/liarsdice-fd930.firebasestorage.app/o/'
-                      'npcs%2F$npcId%2F$fileName?alt=media';
+                      'npcs%2F${widget.npcId}%2F${widget.fileName}?alt=media';
     
     return Image.network(
       networkUrl,
-      width: width,
-      height: height,
-      fit: fit,
+      width: widget.width,
+      height: widget.height,
+      fit: widget.fit,
       errorBuilder: (context, error, stackTrace) {
         return _buildContainer(
-          child: errorWidget ?? _buildDefaultError(),
+          child: widget.errorWidget ?? _buildDefaultError(),
         );
       },
     );

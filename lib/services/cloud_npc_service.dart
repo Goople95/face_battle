@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/ai_personality.dart';
 import '../utils/logger_utils.dart';
+import 'resource_version_manager.dart';
 
 /// 云端NPC资源管理服务 - 使用Firebase Storage SDK
 class CloudNPCService {
@@ -110,7 +111,16 @@ class CloudNPCService {
       if (cachedVersionsStr != null) {
         try {
           final cachedData = json.decode(cachedVersionsStr);
-          _resourceVersions = Map<String, int>.from(cachedData['versions'] ?? {});
+          // 确保值都是int类型（处理可能的字符串）
+          final versionsMap = cachedData['versions'] as Map<String, dynamic>? ?? {};
+          _resourceVersions = {};
+          versionsMap.forEach((key, value) {
+            if (value is int) {
+              _resourceVersions![key] = value;
+            } else if (value is String) {
+              _resourceVersions![key] = int.tryParse(value) ?? 0;
+            }
+          });
           LoggerUtils.info('使用缓存的云端资源版本配置');
         } catch (e) {
           LoggerUtils.debug('缓存版本解析失败: $e');
@@ -149,11 +159,23 @@ class CloudNPCService {
           if (data != null) {
             final jsonStr = utf8.decode(data);
             final cloudData = json.decode(jsonStr);
-            _resourceVersions = Map<String, int>.from(cloudData['versions'] ?? {});
+            // 确保值都是int类型（处理可能的字符串）
+            final versionsMap = cloudData['versions'] as Map<String, dynamic>? ?? {};
+            _resourceVersions = {};
+            versionsMap.forEach((key, value) {
+              if (value is int) {
+                _resourceVersions![key] = value;
+              } else if (value is String) {
+                _resourceVersions![key] = int.tryParse(value) ?? 0;
+              }
+            });
             
             // 保存到本地缓存
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('resource_versions_cache', jsonStr);
+            
+            // 同步版本信息到ResourceVersionManager（优化：避免重复调用）
+            await ResourceVersionManager.instance.syncWithCloud(_resourceVersions!);
             
             LoggerUtils.info('云端资源版本更新成功（Firebase Storage）');
             return;
@@ -169,11 +191,23 @@ class CloudNPCService {
         
         if (response.statusCode == 200) {
           final cloudData = json.decode(response.body);
-          _resourceVersions = Map<String, int>.from(cloudData['versions'] ?? {});
+          // 确保值都是int类型（处理可能的字符串）
+          final versionsMap = cloudData['versions'] as Map<String, dynamic>? ?? {};
+          _resourceVersions = {};
+          versionsMap.forEach((key, value) {
+            if (value is int) {
+              _resourceVersions![key] = value;
+            } else if (value is String) {
+              _resourceVersions![key] = int.tryParse(value) ?? 0;
+            }
+          });
           
           // 保存到本地缓存
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('resource_versions_cache', response.body);
+          
+          // 同步版本信息到ResourceVersionManager（优化：避免重复调用）
+          await ResourceVersionManager.instance.syncWithCloud(_resourceVersions!);
           
           LoggerUtils.info('云端资源版本更新成功（HTTP）');
         }
@@ -191,26 +225,28 @@ class CloudNPCService {
     await _getResourceVersions();  // 重新获取
   }
   
-  /// 检查资源是否需要更新
+  /// 检查资源是否需要更新（优化版：文件级别版本控制）
   static Future<bool> _needsUpdate(String npcId, String resourcePath, int skinId, File localFile) async {
+    // 如果文件不存在，肯定需要下载
     if (!await localFile.exists()) return true;
     
-    // 构建资源路径key
+    // 构建资源路径key（与云端resource_versions.json的key格式一致）
     final resourceKey = 'npcs/$npcId/$skinId/$resourcePath';
-    final versions = await _getResourceVersions();
     
-    if (!versions.containsKey(resourceKey)) {
-      // 没有版本信息，不需要更新
+    // 获取云端版本信息
+    final cloudVersions = await _getResourceVersions();
+    if (!cloudVersions.containsKey(resourceKey)) {
+      // 云端没有该文件的版本信息，说明不需要版本控制，文件存在即可
       return false;
     }
     
-    // 获取本地保存的版本号
-    final prefs = await SharedPreferences.getInstance();
-    final localVersionKey = 'res_ver_$resourceKey';
-    final localVersion = prefs.getInt(localVersionKey) ?? 0;
-    final remoteVersion = versions[resourceKey] ?? 0;
+    // 确保版本管理器已加载
+    await ResourceVersionManager.instance.ensureLoaded();
     
-    if (remoteVersion > localVersion) {
+    // 直接使用文件级别的版本比较
+    final remoteVersion = cloudVersions[resourceKey]!;
+    if (ResourceVersionManager.instance.needsUpdate(resourceKey, remoteVersion)) {
+      final localVersion = ResourceVersionManager.instance.getFileVersion(resourceKey);
       LoggerUtils.info('资源需要更新: $resourceKey (本地v$localVersion -> 远程v$remoteVersion)');
       return true;
     }
@@ -218,15 +254,25 @@ class CloudNPCService {
     return false;
   }
   
-  /// 保存资源版本号
+  /// 保存资源版本号（优化版：文件级别版本控制）
   static Future<void> _saveResourceVersion(String npcId, String resourcePath, int skinId) async {
     final resourceKey = 'npcs/$npcId/$skinId/$resourcePath';
-    final versions = await _getResourceVersions();
-    final version = versions[resourceKey] ?? 1;
     
-    final prefs = await SharedPreferences.getInstance();
-    final localVersionKey = 'res_ver_$resourceKey';
-    await prefs.setInt(localVersionKey, version);
+    // 获取云端版本信息
+    final cloudVersions = await _getResourceVersions();
+    
+    // 只有在云端JSON中明确定义了版本的文件才记录版本
+    // 否则不记录版本（保持NO_VERSION = 0）
+    if (cloudVersions.containsKey(resourceKey)) {
+      final version = cloudVersions[resourceKey]!;
+      // 使用文件级别的版本保存
+      await ResourceVersionManager.instance.setFileVersion(resourceKey, version);
+      LoggerUtils.debug('保存资源版本: $resourceKey = v$version');
+    } else {
+      // 文件不在版本控制中，不记录版本号
+      // 这样getFileVersion会返回NO_VERSION (0)
+      LoggerUtils.debug('资源不在版本控制中，不记录版本: $resourceKey');
+    }
   }
   
   /// 智能获取NPC资源路径（优先本地，否则返回云端URL并后台下载）
