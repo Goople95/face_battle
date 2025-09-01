@@ -2,7 +2,7 @@
 class NPCSkin {
   final int id;
   final Map<String, String> name;  // 多語言名稱
-  final Map<String, String> description;  // 多語言描述
+  final Map<String, String>? description;  // 多語言描述（可選）
   final bool unlocked;  // 是否已解鎖
   final UnlockCondition unlockCondition;  // 解鎖條件
   final String? avatarPath;  // 頭像路徑（可選，默認使用NPC路徑+皮膚ID）
@@ -11,7 +11,7 @@ class NPCSkin {
   NPCSkin({
     required this.id,
     required this.name,
-    required this.description,
+    this.description,
     required this.unlocked,
     required this.unlockCondition,
     this.avatarPath,
@@ -22,7 +22,9 @@ class NPCSkin {
     return NPCSkin(
       id: json['id'] as int,
       name: Map<String, String>.from(json['name'] as Map),
-      description: Map<String, String>.from(json['description'] as Map),
+      description: json['description'] != null 
+        ? Map<String, String>.from(json['description'] as Map)
+        : null,
       unlocked: json['unlocked'] as bool? ?? false,
       unlockCondition: UnlockCondition.fromJson(json['unlockCondition'] as Map<String, dynamic>),
       avatarPath: json['avatarPath'] as String?,
@@ -34,7 +36,7 @@ class NPCSkin {
     return {
       'id': id,
       'name': name,
-      'description': description,
+      if (description != null) 'description': description,
       'unlocked': unlocked,
       'unlockCondition': unlockCondition.toJson(),
       if (avatarPath != null) 'avatarPath': avatarPath,
@@ -49,7 +51,8 @@ class NPCSkin {
   
   /// 獲取本地化描述
   String getLocalizedDescription(String languageCode) {
-    return description[languageCode] ?? description['en'] ?? '';
+    if (description == null) return '';
+    return description![languageCode] ?? description!['en'] ?? '';
   }
 }
 

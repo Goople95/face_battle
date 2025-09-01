@@ -14,7 +14,9 @@
       "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
       "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
       "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
-      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)"
+      "Read(d:\\projects\\CompeteWithAI\\face_battle\\screen shots/**)",
+      "Bash(dir:*)",
+      "Bash(cmd /c \"dir logs\\*.log /O-D\")"
     ],
     "deny": [],
     "ask": [],

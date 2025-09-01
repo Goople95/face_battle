@@ -29,6 +29,7 @@ import '../services/storage/local_storage_service.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/rules_display.dart';
 import '../widgets/npc_avatar_widget.dart';
+import '../services/npc_skin_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -163,14 +164,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final progress = await GameProgressService.instance.loadProgress();
     final drinking = await DrinkingState.loadStatic();
     
+    // 初始化NPCSkinService（需要在GameProgressService加载之后）
+    await NPCSkinService.instance.initialize();
+    
     // 更新醒酒状态（DrinkingState.load() 内部已经调用了 updateSoberStatus）
     // drinking.updateSoberStatus();  // 不需要重复调用
     // await drinking.save();  // 如果没有实际变化，不需要保存
     
-    setState(() {
-      _gameProgress = progress;
-      _drinkingState = drinking;
-    });
+    // 设置状态并强制刷新界面，确保NPC图片使用正确的皮肤
+    if (mounted) {
+      setState(() {
+        _gameProgress = progress;
+        _drinkingState = drinking;
+      });
+    }
   }
   
   void _updateSoberStatus() async {

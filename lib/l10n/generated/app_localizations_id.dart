@@ -995,4 +995,27 @@ class AppLocalizationsId extends AppLocalizations {
   String intimacyMaxLevel(int points) {
     return 'Level maksimum tercapai ($points poin)';
   }
+
+  @override
+  String get skinWardrobe => 'Lemari Pakaian';
+
+  @override
+  String get skinCurrentLook => 'Penampilan Saat Ini';
+
+  @override
+  String get skinTapToWear => 'Sentuh 👙 di tubuhnya untuk memakai';
+
+  @override
+  String get skinNeedsUnlock => 'Perlu dibuka';
+
+  @override
+  String skinUnlockAtLevel(int level, int needed) {
+    return '❤️ Buka di level keintiman $level (kurang $needed)';
+  }
+
+  @override
+  String get skinUnlockWithGems => '💎 Buka gaya eksklusif dengan permata';
+
+  @override
+  String get skinCurrentlyUnavailable => '🔒 Belum tersedia';
 }

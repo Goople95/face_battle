@@ -1813,6 +1813,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Max level reached ({points} pts)'**
   String intimacyMaxLevel(int points);
+
+  /// Skin wardrobe title
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrobe'**
+  String get skinWardrobe;
+
+  /// Current equipped skin
+  ///
+  /// In en, this message translates to:
+  /// **'Current Look'**
+  String get skinCurrentLook;
+
+  /// Tap to wear this skin
+  ///
+  /// In en, this message translates to:
+  /// **'Touch 👙 on her to wear'**
+  String get skinTapToWear;
+
+  /// Skin needs to be unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'Needs unlock'**
+  String get skinNeedsUnlock;
+
+  /// Unlock skin at intimacy level
+  ///
+  /// In en, this message translates to:
+  /// **'❤️ Unlock at intimacy level {level} ({needed} more)'**
+  String skinUnlockAtLevel(int level, int needed);
+
+  /// Unlock skin with gems
+  ///
+  /// In en, this message translates to:
+  /// **'💎 Unlock exclusive style with gems'**
+  String get skinUnlockWithGems;
+
+  /// Skin currently unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'🔒 Currently unavailable'**
+  String get skinCurrentlyUnavailable;
 }
 
 class _AppLocalizationsDelegate

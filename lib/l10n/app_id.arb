@@ -330,5 +330,12 @@
   "intimacyProgressTitle": "Progres Keintiman",
   "intimacyProgressFormat": "Progres: {current} / {total}",
   "intimacyTooltip": "💕 Bikin aku sedikit mabuk untuk meningkatkan keintiman",
-  "intimacyMaxLevel": "Level maksimum tercapai ({points} poin)"
+  "intimacyMaxLevel": "Level maksimum tercapai ({points} poin)",
+  "skinWardrobe": "Lemari Pakaian",
+  "skinCurrentLook": "Penampilan Saat Ini",
+  "skinTapToWear": "Sentuh 👙 di tubuhnya untuk memakai",
+  "skinNeedsUnlock": "Perlu dibuka",
+  "skinUnlockAtLevel": "❤️ Buka di level keintiman {level} (kurang {needed})",
+  "skinUnlockWithGems": "💎 Buka gaya eksklusif dengan permata",
+  "skinCurrentlyUnavailable": "🔒 Belum tersedia"
 }

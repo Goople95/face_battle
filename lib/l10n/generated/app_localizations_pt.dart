@@ -997,4 +997,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String intimacyMaxLevel(int points) {
     return 'Nível máximo alcançado ($points pts)';
   }
+
+  @override
+  String get skinWardrobe => 'Guarda-roupa';
+
+  @override
+  String get skinCurrentLook => 'Visual Atual';
+
+  @override
+  String get skinTapToWear => 'Toque 👙 nela para vestir';
+
+  @override
+  String get skinNeedsUnlock => 'Precisa desbloquear';
+
+  @override
+  String skinUnlockAtLevel(int level, int needed) {
+    return '❤️ Desbloqueia no nível de intimidade $level (faltam $needed)';
+  }
+
+  @override
+  String get skinUnlockWithGems => '💎 Desbloqueie estilo exclusivo com gemas';
+
+  @override
+  String get skinCurrentlyUnavailable => '🔒 Indisponível no momento';
 }

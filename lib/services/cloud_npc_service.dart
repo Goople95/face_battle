@@ -213,8 +213,8 @@ class CloudNPCService {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('resource_versions_cache', jsonStr);
             
-            // 同步版本信息到ResourceVersionManager（优化：避免重复调用）
-            await ResourceVersionManager.instance.syncWithCloud(_resourceVersions!);
+            // 注意：不要在这里同步版本到ResourceVersionManager
+            // 版本号应该只在文件实际下载成功后才保存
             
             LoggerUtils.info('云端资源版本更新成功（Firebase Storage）');
             return;
@@ -245,8 +245,8 @@ class CloudNPCService {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('resource_versions_cache', response.body);
           
-          // 同步版本信息到ResourceVersionManager（优化：避免重复调用）
-          await ResourceVersionManager.instance.syncWithCloud(_resourceVersions!);
+          // 注意：不要在这里同步版本到ResourceVersionManager
+          // 版本号应该只在文件实际下载成功后才保存
           
           LoggerUtils.info('云端资源版本更新成功（HTTP）');
         }
@@ -428,6 +428,76 @@ class CloudNPCService {
       LoggerUtils.error('获取缓存大小失败: $e');
       return 0.0;
     }
+  }
+  
+  /// 预加载drunk视频到缓存（在后台静默下载，不阻塞UI）
+  /// @param npcId NPC的ID
+  /// @param skinId 皮肤ID
+  /// @param delay 延迟时间（毫秒），避免与其他资源加载冲突
+  static Future<void> preloadDrunkVideo(String npcId, {int skinId = 1, int delay = 3000}) async {
+    // 延迟执行，避免与其他资源加载冲突
+    Future.delayed(Duration(milliseconds: delay), () async {
+      try {
+        LoggerUtils.info('开始预加载drunk视频: $npcId (皮肤$skinId), 延迟${delay}ms');
+        
+        // 检查本地是否已存在
+        final dir = await _getNPCDirectory(npcId, skinId: skinId);
+        final localPath = '${dir.path}/drunk.mp4';
+        final localFile = File(localPath);
+        
+        if (await localFile.exists()) {
+          // 检查版本是否最新
+          if (_resourceVersions != null) {
+            final resourceKey = 'npcs/$npcId/$skinId/drunk.mp4';
+            final cachedVersion = ResourceVersionManager.instance.getFileVersion(resourceKey);
+            final latestVersion = _resourceVersions![resourceKey] ?? 1;
+            
+            if (cachedVersion >= latestVersion) {
+              LoggerUtils.info('drunk视频已是最新版本，无需预加载: $npcId');
+              return;
+            }
+          } else {
+            LoggerUtils.info('drunk视频已存在本地缓存: $npcId');
+            return;
+          }
+        }
+        
+        // 构建Firebase Storage路径
+        final storagePath = 'npcs/$npcId/$skinId/drunk.mp4';
+        LoggerUtils.info('预加载drunk视频从云端: $storagePath');
+        
+        try {
+          // 使用Firebase Storage API下载
+          final ref = _storage.ref(storagePath);
+          final data = await ref.getData();
+          
+          if (data != null) {
+            // 保存到本地
+            await localFile.writeAsBytes(data);
+            
+            // 保存版本号
+            await _saveResourceVersion(npcId, 'drunk.mp4', skinId);
+            
+            LoggerUtils.info('drunk视频预加载成功: ${localFile.path}');
+          }
+        } catch (firebaseError) {
+          LoggerUtils.warning('Firebase预加载失败，尝试HTTP: $firebaseError');
+          
+          // 回退到HTTP下载
+          final url = '$_baseUrl/${Uri.encodeComponent(storagePath)}?alt=media&token=$_accessToken';
+          final response = await http.get(Uri.parse(url));
+          
+          if (response.statusCode == 200) {
+            await localFile.writeAsBytes(response.bodyBytes);
+            await _saveResourceVersion(npcId, 'drunk.mp4', skinId);
+            LoggerUtils.info('drunk视频预加载成功(HTTP): ${localFile.path}');
+          }
+        }
+      } catch (e) {
+        // 预加载失败不影响游戏，仅记录日志
+        LoggerUtils.debug('drunk视频预加载失败（不影响游戏）: $e');
+      }
+    });
   }
   
   /// 智能清理缓存（基于大小和时间）

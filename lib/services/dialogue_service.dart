@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../utils/logger_utils.dart';
 import '../models/ai_personality.dart';
 import 'npc_resource_loader.dart';
+import 'npc_skin_service.dart';
 
 /// 对话服务 - 管理NPC的对话内容
 class DialogueService {
@@ -24,9 +25,15 @@ class DialogueService {
 
   /// 按需加载指定NPC的对话文件
   Future<Map<String, dynamic>?> _loadDialogueForNPC(String npcId, {AIPersonality? personality}) async {
+    // 获取当前选择的皮肤ID
+    final skinId = NPCSkinService.instance.getSelectedSkinId(npcId);
+    
+    // 使用皮肤ID作为缓存key
+    final cacheKey = '${npcId}_$skinId';
+    
     // 如果已缓存，直接返回
-    if (_dialogues.containsKey(npcId)) {
-      return _dialogues[npcId];
+    if (_dialogues.containsKey(cacheKey)) {
+      return _dialogues[cacheKey];
     }
 
     try {
@@ -38,32 +45,32 @@ class DialogueService {
         dialoguePath = await NPCResourceLoader.getDialoguePath(
           npcId, 
           personality.avatarPath,
-          skinId: 1,  // 默认使用第一套皮肤
+          skinId: skinId,  // 使用当前选择的皮肤ID
         );
       } else {
         // 没有personality，假设是云端资源
         dialoguePath = await NPCResourceLoader.getDialoguePath(
           npcId, 
           '',  // 空basePath表示云端资源
-          skinId: 1,
+          skinId: skinId,  // 使用当前选择的皮肤ID
         );
       }
       
-      LoggerUtils.info('加载NPC对话: $npcId from $dialoguePath');
+      LoggerUtils.info('加载NPC对话: $npcId (皮肤$skinId) from $dialoguePath');
       
       // 根据路径类型加载文件
       String jsonString;
       if (dialoguePath.startsWith('assets/')) {
         // 本地asset资源
         jsonString = await rootBundle.loadString(dialoguePath);
-        LoggerUtils.info('从本地asset加载对话: $npcId');
+        LoggerUtils.info('从本地asset加载对话: $npcId (皮肤$skinId)');
       } else if (dialoguePath.startsWith('http')) {
-        // 网络URL（云端资源）- 直接使用HTTP获取
-        final ref = _storage.ref('npcs/$npcId/1/dialogue_$npcId.json');
+        // 网络URL（云端资源）- 使用正确的皮肤路径
+        final ref = _storage.ref('npcs/$npcId/$skinId/dialogue_$npcId.json');
         final data = await ref.getData(10000000); // 10MB限制
         if (data != null) {
           jsonString = utf8.decode(data);
-          LoggerUtils.info('从云端URL加载对话: $npcId');
+          LoggerUtils.info('从云端URL加载对话: $npcId (皮肤$skinId)');
         } else {
           throw Exception('云端对话文件为空');
         }
@@ -72,14 +79,14 @@ class DialogueService {
         final file = File(dialoguePath);
         if (await file.exists()) {
           jsonString = await file.readAsString();
-          LoggerUtils.info('从本地缓存加载对话: $npcId');
+          LoggerUtils.info('从本地缓存加载对话: $npcId (皮肤$skinId)');
         } else {
           throw Exception('本地缓存文件不存在');
         }
       }
       
       final Map<String, dynamic> dialogueData = json.decode(jsonString);
-      _dialogues[npcId] = dialogueData;
+      _dialogues[cacheKey] = dialogueData;  // 使用带皮肤ID的缓存key
       return dialogueData;
       
     } catch (e) {

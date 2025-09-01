@@ -14,6 +14,7 @@ import '../services/intimacy_service.dart';
 import '../services/game_progress_service.dart';
 import '../services/cloud_npc_service.dart';
 import '../services/npc_resource_loader.dart';
+import '../services/npc_skin_service.dart';
 import '../utils/logger_utils.dart';
 import '../l10n/generated/app_localizations.dart';
 
@@ -190,6 +191,9 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     LoggerUtils.debug('尝试加载醉倒视频: ${widget.defeatedAI.id}/drunk.mp4');
     
     try {
+      // 获取当前选择的皮肤ID
+      final skinId = NPCSkinService.instance.getSelectedSkinId(widget.defeatedAI.id);
+      
       // 根据personality判断资源类型并获取正确路径
       String videoPath;
       if (widget.defeatedAI.avatarPath.startsWith('assets/')) {
@@ -199,15 +203,17 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
           widget.defeatedAI.id,
           widget.defeatedAI.avatarPath,
           'drunk',
+          skinId: skinId,  // 传递皮肤ID
         );
-        LoggerUtils.info('使用本地drunk视频: $videoPath');
+        LoggerUtils.info('使用本地drunk视频(皮肤$skinId): $videoPath');
       } else {
         // 云端资源，使用智能缓存机制
         videoPath = await CloudNPCService.getSmartResourcePath(
           widget.defeatedAI.id, 
-          'drunk.mp4'
+          'drunk.mp4',
+          skinId: skinId,  // 传递皮肤ID
         );
-        LoggerUtils.info('使用云端drunk视频: $videoPath');
+        LoggerUtils.info('使用云端drunk视频(皮肤$skinId): $videoPath');
       }
       
       // 根据路径类型创建合适的控制器

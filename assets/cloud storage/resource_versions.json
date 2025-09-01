@@ -1,9 +1,18 @@
 {
   "comment": "资源版本控制文件 - 当需要强制更新某个资源时，增加其版本号",
+  "example": "npcs/1001/1/1.jpg: 1",
   "versions": {
-    "npcs/1001/1/1.mp4": 2,
-    "npcs/1001/1/drunk.mp4": 1,
-    "_example_": "添加任何需要版本控制的文件路径和版本号"
+    "npcs/0002/2/1.jpg": 2,
+    "npcs/0002/2/1.mp4": 2,
+    "npcs/0002/2/2.mp4": 2,
+    "npcs/0002/2/3.mp4": 2,
+    "npcs/0002/2/4.mp4": 2,
+    "npcs/0002/2/5.mp4": 2,
+    "npcs/0002/2/6.mp4": 2,
+    "npcs/0002/2/7.mp4": 2,
+    "npcs/0002/2/8.mp4": 2,
+    "npcs/0002/2/drunk.mp4": 2,
+    "npcs/0002/2/dialogue_0002.json": 2
   },
   "globalVersion": 1,
   "lastUpdate": "2025-08-31"

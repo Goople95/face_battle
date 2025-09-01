@@ -11,6 +11,8 @@ class PurchaseService {
   static final PurchaseService _instance = PurchaseService._internal();
   factory PurchaseService() => _instance;
   PurchaseService._internal();
+  
+  static PurchaseService get instance => _instance;
 
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
@@ -74,6 +76,17 @@ class PurchaseService {
   /// 检查NPC是否已购买
   bool isNPCPurchased(String npcId) {
     return _purchasedNPCs.contains(npcId);
+  }
+  
+  /// 检查是否拥有某个项目（用于皮肤系统）
+  bool hasItem(String itemId) {
+    // 如果是NPC解锁项目
+    if (itemId.startsWith('vip_npc_')) {
+      final npcId = itemId.replaceFirst('vip_npc_', '');
+      return isNPCPurchased(npcId);
+    }
+    // 未来可以扩展支持其他类型的项目
+    return _purchasedNPCs.contains(itemId);
   }
   
   /// 获取NPC的商品信息

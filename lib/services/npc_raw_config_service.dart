@@ -60,7 +60,30 @@ class NPCRawConfigService {
     if (_rawConfig == null) return [];
     final npcs = _rawConfig!['npcs'];
     if (npcs == null) return [];
-    return npcs.values.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    
+    // 安全地處理類型轉換
+    try {
+      final List<Map<String, dynamic>> result = [];
+      if (npcs is Map) {
+        // npcs 是 Map，遍歷其 values
+        for (final value in npcs.values) {
+          if (value is Map) {
+            result.add(Map<String, dynamic>.from(value));
+          }
+        }
+      } else if (npcs is List) {
+        // npcs 是 List，直接遍歷
+        for (final item in npcs) {
+          if (item is Map) {
+            result.add(Map<String, dynamic>.from(item));
+          }
+        }
+      }
+      return result;
+    } catch (e) {
+      LoggerUtils.error('getAllNPCs 類型轉換失敗: $e');
+      return [];
+    }
   }
   
   /// 獲取VIP配置

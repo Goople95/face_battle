@@ -11,6 +11,7 @@ import 'storage/local_storage_service.dart';
 import 'ip_location_service.dart';
 import 'analytics_service.dart';
 import 'cloud_npc_service.dart';
+import 'npc_skin_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 认证服务 - 管理用户登录状态
@@ -432,7 +433,11 @@ class AuthService extends ChangeNotifier {
       // 4. 初始化游戏进度服务
       await GameProgressService.instance.initialize();
       
-      // 5. 检查资源版本更新（后台静默）
+      // 5. 初始化皮膚服務
+      await NPCSkinService.instance.initialize();
+      LoggerUtils.info('皮膚服務初始化完成');
+      
+      // 6. 检查资源版本更新（后台静默）
       CloudNPCService.refreshResourceVersions().then((_) {
         LoggerUtils.info('资源版本检查完成');
       }).catchError((e) {

@@ -13,7 +13,7 @@
         "en": "Her calm gaze hides a quiet allure.",
         "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
         "es": "Su mirada serena esconde un encanto silencioso.",
-        "pt": "Seu olhar calmo esconde um charme discreto.",
+        "pt": "Seu olhar calmo esconde un charme discreto.",
         "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
       },
       "avatarPath": "assets/npcs/0001/1/",
@@ -26,7 +26,32 @@
       },
       "drinkCapacity": 2,
       "country": "Germany",
-      "videoCount": 5
+      "videoCount": 5,
+      "skins": [
+        {
+          "id": 1,
+          "name": {
+            "en": "Classic",
+            "zh_TW": "經典"
+          },
+          "unlocked": true,
+          "unlockCondition": {
+            "type": "default"
+          }
+        },
+        {
+          "id": 2,
+          "name": {
+            "en": "Summer Beach",
+            "zh_TW": "夏日海灘"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 3
+          }
+        }
+      ]
     },
     "0002": {
       "id": "0002",
@@ -54,7 +79,44 @@
       },
       "drinkCapacity": 8,
       "country": "Russia",
-      "videoCount": 8
+      "videoCount": 8,
+      "skins": [
+        {
+          "id": 1,
+          "name": {
+            "en": "Classic",
+            "zh_TW": "經典"
+          },
+          "unlocked": true,
+          "unlockCondition": {
+            "type": "default"
+          }
+        },
+        {
+          "id": 2,
+          "name": {
+            "en": "Winter Elegance",
+            "zh_TW": "冬日優雅"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 5
+          }
+        },
+        {
+          "id": 3,
+          "name": {
+            "en": "Party Night",
+            "zh_TW": "派對之夜"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 8
+          }
+        }
+      ]
     },
     "1001": {
       "id": "1001",
@@ -66,7 +128,7 @@
         "id": "Aki"
       },
       "descriptions": {
-        "en": "Her sweet smile makes you wonder what she’s truly thinking.",
+        "en": "Her sweet smile makes you wonder what she's truly thinking.",
         "zh_TW": "甜美的笑容，讓人忍不住猜想她真正的心思。",
         "es": "Su dulce sonrisa te hace preguntarte qué piensa en realidad.",
         "pt": "Seu doce sorriso faz você imaginar o que ela realmente pensa.",
@@ -83,7 +145,44 @@
       },
       "drinkCapacity": 2,
       "country": "Japan",
-      "videoCount": 4
+      "videoCount": 4,
+      "skins": [
+        {
+          "id": 1,
+          "name": {
+            "en": "Classic",
+            "zh_TW": "經典"
+          },
+          "unlocked": true,
+          "unlockCondition": {
+            "type": "default"
+          }
+        },
+        {
+          "id": 2,
+          "name": {
+            "en": "Kimono",
+            "zh_TW": "和服"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 4
+          }
+        },
+        {
+          "id": 3,
+          "name": {
+            "en": "School Uniform",
+            "zh_TW": "學生制服"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 7
+          }
+        }
+      ]
     },
     "1002": {
       "id": "1002",
@@ -112,7 +211,44 @@
       },
       "drinkCapacity": 2,
       "country": "Brazil",
-      "videoCount": 5
+      "videoCount": 5,
+      "skins": [
+        {
+          "id": 1,
+          "name": {
+            "en": "Classic",
+            "zh_TW": "經典"
+          },
+          "unlocked": true,
+          "unlockCondition": {
+            "type": "default"
+          }
+        },
+        {
+          "id": 2,
+          "name": {
+            "en": "Carnival",
+            "zh_TW": "嘉年華"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 6
+          }
+        },
+        {
+          "id": 3,
+          "name": {
+            "en": "Beach Sunset",
+            "zh_TW": "海灘夕陽"
+          },
+          "unlocked": false,
+          "unlockCondition": {
+            "type": "intimacy",
+            "level": 9
+          }
+        }
+      ]
     }
   },
   "vipConfig": {

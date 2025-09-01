@@ -9,6 +9,8 @@ class NPCConfigService {
   static final NPCConfigService _instance = NPCConfigService._internal();
   factory NPCConfigService() => _instance;
   NPCConfigService._internal();
+  
+  static NPCConfigService get instance => _instance;
 
   // NPC数据存储
   final Map<String, AIPersonality> _npcs = {};
@@ -30,6 +32,12 @@ class NPCConfigService {
 
   // 根据ID获取NPC
   AIPersonality? getNPCById(String id) => _npcs[id];
+  
+  // 獲取所有NPC（用於皮膚系統）
+  List<Map<String, dynamic>> getAllNPCs() {
+    // 返回原始配置數據，包含皮膚信息
+    return allCharacters.map((npc) => npc.toJson()).toList();
+  }
 
   // 根据名称获取NPC（兼容旧代码）
   AIPersonality? getNPCByName(String name) {

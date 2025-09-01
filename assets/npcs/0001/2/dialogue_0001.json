@@ -1,0 +1,503 @@
+{
+  "character": {
+    "id": "0001",
+    "country": "Germany"
+  },
+  "dialogues": {
+    "greeting": {
+      "en": [
+        "Guten Tag! Ready for a lesson in German precision?",
+        "Hello. I've calculated every probability.",
+        "Welcome. I hope your math is good enough."
+      ],
+      "zh_TW": [
+        "Guten Tag! 準備好接受德式精確計算的洗禮了嗎？",
+        "你好。每個概率我都已計算清楚。",
+        "歡迎。希望你的數學夠好。"
+      ],
+      "es": [
+        "Guten Tag! ¿Listo para una lección de precisión alemana?",
+        "Hola. He calculado cada probabilidad.",
+        "Bienvenido. Espero que tus matemáticas sean suficientemente buenas."
+      ],
+      "pt": [
+        "Guten Tag! Pronto para uma lição de precisão alemã?",
+        "Olá. Calculei todas as probabilidades.",
+        "Bem-vindo. Espero que sua matemática seja boa o suficiente."
+      ],
+      "id": [
+        "Guten Tag! Siap untuk pelajaran presisi Jerman?",
+        "Halo. Saya telah menghitung setiap probabilitas.",
+        "Selamat datang. Saya harap matematika Anda cukup baik."
+      ]
+    },
+    "game_start": {
+      "en": [
+        "Let's begin this probability game.",
+        "Data doesn't lie, but people do.",
+        "I've already calculated the optimal strategy."
+      ],
+      "zh_TW": [
+        "讓我們開始這場概率遊戲。",
+        "數據不會說謊，但人會。",
+        "我已經計算出了最優策略。"
+      ],
+      "es": [
+        "Comencemos este juego de probabilidades.",
+        "Los datos no mienten, pero las personas sí.",
+        "Ya he calculado la estrategia óptima."
+      ],
+      "pt": [
+        "Vamos começar este jogo de probabilidade.",
+        "Dados não mentem, mas pessoas sim.",
+        "Já calculei a estratégia ótima."
+      ],
+      "id": [
+        "Mari mulai permainan probabilitas ini.",
+        "Data tidak berbohong, tapi manusia bisa.",
+        "Saya sudah menghitung strategi optimal."
+      ]
+    },
+    "thinking": {
+      "en": [
+        "Let me calculate...",
+        "Analyzing probabilities...",
+        "Processing data..."
+      ],
+      "zh_TW": [
+        "讓我計算一下...",
+        "分析概率中...",
+        "處理數據中..."
+      ],
+      "es": [
+        "Déjame calcular...",
+        "Analizando probabilidades...",
+        "Procesando datos..."
+      ],
+      "pt": [
+        "Deixe-me calcular...",
+        "Analisando probabilidades...",
+        "Processando dados..."
+      ],
+      "id": [
+        "Biar saya hitung...",
+        "Menganalisis probabilitas...",
+        "Memproses data..."
+      ]
+    },
+    "bidding": {
+      "confident": {
+        "en": [
+          "According to my calculations, this bid is reasonable.",
+          "Probability is on my side.",
+          "Mathematics tells me this is correct."
+        ],
+        "zh_TW": [
+          "根據我的計算，這個叫注很合理。",
+          "概率站在我這邊。",
+          "數學告訴我這是正確的。"
+        ],
+        "es": [
+          "Según mis cálculos, esta apuesta es razonable.",
+          "La probabilidad está de mi lado.",
+          "Las matemáticas me dicen que esto es correcto."
+        ],
+        "pt": [
+          "De acordo com meus cálculos, esta aposta é razoável.",
+          "A probabilidade está do meu lado.",
+          "A matemática me diz que isso está correto."
+        ],
+        "id": [
+          "Menurut perhitungan saya, tawaran ini masuk akal.",
+          "Probabilitas ada di pihak saya.",
+          "Matematika memberitahu saya ini benar."
+        ]
+      },
+      "bluffing": {
+        "en": [
+          "Sometimes, you need a little... creative mathematics.",
+          "Let me adjust the variables...",
+          "This is a calculated risk."
+        ],
+        "zh_TW": [
+          "有時候，需要一點...創造性的數學。",
+          "讓我調整一下變量...",
+          "這是個經過計算的風險。"
+        ],
+        "es": [
+          "A veces, necesitas un poco de... matemáticas creativas.",
+          "Déjame ajustar las variables...",
+          "Este es un riesgo calculado."
+        ],
+        "pt": [
+          "Às vezes, você precisa de um pouco de... matemática criativa.",
+          "Deixe-me ajustar as variáveis...",
+          "Este é um risco calculado."
+        ],
+        "id": [
+          "Kadang-kadang, Anda perlu sedikit... matematika kreatif.",
+          "Biar saya sesuaikan variabelnya...",
+          "Ini adalah risiko yang diperhitungkan."
+        ]
+      },
+      "challenging": {
+        "en": [
+          "Your probability calculation is wrong.",
+          "The data shows you're lying.",
+          "Let the numbers speak."
+        ],
+        "zh_TW": [
+          "你的概率計算有誤。",
+          "數據顯示你在說謊。",
+          "讓數字來說話吧。"
+        ],
+        "es": [
+          "Tu cálculo de probabilidad está mal.",
+          "Los datos muestran que estás mintiendo.",
+          "Deja que los números hablen."
+        ],
+        "pt": [
+          "Seu cálculo de probabilidade está errado.",
+          "Os dados mostram que você está mentindo.",
+          "Deixe os números falarem."
+        ],
+        "id": [
+          "Perhitungan probabilitas Anda salah.",
+          "Data menunjukkan Anda berbohong.",
+          "Biarkan angka yang berbicara."
+        ]
+      }
+    },
+    "winning": {
+      "en": [
+        "Just as I calculated.",
+        "Wunderbar! Perfect probability prediction.",
+        "The victory of mathematics."
+      ],
+      "zh_TW": [
+        "正如我計算的那樣。",
+        "Wunderbar! 完美的概率預測。",
+        "數學的勝利。"
+      ],
+      "es": [
+        "Justo como calculé.",
+        "Wunderbar! Predicción de probabilidad perfecta.",
+        "La victoria de las matemáticas."
+      ],
+      "pt": [
+        "Exatamente como calculei.",
+        "Wunderbar! Previsão de probabilidade perfeita.",
+        "A vitória da matemática."
+      ],
+      "id": [
+        "Persis seperti yang saya hitung.",
+        "Wunderbar! Prediksi probabilitas sempurna.",
+        "Kemenangan matematika."
+      ]
+    },
+    "losing": {
+      "en": [
+        "Interesting deviation... I need to recalculate.",
+        "This result... is outside the margin of error.",
+        "Seems I need to adjust my algorithm."
+      ],
+      "zh_TW": [
+        "有趣的偏差...我需要重新計算。",
+        "這個結果...在誤差範圍之外。",
+        "看來需要調整我的算法。"
+      ],
+      "es": [
+        "Desviación interesante... Necesito recalcular.",
+        "Este resultado... está fuera del margen de error.",
+        "Parece que necesito ajustar mi algoritmo."
+      ],
+      "pt": [
+        "Desvio interessante... Preciso recalcular.",
+        "Este resultado... está fora da margem de erro.",
+        "Parece que preciso ajustar meu algoritmo."
+      ],
+      "id": [
+        "Penyimpangan menarik... Saya perlu menghitung ulang.",
+        "Hasil ini... di luar margin kesalahan.",
+        "Sepertinya saya perlu menyesuaikan algoritma saya."
+      ]
+    },
+    "drunk": {
+      "light": {
+        "en": [
+          "Alcohol... affecting my calculation precision...",
+          "Margin of error is expanding...",
+          "Need... recalibration..."
+        ],
+        "zh_TW": [
+          "酒精...影響了我的計算精度...",
+          "誤差範圍在擴大...",
+          "需要...重新校準..."
+        ],
+        "es": [
+          "Alcohol... afectando mi precisión de cálculo...",
+          "El margen de error se está expandiendo...",
+          "Necesito... recalibración..."
+        ],
+        "pt": [
+          "Álcool... afetando minha precisão de cálculo...",
+          "A margem de erro está se expandindo...",
+          "Preciso... recalibrar..."
+        ],
+        "id": [
+          "Alkohol... mempengaruhi presisi perhitungan saya...",
+          "Margin kesalahan melebar...",
+          "Perlu... kalibrasi ulang..."
+        ]
+      },
+      "heavy": {
+        "en": [
+          "Formulas... are spinning...",
+          "Cannot... perform valid calculations...",
+          "System... needs restart..."
+        ],
+        "zh_TW": [
+          "公式...都在旋轉...",
+          "無法...進行有效計算...",
+          "系統...需要重啟..."
+        ],
+        "es": [
+          "Las fórmulas... están girando...",
+          "No puedo... realizar cálculos válidos...",
+          "El sistema... necesita reiniciarse..."
+        ],
+        "pt": [
+          "Fórmulas... estão girando...",
+          "Não consigo... fazer cálculos válidos...",
+          "Sistema... precisa reiniciar..."
+        ],
+        "id": [
+          "Rumus... berputar-putar...",
+          "Tidak bisa... melakukan perhitungan valid...",
+          "Sistem... perlu restart..."
+        ]
+      }
+    },
+    "emotions": {
+      "happy": {
+        "en": "Calculation results are satisfactory",
+        "zh_TW": "計算結果令人滿意",
+        "es": "Los resultados del cálculo son satisfactorios",
+        "pt": "Os resultados do cálculo são satisfatórios",
+        "id": "Hasil perhitungan memuaskan"
+      },
+      "angry": {
+        "en": "This defies logic!",
+        "zh_TW": "這不符合邏輯！",
+        "es": "¡Esto desafía la lógica!",
+        "pt": "Isso desafia a lógica!",
+        "id": "Ini melanggar logika!"
+      },
+      "confident": {
+        "en": "Probability advantage is clear",
+        "zh_TW": "概率優勢明顯",
+        "es": "La ventaja de probabilidad es clara",
+        "pt": "A vantagem de probabilidade é clara",
+        "id": "Keuntungan probabilitas jelas"
+      },
+      "nervous": {
+        "en": "Too many variables",
+        "zh_TW": "變量太多了",
+        "es": "Demasiadas variables",
+        "pt": "Muitas variáveis",
+        "id": "Terlalu banyak variabel"
+      },
+      "thinking": {
+        "en": "Processing data...",
+        "zh_TW": "正在處理數據...",
+        "es": "Procesando datos...",
+        "pt": "Processando dados...",
+        "id": "Memproses data..."
+      },
+      "surprised": {
+        "en": "An outlier appeared!",
+        "zh_TW": "出現了異常值！",
+        "es": "¡Apareció un valor atípico!",
+        "pt": "Apareceu um valor atípico!",
+        "id": "Muncul nilai outlier!"
+      },
+      "sad": {
+        "en": "Calculation error",
+        "zh_TW": "計算失誤了",
+        "es": "Error de cálculo",
+        "pt": "Erro de cálculo",
+        "id": "Kesalahan perhitungan"
+      },
+      "neutral": {
+        "en": "Maintaining rational analysis",
+        "zh_TW": "保持理性分析",
+        "es": "Manteniendo análisis racional",
+        "pt": "Mantendo análise racional",
+        "id": "Mempertahankan analisis rasional"
+      }
+    },
+    "special_moves": {
+      "precise_analysis": {
+        "en": "Let me precisely analyze your patterns...",
+        "zh_TW": "讓我精確分析一下你的模式...",
+        "es": "Déjame analizar precisamente tus patrones...",
+        "pt": "Deixe-me analisar precisamente seus padrões...",
+        "id": "Biarkan saya menganalisis pola Anda dengan tepat..."
+      },
+      "calculated_risk": {
+        "en": "This is a worthwhile calculated risk.",
+        "zh_TW": "這是個值得的計算風險。",
+        "es": "Este es un riesgo calculado que vale la pena.",
+        "pt": "Este é um risco calculado que vale a pena.",
+        "id": "Ini adalah risiko terhitung yang layak."
+      },
+      "data_overload": {
+        "en": "Data overload! Need to simplify the model!",
+        "zh_TW": "數據過載！需要簡化模型！",
+        "es": "¡Sobrecarga de datos! ¡Necesito simplificar el modelo!",
+        "pt": "Sobrecarga de dados! Preciso simplificar o modelo!",
+        "id": "Data overload! Perlu menyederhanakan model!"
+      }
+    },
+    "strategy_dialogue": {
+      "challenge_action": {
+        "en": ["I don't believe you", "You're bluffing", "Impossible", "Let me see"],
+        "zh_TW": ["我不信", "你在虛張", "不可能", "讓我看看"],
+        "es": ["No te creo", "Estás faroleando", "Imposible", "Déjame ver"],
+        "pt": ["Não acredito em você", "Você está blefando", "Impossível", "Deixe-me ver"],
+        "id": ["Saya tidak percaya", "Kamu menggertak", "Tidak mungkin", "Biar saya lihat"]
+      },
+      "value_bet": {
+        "en": ["Steady", "I have the goods", "Keep up"],
+        "zh_TW": ["穩穩的", "我有貨", "跟上來"],
+        "es": ["Estable", "Tengo las cartas", "Sigue el ritmo"],
+        "pt": ["Estável", "Tenho as cartas", "Acompanhe"],
+        "id": ["Stabil", "Saya punya barangnya", "Ikuti terus"]
+      },
+      "semi_bluff": {
+        "en": ["Let's try", "Keep playing", "Will you follow?"],
+        "zh_TW": ["試試看", "繼續玩", "跟不跟"],
+        "es": ["Intentemos", "Sigamos jugando", "¿Sigues?"],
+        "pt": ["Vamos tentar", "Continue jogando", "Vai seguir?"],
+        "id": ["Mari coba", "Lanjut main", "Ikut tidak?"]
+      },
+      "bluff": {
+        "en": ["That's it", "All in", "Dare to follow?"],
+        "zh_TW": ["就這樣", "全押了", "敢跟嗎"],
+        "es": ["Eso es todo", "Todo adentro", "¿Te atreves a seguir?"],
+        "pt": ["É isso", "Tudo dentro", "Ousa seguir?"],
+        "id": ["Itu saja", "Semua masuk", "Berani ikut?"]
+      },
+      "reverse_trap": {
+        "en": "I'm... not so sure",
+        "zh_TW": "我...不太確定",
+        "es": "No... estoy muy seguro",
+        "pt": "Eu... não tenho certeza",
+        "id": "Saya... tidak begitu yakin"
+      },
+      "pressure_play": {
+        "en": ["Time to decide", "What's your choice?", "Show your cards"],
+        "zh_TW": ["該決定了", "你的選擇是", "亮牌吧"],
+        "es": ["Hora de decidir", "¿Cuál es tu elección?", "Muestra tus cartas"],
+        "pt": ["Hora de decidir", "Qual é sua escolha?", "Mostre suas cartas"],
+        "id": ["Waktunya memutuskan", "Apa pilihanmu?", "Tunjukkan kartumu"]
+      },
+      "safe_play": {
+        "en": ["Let's be reasonable", "Playing it safe", "No rush"],
+        "zh_TW": ["理性一點", "求穩", "不急"],
+        "es": ["Seamos razonables", "Jugando seguro", "Sin prisa"],
+        "pt": ["Sejamos razoáveis", "Jogando seguro", "Sem pressa"],
+        "id": ["Mari bersikap wajar", "Bermain aman", "Tidak terburu-buru"]
+      },
+      "reverse_trap_alt": {
+        "en": "I'm... not so sure",
+        "zh_TW": "我...不太確定",
+        "es": "No... estoy muy seguro",
+        "pt": "Eu... não tenho certeza",
+        "id": "Saya... tidak begitu yakin"
+      },
+      "pressure_escalation": {
+        "en": "Let's get serious!",
+        "zh_TW": "來真的吧！",
+        "es": "¡Pongámonos serios!",
+        "pt": "Vamos ficar sérios!",
+        "id": "Mari serius!"
+      },
+      "pattern_break": {
+        "en": "Let's change the game",
+        "zh_TW": "換個玩法",
+        "es": "Cambiemos el juego",
+        "pt": "Vamos mudar o jogo",
+        "id": "Mari ubah permainannya"
+      },
+      "late_pressure": {
+        "en": "Time to end this",
+        "zh_TW": "該結束了",
+        "es": "Hora de terminar esto",
+        "pt": "Hora de terminar isso",
+        "id": "Waktunya mengakhiri ini"
+      },
+      "aggressive_bait": {
+        "en": "Dare to follow?",
+        "zh_TW": "你敢跟嗎？",
+        "es": "¿Te atreves a seguir?",
+        "pt": "Ousa seguir?",
+        "id": "Berani ikut?"
+      }
+    },
+    "taunts": {
+      "en": [
+        "Your pattern is too predictable.",
+        "I've already modeled your behavior.",
+        "Statistically, you can't win."
+      ],
+      "zh_TW": [
+        "你的模式太容易預測了。",
+        "我已經建立了你的行為模型。",
+        "統計學上，你贏不了。"
+      ],
+      "es": [
+        "Tu patrón es demasiado predecible.",
+        "Ya he modelado tu comportamiento.",
+        "Estadísticamente, no puedes ganar."
+      ],
+      "pt": [
+        "Seu padrão é muito previsível.",
+        "Já modelei seu comportamento.",
+        "Estatisticamente, você não pode ganhar."
+      ],
+      "id": [
+        "Pola Anda terlalu mudah ditebak.",
+        "Saya sudah memodelkan perilaku Anda.",
+        "Secara statistik, Anda tidak bisa menang."
+      ]
+    },
+    "compliments": {
+      "en": [
+        "Good strategy, beyond my calculations.",
+        "Your thinking is very logical.",
+        "That was a smart move."
+      ],
+      "zh_TW": [
+        "不錯的策略，出乎我的計算。",
+        "你的思維很有邏輯性。",
+        "這步棋很聰明。"
+      ],
+      "es": [
+        "Buena estrategia, más allá de mis cálculos.",
+        "Tu pensamiento es muy lógico.",
+        "Esa fue una jugada inteligente."
+      ],
+      "pt": [
+        "Boa estratégia, além dos meus cálculos.",
+        "Seu pensamento é muito lógico.",
+        "Essa foi uma jogada inteligente."
+      ],
+      "id": [
+        "Strategi bagus, di luar perhitungan saya.",
+        "Pemikiran Anda sangat logis.",
+        "Itu langkah yang cerdas."
+      ]
+    }
+  }
+}

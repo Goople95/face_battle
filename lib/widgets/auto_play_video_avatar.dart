@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:io';
+import 'dart:async';
 import '../utils/logger_utils.dart';
 import '../models/ai_personality.dart';
 import '../services/cloud_npc_service.dart';
 import '../services/npc_resource_loader.dart';
+import '../services/npc_skin_service.dart';
 import 'npc_image_widget.dart';
 import 'dart:math' as math;
 
@@ -34,11 +36,31 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   bool _isInitialized = false;
   final _random = math.Random();
   bool _isLoadingNext = false;  // 防止重复加载
+  StreamSubscription<Map<String, int>>? _skinChangeSubscription;
+  int? _currentSkinId;
   
   @override
   void initState() {
     super.initState();
+    _currentSkinId = NPCSkinService.instance.getSelectedSkinId(widget.characterId);
     _loadAndPlayVideo();
+    
+    // 监听皮肤变化
+    _skinChangeSubscription = NPCSkinService.instance.skinChangesStream.listen((changes) {
+      final newSkinId = changes[widget.characterId];
+      if (newSkinId != null && newSkinId != _currentSkinId) {
+        LoggerUtils.info('AutoPlayVideoAvatar检测到皮肤变化: ${widget.characterId} -> $newSkinId');
+        _currentSkinId = newSkinId;
+        
+        // 立即显示静态图片作为占位
+        setState(() {
+          _isInitialized = false;
+        });
+        
+        // 重新加载新皮肤的视频
+        _loadAndPlayVideo();
+      }
+    });
   }
   
   /// 加载并播放视频
@@ -69,6 +91,9 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
       final fileName = '$_currentVideoIndex.mp4';
       LoggerUtils.info('选择视频: $fileName (避免重复上一个: $_lastVideoIndex)');
       
+      // 获取当前选择的皮肤ID
+      final skinId = NPCSkinService.instance.getSelectedSkinId(widget.characterId);
+      
       // 根据personality判断资源类型并获取正确路径
       String videoPath;
       if (widget.personality != null && widget.personality!.avatarPath.startsWith('assets/')) {
@@ -78,12 +103,17 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
           widget.characterId,
           widget.personality!.avatarPath,
           _currentVideoIndex,
+          skinId: skinId,  // 传递皮肤ID
         );
-        LoggerUtils.info('使用本地资源加载器: $videoPath');
+        LoggerUtils.info('使用本地资源加载器(皮肤$skinId): $videoPath');
       } else {
         // 云端资源，使用智能缓存机制
-        videoPath = await CloudNPCService.getSmartResourcePath(widget.characterId, fileName);
-        LoggerUtils.info('使用云端资源加载器: $videoPath');
+        videoPath = await CloudNPCService.getSmartResourcePath(
+          widget.characterId, 
+          fileName,
+          skinId: skinId,  // 传递皮肤ID
+        );
+        LoggerUtils.info('使用云端资源加载器(皮肤$skinId): $videoPath');
       }
       
       LoggerUtils.info('播放视频: ${widget.characterId}/$fileName (从$videoCount个视频中选择)');
@@ -178,16 +208,21 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
   
   @override
   void dispose() {
+    _skinChangeSubscription?.cancel();
     _controller?.dispose();
     super.dispose();
   }
   
   /// 构建后备静态图片
   Widget _buildFallbackImage() {
-    // 使用统一的NPC图片组件
+    // 获取当前选择的皮肤ID
+    final skinId = NPCSkinService.instance.getSelectedSkinId(widget.characterId);
+    
+    // 使用统一的NPC图片组件，包含皮肤ID
     return NPCImageWidget(
       npcId: widget.characterId,
       fileName: '1.jpg',
+      skinId: skinId,
       width: widget.size,
       height: widget.size,
       fit: BoxFit.cover,

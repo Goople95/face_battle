@@ -943,5 +943,48 @@
       }
     }
   },
-  "intimacyMaxLevel": "Max level reached ({points} pts)"
+  "intimacyMaxLevel": "Max level reached ({points} pts)",
+  
+  "@skinWardrobe": {
+    "description": "Skin wardrobe title"
+  },
+  "skinWardrobe": "Wardrobe",
+  
+  "@skinCurrentLook": {
+    "description": "Current equipped skin"
+  },
+  "skinCurrentLook": "Current Look",
+  
+  "@skinTapToWear": {
+    "description": "Tap to wear this skin"
+  },
+  "skinTapToWear": "Touch 👙 on her to wear",
+  
+  "@skinNeedsUnlock": {
+    "description": "Skin needs to be unlocked"
+  },
+  "skinNeedsUnlock": "Needs unlock",
+  
+  "@skinUnlockAtLevel": {
+    "description": "Unlock skin at intimacy level",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "skinUnlockAtLevel": "❤️ Unlock at intimacy level {level} ({needed} more)",
+  
+  "@skinUnlockWithGems": {
+    "description": "Unlock skin with gems"
+  },
+  "skinUnlockWithGems": "💎 Unlock exclusive style with gems",
+  
+  "@skinCurrentlyUnavailable": {
+    "description": "Skin currently unavailable"
+  },
+  "skinCurrentlyUnavailable": "🔒 Currently unavailable"
 }

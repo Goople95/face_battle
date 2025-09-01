@@ -1,0 +1,154 @@
+{
+  "npcs": {
+    "0001": {
+      "id": "0001",
+      "names": {
+        "en": "Lena",
+        "zh_TW": "Lena",
+        "es": "Lena",
+        "pt": "Lena",
+        "id": "Lena"
+      },
+      "descriptions": {
+        "en": "Her calm gaze hides a quiet allure.",
+        "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
+        "es": "Su mirada serena esconde un encanto silencioso.",
+        "pt": "Seu olhar calmo esconde um charme discreto.",
+        "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
+      },
+      "avatarPath": "assets/npcs/0001/1/",
+      "videosPath": "assets/npcs/0001/1/",
+      "isVIP": false,
+      "personality": {
+        "bluffRatio": 0.25,
+        "challengeThreshold": 0.4,
+        "riskAppetite": 0.3
+      },
+      "drinkCapacity": 2,
+      "country": "Germany",
+      "videoCount": 5
+    },
+    "0002": {
+      "id": "0002",
+      "names": {
+        "en": "Katerina",
+        "zh_TW": "Katerina",
+        "es": "Katerina",
+        "pt": "Katerina",
+        "id": "Katerina"
+      },
+      "descriptions": {
+        "en": "Graceful and distant, she draws you closer without a word.",
+        "zh_TW": "高貴而疏離，她無聲地吸引著你靠近。",
+        "es": "Elegante y distante, te atrae sin decir una palabra.",
+        "pt": "Elegante e distante, ela te atrai sem dizer una palabra.",
+        "id": "Anggun dan berjarak, ia menarikmu tanpa sepatah kata pun."
+      },
+      "avatarPath": "assets/npcs/0002/1/",
+      "videosPath": "assets/npcs/0002/1/",
+      "isVIP": false,
+      "personality": {
+        "bluffRatio": 0.4,
+        "challengeThreshold": 0.38,
+        "riskAppetite": 0.5
+      },
+      "drinkCapacity": 8,
+      "country": "Russia",
+      "videoCount": 8
+    },
+    "1001": {
+      "id": "1001",
+      "names": {
+        "en": "Aki",
+        "zh_TW": "Aki",
+        "es": "Aki",
+        "pt": "Aki",
+        "id": "Aki"
+      },
+      "descriptions": {
+        "en": "Her sweet smile makes you wonder what she’s truly thinking.",
+        "zh_TW": "甜美的笑容，讓人忍不住猜想她真正的心思。",
+        "es": "Su dulce sonrisa te hace preguntarte qué piensa en realidad.",
+        "pt": "Seu doce sorriso faz você imaginar o que ela realmente pensa.",
+        "id": "Senyum manisnya membuatmu bertanya-tanya apa yang sebenarnya ia pikirkan."
+      },
+      "avatarPath": "assets/npcs/1001/1/",
+      "videosPath": "assets/npcs/1001/1/",
+      "isVIP": true,
+      "unlockItemId": "vip_npc_1001",
+      "personality": {
+        "bluffRatio": 0.48,
+        "challengeThreshold": 0.42,
+        "riskAppetite": 0.65
+      },
+      "drinkCapacity": 2,
+      "country": "Japan",
+      "videoCount": 4
+    },
+    "1002": {
+      "id": "1002",
+      "names": {
+        "en": "Isabella",
+        "zh_TW": "Isabella",
+        "es": "Isabella",
+        "pt": "Isabella",
+        "id": "Isabella"
+      },
+      "descriptions": {
+        "en": "Her words flow like music, impossible to resist.",
+        "zh_TW": "她的話語像音樂般流淌，令人難以抗拒。",
+        "es": "Sus palabras fluyen como música, imposibles de resistir.",
+        "pt": "Suas palavras fluem como música, impossíveis de resistir.",
+        "id": "Kata-katanya mengalir seperti musik, mustahil untuk ditolak."
+      },
+      "avatarPath": "assets/npcs/1002/1/",
+      "videosPath": "assets/npcs/1002/1/",
+      "isVIP": true,
+      "unlockItemId": "vip_npc_1002",
+      "personality": {
+        "bluffRatio": 0.55,
+        "challengeThreshold": 0.45,
+        "riskAppetite": 0.7
+      },
+      "drinkCapacity": 2,
+      "country": "Brazil",
+      "videoCount": 5
+    }
+  },
+  "vipConfig": {
+    "adRequiredPerGame": true,
+    "adRewardDuration": 1,
+    "vipBenefits": {
+      "en": [
+        "No ads required",
+        "2x intimacy points per win",
+        "Free sobering when drunk",
+        "Exclusive dialogues"
+      ],
+      "zh_TW": [
+        "無需觀看廣告",
+        "親密度獎勵翻倍",
+        "免費醒酒功能",
+        "專屬對話內容"
+      ],
+      "es": [
+        "Sin anuncios requeridos",
+        "2x puntos de intimidad por victoria",
+        "Desembriagar gratis",
+        "Diálogos exclusivos"
+      ],
+      "pt": [
+        "Sem anúncios necessários",
+        "2x pontos de intimidade por vitória",
+        "Deixar sóbrio gratuitamente",
+        "Diálogos exclusivos"
+      ],
+      "id": [
+        "Tanpa iklan",
+        "2x poin keintiman per kemenangan",
+        "Sadarkan gratis saat mabuk",
+        "Dialog eksklusif"
+      ]
+    }
+  }
+}

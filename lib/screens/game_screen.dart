@@ -25,9 +25,11 @@ import '../services/game_progress_service.dart';
 import '../services/purchase_service.dart';
 import '../services/analytics_service.dart';
 import '../services/npc_skin_service.dart';
+import '../services/cloud_npc_service.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/rules_display.dart';
 import '../widgets/skin_selector_dialog.dart';
+import '../widgets/skin_selector_overlay.dart';
 
 class GameScreen extends StatefulWidget {
   final AIPersonality aiPersonality;
@@ -51,6 +53,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   bool _gameStarted = false;  // Track if game has started
   bool _playerChallenged = false; // Track who challenged
   DateTime? _sessionStartTime;  // 记录游戏开始时间用于Analytics
+  bool _drunkVideoPreloaded = false;  // 记录drunk视频是否已预加载
   
   // UI Controllers
   int _selectedQuantity = 2;  // 起叫最少2个
@@ -425,6 +428,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // If AI goes first
     if (!_currentRound!.isPlayerTurn) {
       _aiTurn();
+    }
+    
+    // 预加载drunk视频（游戏开始后只预加载一次）
+    if (!_drunkVideoPreloaded) {
+      _drunkVideoPreloaded = true;
+      final skinId = NPCSkinService.instance.getSelectedSkinId(widget.aiPersonality.id);
+      CloudNPCService.preloadDrunkVideo(
+        widget.aiPersonality.id, 
+        skinId: skinId,
+        delay: 3000,  // 延迟3秒，避免与初始视频冲突
+      );
+      LoggerUtils.info('触发drunk视频预加载: ${widget.aiPersonality.id} (皮肤$skinId)');
     }
   }
   
@@ -1775,10 +1790,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Icon(
-                                        Icons.palette_outlined,
-                                        color: Colors.amber,
-                                        size: 20,
+                                      child: const Text(
+                                        '👙',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -3669,21 +3685,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   
   // 顯示皮膚選擇器
   Future<void> _showSkinSelector() async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => SkinSelectorDialog(
+    // 获取比基尼按钮的位置
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    
+    final screenSize = MediaQuery.of(context).size;
+    // 按钮大约在右上角位置
+    final anchorPosition = Offset(screenSize.width - 60, 100);
+    
+    // 使用Overlay显示轻奢风格选择器
+    OverlayEntry? overlayEntry;
+    overlayEntry = OverlayEntry(
+      builder: (context) => SkinSelectorOverlay(
         npcId: widget.aiPersonality.id,
         npcName: _getLocalizedAIName(context),
+        anchorPosition: anchorPosition,
+        onClose: () {
+          overlayEntry?.remove();
+          // 刷新界面
+          if (mounted) {
+            setState(() {});
+          }
+        },
       ),
     );
     
-    // 如果選擇了新皮膚，刷新界面
-    if (result == true && mounted) {
-      setState(() {
-        // 觸發界面重繪以顯示新皮膚
-      });
-    }
+    Overlay.of(context).insert(overlayEntry);
   }
 
   // 播放酒杯飞行动画

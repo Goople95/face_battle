@@ -6,6 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Dice Girls is a Flutter-based Liar's Dice game where players compete against AI opponents with dynamic facial expressions and personalities. The game implements sophisticated AI behavior through both local algorithms and cloud-based Gemini AI integration.
 
+## Architecture Patterns
+
+### Core Architecture
+- **Hybrid State Management**: Provider for state management + Service layer architecture
+- **Multi-tier AI System**: MasterAIEngine → EliteAIEngine → AIService fallback chain
+- **Resource Strategy**: Local assets + Firebase Storage with intelligent caching
+- **Internationalization**: Full i18n support (zh, en, es, pt, id, vi)
+
 ## Development Commands
 
 ### Essential Flutter Commands
@@ -52,12 +60,23 @@ The game implements a turn-based Liar's Dice with the following flow:
 
 ### AI System Architecture
 
-The AI operates on two levels:
+The AI operates on three levels:
 
-**1. Decision Engine** (`lib/services/`)
-- **Primary**: `gemini_service.dart` - Cloud-based Gemini AI for intelligent decisions
-- **Fallback**: `ai_service.dart` - Local probability-based algorithm when API unavailable
-- Automatic fallback when API fails or `useRealAI = false` in config
+**1. Decision Engine Hierarchy** (`lib/services/`)
+- **MasterAIEngine**: (`master_ai_engine.dart`) - Top-level AI with complete strategy integration
+  - Psychological warfare tactics (bluffing, pressure escalation, pattern breaking)
+  - Dual-engine comparison (Master vs Elite) for optimal decisions
+  - Context-aware strategy selection based on game state
+- **EliteAIEngine**: (`elite_ai_engine.dart`) - Advanced psychological tactics engine
+  - Sophisticated bluff detection and execution
+  - Pattern recognition and exploitation
+  - Emotional manipulation strategies
+- **GeminiService**: (`gemini_service.dart`) - Cloud-based Gemini AI integration
+  - Natural language decision reasoning
+  - Dynamic personality-based responses
+- **AIService**: (`ai_service.dart`) - Local probability-based fallback
+  - Pure mathematical decision making
+  - Works offline without API dependency
 
 **2. Personality System** (`lib/models/ai_personality.dart`)
 Each AI character has distinct behavioral parameters:
@@ -66,6 +85,8 @@ Each AI character has distinct behavioral parameters:
 - `riskAppetite`: Willingness to make aggressive bids (0-1)
 - `tellExposure`: Probability of showing emotional tells (0-1)
 - `reverseActingProb`: Chance of showing misleading emotions (0-1)
+- `psychologicalWarfare`: Enable advanced mind games (bool)
+- `adaptiveLearning`: Adjust strategy based on opponent patterns (bool)
 
 ### Expression System
 
@@ -130,13 +151,90 @@ When a bid is challenged:
 3. If actual ≥ bid: challenger loses
 4. If actual < bid: bidder loses
 
+## Resource Management
+
+### Cloud Resource System (`lib/services/cloud_npc_service.dart`)
+- **Dual-access Strategy**: Firebase Storage SDK + HTTP fallback
+- **Version Control**: `ResourceVersionManager` tracks resource versions
+- **Smart Caching**: 
+  - Version-based cache invalidation
+  - 500MB cache limit with automatic cleanup
+  - 30-day expiration for unused resources
+- **Background Updates**: Non-blocking resource downloads
+
+### Storage Structure
+```
+assets/cloud storage/       # Cloud configuration files
+├── npc_config.json        # NPC definitions (always fetch from cloud)
+└── resource_versions.json # Version control for forced updates
+
+Local cache structure:
+getApplicationDocumentsDirectory()/npcs/[npcId]/[skinId]/
+├── 1.jpg                  # Avatar images
+├── videos/                # Expression videos
+└── metadata.json          # Cache metadata
+```
+
 ## Logging and Debugging
 
 The project includes comprehensive logging:
 - **LoggerUtils** (`lib/utils/logger_utils.dart`): Structured logging with levels
+  - `LoggerUtils.info()`: General information
+  - `LoggerUtils.debug()`: Debug details (AI decisions, cache operations)
+  - `LoggerUtils.error()`: Error tracking with stack traces
+  - `LoggerUtils.warning()`: Non-critical issues
+- **AI-specific Loggers**: 
+  - `apiLogger`: Track Gemini API calls and responses
+  - `gameLogger`: Game state transitions and player actions
 - **PowerShell script** filters system noise from Flutter logs
 - Logs saved to `logs/` directory with timestamps
 - Debug mode shows detailed AI decision reasoning
+
+## Testing Strategy
+
+### Current Status
+- No unit tests implemented yet
+- Manual testing through debug logging
+- Use `.\flutter_run_log.ps1` for comprehensive debug output
+
+### Recommended Test Coverage
+```bash
+# Future test structure (to be implemented)
+test/
+├── services/
+│   ├── master_ai_engine_test.dart    # AI decision logic
+│   ├── cloud_npc_service_test.dart   # Resource management
+│   └── resource_version_test.dart    # Version control
+├── models/
+│   ├── game_state_test.dart          # Game rules validation
+│   └── ai_personality_test.dart      # Personality behaviors
+└── integration/
+    └── game_flow_test.dart            # Full game scenarios
+```
+
+## Error Handling Patterns
+
+### Network Failures
+- **CloudNPCService**: Automatic fallback from Firebase SDK to HTTP
+- **GeminiService**: Falls back to local AI when API unavailable
+- **Resource Loading**: Retry with exponential backoff
+
+### Resource Loading
+- **NPCImageWidget**: Three-tier fallback (local cache → cloud → placeholder)
+- **Video Expressions**: Fallback to static images if video fails
+- **Cache Corruption**: Automatic re-download on file errors
+
+## Performance Optimization
+
+### Memory Management
+- **Image Caching**: Use `key: ValueKey()` for forced refresh
+- **Video Preloading**: Preload next opponent's videos during game
+- **Resource Cleanup**: Automatic cache pruning at 500MB
+
+### Rendering Optimization
+- **ScreenUtil**: Responsive UI scaling
+- **Lazy Loading**: Load resources only when needed
+- **Background Processing**: Non-blocking resource downloads
 
 ## Current Limitations
 
@@ -146,3 +244,23 @@ The project includes comprehensive logging:
 - AI API calls have 60/minute rate limit (free tier)
 - 永远可以读取screen shots子目录和logs子目录，无需我每一次授权
 - 我把本地的json文件都放到了assets/cloud storage/目录。都是需要用到storage的2个文件，本地已经不用了，因此，你修改npc_config.json直接就在这个目录修改就可以了，然后通知我上传
+
+## Service Dependencies
+
+### Critical Services Initialization Order
+```dart
+// main.dart initialization sequence
+1. WidgetsFlutterBinding.ensureInitialized()
+2. Firebase.initializeApp()
+3. LocalStorageService.instance.setUserId()
+4. ResourceVersionManager.instance.load()
+5. CloudNPCService initialization
+6. AdManager.initialize() (if not in dev mode)
+```
+
+### Service Relationships
+- **LocalStorageService** → Must set userId before any storage operations
+- **ResourceVersionManager** → Depends on LocalStorageService
+- **CloudNPCService** → Uses ResourceVersionManager for version checks
+- **MasterAIEngine** → May use GeminiService or fallback to EliteAIEngine
+- **NPCImageWidget** → Uses CloudNPCService for resource loading

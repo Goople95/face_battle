@@ -291,5 +291,12 @@
   "intimacyProgressTitle": "Progreso de Intimidad",
   "intimacyProgressFormat": "Progreso: {current} / {total}",
   "intimacyTooltip": "💕 Embriágame para aumentar la intimidad",
-  "intimacyMaxLevel": "Nivel máximo alcanzado ({points} pts)"
+  "intimacyMaxLevel": "Nivel máximo alcanzado ({points} pts)",
+  "skinWardrobe": "Vestuario",
+  "skinCurrentLook": "Look Actual",
+  "skinTapToWear": "Toca 👙 en ella para vestir",
+  "skinNeedsUnlock": "Necesita desbloqueo",
+  "skinUnlockAtLevel": "❤️ Desbloquea en nivel de intimidad {level} (faltan {needed})",
+  "skinUnlockWithGems": "💎 Desbloquea estilo exclusivo con gemas",
+  "skinCurrentlyUnavailable": "🔒 No disponible actualmente"
 }

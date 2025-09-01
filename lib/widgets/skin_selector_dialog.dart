@@ -6,7 +6,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../widgets/npc_image_widget.dart';
 import '../utils/logger_utils.dart';
 
-/// 皮膚選擇器對話框
+/// 皮膚選擇器對話框 - 簡化版UI
 class SkinSelectorDialog extends StatefulWidget {
   final String npcId;
   final String npcName;
@@ -65,12 +65,26 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
       insetPadding: const EdgeInsets.all(20),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.95),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.pink.shade900.withValues(alpha: 0.95),
+              Colors.purple.shade900.withValues(alpha: 0.95),
+            ],
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.white24,
-            width: 1,
+            color: Colors.pink.shade300.withValues(alpha: 0.5),
+            width: 2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.pink.withValues(alpha: 0.3),
+              blurRadius: 20,
+              spreadRadius: 2,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -78,10 +92,10 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
             // 標題欄
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.white24,
+                    color: Colors.pink.shade300.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -108,10 +122,11 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                           ),
                         ),
                         Text(
-                          'Skin Selector',
+                          '👙 ${currentLang == 'zh' ? '换装' : 'Wardrobe'}',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: Colors.pink.shade200,
                             fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -119,14 +134,14 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                   ),
                   // 關閉按鈕
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
+                    icon: Icon(Icons.close, color: Colors.pink.shade200),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
             ),
             
-            // 皮膚列表
+            // 皮膚網格（3列）
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.all(50),
@@ -137,13 +152,19 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
             else
               Container(
                 constraints: const BoxConstraints(maxHeight: 400),
-                child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                child: GridView.builder(
                   shrinkWrap: true,
-                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                  ),
                   itemCount: _skins.length,
                   itemBuilder: (context, index) {
                     final skinInfo = _skins[index];
-                    return _buildSkinItem(skinInfo, currentLang, t);
+                    return _buildSkinGridItem(skinInfo, currentLang);
                   },
                 ),
               ),
@@ -151,10 +172,10 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
             // 底部按鈕
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: Colors.white24,
+                    color: Colors.pink.shade300.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -162,29 +183,72 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // 取消按鈕
+                  // 返回按鈕
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.pink.shade200,
+                    ),
                     child: Text(
-                      t?.cancel ?? 'Cancel',
-                      style: const TextStyle(color: Colors.white54),
+                      currentLang == 'zh' ? '返回' : 'Back',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // 確認按鈕
+                  // 換裝按鈕
                   ElevatedButton(
                     onPressed: (_selectedSkinId != null && 
                              _skins.any((s) => s.skin.id == _selectedSkinId && s.isUnlocked))
                         ? () => _onConfirm()
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      disabledBackgroundColor: Colors.grey[800],
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[800]?.withValues(alpha: 0.3),
+                      disabledForegroundColor: Colors.white30,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      shadowColor: Colors.pink,
+                      elevation: 0,
+                    ).copyWith(
+                      backgroundColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.disabled)) {
+                          return Colors.grey[800]?.withValues(alpha: 0.3);
+                        }
+                        return null;
+                      }),
+                      overlayColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.pressed)) {
+                          return Colors.pink.withValues(alpha: 0.2);
+                        }
+                        return Colors.pink.withValues(alpha: 0.1);
+                      }),
                     ),
-                    child: Text(
-                      t?.confirm ?? 'Confirm',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: (_selectedSkinId != null && 
+                                 _skins.any((s) => s.skin.id == _selectedSkinId && s.isUnlocked))
+                            ? LinearGradient(
+                                colors: [
+                                  Colors.pink.shade400,
+                                  Colors.purple.shade400,
+                                ],
+                              )
+                            : null,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        currentLang == 'zh' ? '💋 換上' : '💋 Wear',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -196,181 +260,190 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
     );
   }
   
-  Widget _buildSkinItem(SkinInfo skinInfo, String lang, AppLocalizations? t) {
+  Widget _buildSkinGridItem(SkinInfo skinInfo, String lang) {
     final skin = skinInfo.skin;
     final isSelected = skin.id == _selectedSkinId;
     final currentIntimacy = IntimacyService().getIntimacyLevel(widget.npcId);
     
-    return GestureDetector(
-      onTap: skinInfo.isUnlocked 
-        ? () => setState(() => _selectedSkinId = skin.id)
-        : null,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected 
-            ? Colors.amber.withValues(alpha: 0.2)
-            : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected 
-              ? Colors.amber
-              : skinInfo.isUnlocked 
-                ? Colors.white24
-                : Colors.white12,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // 皮膚預覽圖
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.white24,
-                  width: 1,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(7),
-                child: Stack(
-                  children: [
-                    // 預覽圖 - 使用每個皮膚自己的圖片
-                    NPCImageWidget(
-                      npcId: widget.npcId,
-                      fileName: '1.jpg',
-                      skinId: skin.id,  // 傳入皮膚ID以顯示對應皮膚的預覽圖
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                    ),
-                    // 鎖定遮罩
-                    if (!skinInfo.isUnlocked)
-                      Container(
-                        color: Colors.black54,
-                        child: const Center(
-                          child: Icon(
-                            Icons.lock,
-                            color: Colors.white54,
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+    return Tooltip(
+      message: _getTooltipMessage(skinInfo, lang, currentIntimacy),
+      preferBelow: false,
+      verticalOffset: 20,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 12,
+      ),
+      child: GestureDetector(
+        onTap: skinInfo.isUnlocked 
+          ? () => setState(() => _selectedSkinId = skin.id)
+          : null,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected 
+                ? Colors.pink.shade300
+                : skinInfo.isUnlocked 
+                  ? Colors.pink.shade200.withValues(alpha: 0.3)
+                  : Colors.white12,
+              width: isSelected ? 3 : 1.5,
             ),
-            const SizedBox(width: 12),
-            // 皮膚信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 皮膚名稱
-                  Row(
-                    children: [
-                      Text(
-                        skin.getLocalizedName(lang),
-                        style: TextStyle(
-                          color: skinInfo.isUnlocked 
-                            ? Colors.white
-                            : Colors.white54,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (skinInfo.isSelected)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'Equipped',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // 皮膚描述
-                  Text(
-                    skin.getLocalizedDescription(lang),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 14,
-                    ),
-                  ),
-                  // 解鎖條件
-                  if (!skinInfo.isUnlocked && skin.unlockCondition.description != null)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.lock_outline,
-                            color: Colors.red,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _getUnlockText(skin.unlockCondition, lang, currentIntimacy),
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                            ),
-                          ),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: Colors.pink.withValues(alpha: 0.4),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ] : null,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(11),
+            child: Stack(
+              children: [
+                // 背景圖片
+                NPCImageWidget(
+                  npcId: widget.npcId,
+                  fileName: '1.jpg',
+                  skinId: skin.id,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+                
+                // 未解鎖遮罩
+                if (!skinInfo.isUnlocked)
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.3),
+                          Colors.black.withValues(alpha: 0.7),
                         ],
                       ),
                     ),
-                ],
-              ),
+                    child: Center(
+                      child: Text(
+                        _getUnlockIcon(skin.unlockCondition),
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                    ),
+                  ),
+                
+                
+                // 已裝備標識
+                if (skinInfo.isSelected)
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.pink.shade400,
+                            Colors.purple.shade400,
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.pink.withValues(alpha: 0.5),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                
+                // 選中框
+                if (isSelected && !skinInfo.isSelected)
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                        color: Colors.pink.shade300.withValues(alpha: 0.4),
+                        width: 4,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            // 選擇指示器
-            if (skinInfo.isUnlocked)
-              Radio<int>(
-                value: skin.id,
-                groupValue: _selectedSkinId,
-                onChanged: (value) => setState(() => _selectedSkinId = value),
-                activeColor: Colors.amber,
-              ),
-          ],
+          ),
         ),
       ),
     );
   }
   
-  String _getUnlockText(UnlockCondition condition, String lang, int currentIntimacy) {
-    final desc = condition.getLocalizedDescription(lang);
+  // Tooltip信息
+  String _getTooltipMessage(SkinInfo skinInfo, String lang, int currentIntimacy) {
+    final skin = skinInfo.skin;
+    String message = '${skin.getLocalizedName(lang)}\n\n';
     
-    // 如果是親密度條件，顯示進度
-    if (condition.type == 'intimacy' && condition.level != null) {
-      return '$desc ($currentIntimacy/${condition.level})';
+    if (skinInfo.isSelected) {
+      message += lang == 'zh' ? '✅ 當前造型' : '✅ Currently Wearing';
+    } else if (skinInfo.isUnlocked) {
+      message += lang == 'zh' ? '🎭 點擊選擇此造型' : '🎭 Click to select this style';
+    } else {
+      switch (skin.unlockCondition.type) {
+        case 'intimacy':
+          final needed = skin.unlockCondition.level! - currentIntimacy;
+          message += lang == 'zh' 
+            ? '🔒 需要親密度等級 ${skin.unlockCondition.level}\n(還差 $needed 級)'
+            : '🔒 Requires intimacy level ${skin.unlockCondition.level}\n($needed more levels needed)';
+          break;
+        case 'payment':
+        case 'vip_exclusive':
+          message += lang == 'zh' 
+            ? '💎 使用寶石解鎖此造型'
+            : '💎 Use gems to unlock this style';
+          break;
+        default:
+          message += lang == 'zh' ? '🔒 未解鎖' : '🔒 Locked';
+      }
     }
     
-    return desc;
+    return message;
+  }
+  
+  // 解鎖圖標
+  String _getUnlockIcon(UnlockCondition condition) {
+    switch (condition.type) {
+      case 'intimacy':
+        return '🔒';
+      case 'payment':
+      case 'vip_exclusive':
+        return '💎';
+      default:
+        return '🔒';
+    }
+  }
+  
+  // 解鎖短文本
+  String _getUnlockShortText(UnlockCondition condition, String lang) {
+    switch (condition.type) {
+      case 'intimacy':
+        return lang == 'zh' 
+          ? 'Lv.${condition.level}'
+          : 'Lv.${condition.level}';
+      case 'payment':
+      case 'vip_exclusive':
+        return lang == 'zh' ? '寶石' : 'Gems';
+      default:
+        return '';
+    }
   }
   
   Future<void> _onConfirm() async {

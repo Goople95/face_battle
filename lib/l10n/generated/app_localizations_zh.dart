@@ -987,6 +987,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String intimacyMaxLevel(int points) {
     return '已达最高级 ($points pts)';
   }
+
+  @override
+  String get skinWardrobe => '换装';
+
+  @override
+  String get skinCurrentLook => '当前装扮';
+
+  @override
+  String get skinTapToWear => '点击她身上的 👙 换装';
+
+  @override
+  String get skinNeedsUnlock => '需要解锁';
+
+  @override
+  String skinUnlockAtLevel(int level, int needed) {
+    return '❤️ 亲密度达到 $level 级解锁 (还差 $needed 级)';
+  }
+
+  @override
+  String get skinUnlockWithGems => '💎 使用宝石解锁专属造型';
+
+  @override
+  String get skinCurrentlyUnavailable => '🔒 暂时无法解锁';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -1972,4 +1995,27 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String intimacyMaxLevel(int points) {
     return '已達最高級 ($points pts)';
   }
+
+  @override
+  String get skinWardrobe => '換裝';
+
+  @override
+  String get skinCurrentLook => '當前裝扮';
+
+  @override
+  String get skinTapToWear => '點擊她身上的 👙 換裝';
+
+  @override
+  String get skinNeedsUnlock => '需要解鎖';
+
+  @override
+  String skinUnlockAtLevel(int level, int needed) {
+    return '❤️ 親密度達到 $level 級解鎖 (還差 $needed 級)';
+  }
+
+  @override
+  String get skinUnlockWithGems => '💎 使用寶石解鎖專屬造型';
+
+  @override
+  String get skinCurrentlyUnavailable => '🔒 暫時無法解鎖';
 }

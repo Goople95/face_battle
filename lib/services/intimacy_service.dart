@@ -37,6 +37,11 @@ class IntimacyService {
       losses: vsRecord['losses'] ?? 0,
     );
   }
+  
+  /// 獲取NPC的親密度等級（用於皮膚系統）
+  int getIntimacyLevel(String npcId) {
+    return GameProgressService.instance.getNpcIntimacyLevel(npcId);
+  }
 
   /// 更新亲密度（内部方法，不对外暴露）
   Future<void> _updateIntimacy(String npcId, int pointsToAdd) async {

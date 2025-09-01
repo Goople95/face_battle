@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:async';
 import '../services/cloud_npc_service.dart';
 import '../services/npc_resource_loader.dart';
 import '../services/npc_skin_service.dart';
@@ -36,11 +37,29 @@ class NPCImageWidget extends StatefulWidget {
 
 class _NPCImageWidgetState extends State<NPCImageWidget> {
   late Future<String> _pathFuture;
+  StreamSubscription<Map<String, int>>? _skinSubscription;
+  int? _currentSkinId;
   
   @override
   void initState() {
     super.initState();
+    // 初始化皮膚ID
+    _currentSkinId = widget.skinId ?? NPCSkinService.instance.getSelectedSkinId(widget.npcId);
     _initPathFuture();
+    
+    // 監聽皮膚變化
+    if (widget.skinId == null) {  // 只有沒有指定skinId時才監聽
+      _skinSubscription = NPCSkinService.instance.skinChangesStream.listen((skins) {
+        final newSkinId = skins[widget.npcId] ?? 1;
+        if (newSkinId != _currentSkinId && mounted) {
+          LoggerUtils.debug('NPCImageWidget 監聽到皮膚變化: NPC=${widget.npcId}, ${_currentSkinId} -> $newSkinId');
+          setState(() {
+            _currentSkinId = newSkinId;
+            _initPathFuture();
+          });
+        }
+      });
+    }
   }
   
   @override
@@ -50,13 +69,23 @@ class _NPCImageWidgetState extends State<NPCImageWidget> {
     if (oldWidget.npcId != widget.npcId || 
         oldWidget.fileName != widget.fileName ||
         oldWidget.skinId != widget.skinId) {
+      // 更新當前皮膚ID
+      _currentSkinId = widget.skinId ?? NPCSkinService.instance.getSelectedSkinId(widget.npcId);
       _initPathFuture();
     }
   }
   
+  @override
+  void dispose() {
+    _skinSubscription?.cancel();
+    super.dispose();
+  }
+  
   void _initPathFuture() {
-    // 使用傳入的skinId或獲取當前選擇的皮膚ID
-    final skinId = widget.skinId ?? NPCSkinService.instance.getSelectedSkinId(widget.npcId);
+    // 使用緩存的skinId，避免重複調用，如果為null則使用默認值1
+    final skinId = _currentSkinId ?? 1;
+    
+    LoggerUtils.debug('NPCImageWidget 加载图片: npcId=${widget.npcId}, skinId=$skinId, fileName=${widget.fileName}');
     
     // 獲取皮膚對應的路徑
     final avatarPath = NPCSkinService.instance.getAvatarPath(widget.npcId);

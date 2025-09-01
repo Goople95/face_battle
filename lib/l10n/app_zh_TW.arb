@@ -292,5 +292,12 @@
   "intimacyProgressTitle": "親密度進度",
   "intimacyProgressFormat": "進度：{current} / {total}",
   "intimacyTooltip": "💕 灌醉我，就能增加親密度",
-  "intimacyMaxLevel": "已達最高級 ({points} pts)"
+  "intimacyMaxLevel": "已達最高級 ({points} pts)",
+  "skinWardrobe": "換裝",
+  "skinCurrentLook": "當前裝扮",
+  "skinTapToWear": "點擊她身上的 👙 換裝",
+  "skinNeedsUnlock": "需要解鎖",
+  "skinUnlockAtLevel": "❤️ 親密度達到 {level} 級解鎖 (還差 {needed} 級)",
+  "skinUnlockWithGems": "💎 使用寶石解鎖專屬造型",
+  "skinCurrentlyUnavailable": "🔒 暫時無法解鎖"
 }

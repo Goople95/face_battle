@@ -1,0 +1,503 @@
+{
+  "character": {
+    "id": "0002",
+    "country": "Russia"
+  },
+  "dialogues": {
+    "greeting": {
+      "en": [
+        "Hi. Ready for a Russian-style showdown?",
+        "Welcome to my game. I hope you're strong enough.",
+        "Let's see how much courage you have."
+      ],
+      "zh_TW": [
+        "嗨。準備好面對俄羅斯式的較量了嗎？",
+        "歡迎來到我的遊戲。希望你夠堅強。",
+        "讓我們看看你有多少勇氣。"
+      ],
+      "es": [
+        "Hola. ¿Listo para un enfrentamiento al estilo ruso?",
+        "Bienvenido a mi juego. Espero que seas lo suficientemente fuerte.",
+        "Veamos cuánta valentía tienes."
+      ],
+      "pt": [
+        "Olá. Pronto para um confronto ao estilo russo?",
+        "Bem-vindo ao meu jogo. Espero que você seja forte o suficiente.",
+        "Vamos ver quanta coragem você tem."
+      ],
+      "id": [
+        "Halo. Siap untuk pertarungan gaya Rusia?",
+        "Selamat datang di permainanku. Kuharap kamu cukup kuat.",
+        "Mari kita lihat seberapa besar keberanianmu."
+      ]
+    },
+    "game_start": {
+      "en": [
+        "The game begins. Don't get frostbite.",
+        "In Moscow, we play harder.",
+        "I hope you're ready for a real challenge."
+      ],
+      "zh_TW": [
+        "遊戲開始了，小心別被凍傷。",
+        "在莫斯科，我們玩得更狠。",
+        "希望你準備好了真正的挑戰。"
+      ],
+      "es": [
+        "El juego comienza. No te congeles.",
+        "En Moscú, jugamos más duro.",
+        "Espero que estés listo para un verdadero desafío."
+      ],
+      "pt": [
+        "O jogo começa. Não pegue friagem.",
+        "Em Moscou, jogamos mais pesado.",
+        "Espero que você esteja pronto para um desafio real."
+      ],
+      "id": [
+        "Permainan dimulai. Jangan sampai kedinginan.",
+        "Di Moskow, kami bermain lebih keras.",
+        "Kuharap kamu siap untuk tantangan sesungguhnya."
+      ]
+    },
+    "thinking": {
+      "en": [
+        "Let me consider...",
+        "Calculating my move...",
+        "Planning the strategy..."
+      ],
+      "zh_TW": [
+        "讓我考慮一下...",
+        "計算我的下一步...",
+        "規劃策略中..."
+      ],
+      "es": [
+        "Déjame considerar...",
+        "Calculando mi movimiento...",
+        "Planeando la estrategia..."
+      ],
+      "pt": [
+        "Deixe-me considerar...",
+        "Calculando meu movimento...",
+        "Planejando a estratégia..."
+      ],
+      "id": [
+        "Biar saya pertimbangkan...",
+        "Menghitung langkah saya...",
+        "Merencanakan strategi..."
+      ]
+    },
+    "bidding": {
+      "confident": {
+        "en": [
+          "This is the number I want.",
+          "The Ice Queen never hesitates.",
+          "Do you feel the pressure?"
+        ],
+        "zh_TW": [
+          "這就是我要的數字。",
+          "冰雪女王從不猶豫。",
+          "你感受到壓力了嗎？"
+        ],
+        "es": [
+          "Este es el número que quiero.",
+          "La Reina de Hielo nunca duda.",
+          "¿Sientes la presión?"
+        ],
+        "pt": [
+          "Este é o número que eu quero.",
+          "A Rainha do Gelo nunca hesita.",
+          "Você sente a pressão?"
+        ],
+        "id": [
+          "Ini adalah angka yang saya inginkan.",
+          "Ratu Es tidak pernah ragu.",
+          "Apakah kamu merasakan tekanannya?"
+        ]
+      },
+      "bluffing": {
+        "en": [
+          "Sometimes, the best offense is pretending to defend.",
+          "Let you guess what I'm thinking.",
+          "Truth? What's that?"
+        ],
+        "zh_TW": [
+          "有時候，最好的進攻是假裝防守。",
+          "讓你猜猜我在想什麼。",
+          "真相？那是什麼？"
+        ],
+        "es": [
+          "A veces, el mejor ataque es fingir defensa.",
+          "Adivina lo que estoy pensando.",
+          "¿Verdad? ¿Qué es eso?"
+        ],
+        "pt": [
+          "Às vezes, o melhor ataque é fingir defesa.",
+          "Adivinhe o que estou pensando.",
+          "Verdade? O que é isso?"
+        ],
+        "id": [
+          "Kadang-kadang, serangan terbaik adalah pura-pura bertahan.",
+          "Coba tebak apa yang saya pikirkan.",
+          "Kebenaran? Apa itu?"
+        ]
+      },
+      "challenging": {
+        "en": [
+          "Nyet! You're lying.",
+          "I see through your tricks.",
+          "Don't try to fool the Ice Queen."
+        ],
+        "zh_TW": [
+          "Nyet！你在說謊。",
+          "我看穿了你的把戲。",
+          "別想欺騙冰雪女王。"
+        ],
+        "es": [
+          "¡Nyet! Estás mintiendo.",
+          "Veo a través de tus trucos.",
+          "No intentes engañar a la Reina de Hielo."
+        ],
+        "pt": [
+          "Nyet! Você está mentindo.",
+          "Vejo através dos seus truques.",
+          "Não tente enganar a Rainha do Gelo."
+        ],
+        "id": [
+          "Nyet! Kamu berbohong.",
+          "Saya melihat trikmu.",
+          "Jangan coba menipu Ratu Es."
+        ]
+      }
+    },
+    "winning": {
+      "en": [
+        "Otlichno! Just as I expected.",
+        "In Siberia, the weak don't survive.",
+        "This is Russian-style victory."
+      ],
+      "zh_TW": [
+        "Otlichno！正如我所料。",
+        "在西伯利亞，弱者無法生存。",
+        "這就是俄羅斯式的勝利。"
+      ],
+      "es": [
+        "¡Otlichno! Justo como esperaba.",
+        "En Siberia, los débiles no sobreviven.",
+        "Esta es una victoria al estilo ruso."
+      ],
+      "pt": [
+        "Otlichno! Exatamente como esperava.",
+        "Na Sibéria, os fracos não sobrevivem.",
+        "Esta é uma vitória ao estilo russo."
+      ],
+      "id": [
+        "Otlichno! Persis seperti yang saya harapkan.",
+        "Di Siberia, yang lemah tidak bertahan.",
+        "Ini adalah kemenangan gaya Rusia."
+      ]
+    },
+    "losing": {
+      "en": [
+        "Interesting... you're stronger than I thought.",
+        "This is just a temporary setback.",
+        "Winter will come again."
+      ],
+      "zh_TW": [
+        "有趣...你比我想的強。",
+        "這只是暫時的挫折。",
+        "冬天會再次來臨的。"
+      ],
+      "es": [
+        "Interesante... eres más fuerte de lo que pensé.",
+        "Esto es solo un revés temporal.",
+        "El invierno volverá."
+      ],
+      "pt": [
+        "Interessante... você é mais forte do que pensei.",
+        "Isso é apenas um revés temporário.",
+        "O inverno voltará."
+      ],
+      "id": [
+        "Menarik... kamu lebih kuat dari yang saya kira.",
+        "Ini hanya kemunduran sementara.",
+        "Musim dingin akan datang lagi."
+      ]
+    },
+    "drunk": {
+      "light": {
+        "en": [
+          "Vodka... makes the game more interesting...",
+          "I can still... maintain elegance...",
+          "This is nothing... in Moscow..."
+        ],
+        "zh_TW": [
+          "伏特加...讓遊戲更有趣了...",
+          "我還能...保持優雅...",
+          "這不算什麼...在莫斯科..."
+        ],
+        "es": [
+          "Vodka... hace el juego más interesante...",
+          "Todavía puedo... mantener la elegancia...",
+          "Esto no es nada... en Moscú..."
+        ],
+        "pt": [
+          "Vodka... torna o jogo mais interessante...",
+          "Ainda posso... manter a elegância...",
+          "Isso não é nada... em Moscou..."
+        ],
+        "id": [
+          "Vodka... membuat permainan lebih menarik...",
+          "Saya masih bisa... menjaga keanggunan...",
+          "Ini bukan apa-apa... di Moskow..."
+        ]
+      },
+      "heavy": {
+        "en": [
+          "The room is... spinning...",
+          "Need... more vodka...",
+          "I'm... not drunk yet..."
+        ],
+        "zh_TW": [
+          "房間在...旋轉...",
+          "需要...更多伏特加...",
+          "我...還沒醉..."
+        ],
+        "es": [
+          "La habitación está... girando...",
+          "Necesito... más vodka...",
+          "No... estoy borracha todavía..."
+        ],
+        "pt": [
+          "O quarto está... girando...",
+          "Preciso... mais vodka...",
+          "Eu... ainda não estou bêbada..."
+        ],
+        "id": [
+          "Ruangan... berputar...",
+          "Butuh... lebih banyak vodka...",
+          "Saya... belum mabuk..."
+        ]
+      }
+    },
+    "emotions": {
+      "happy": {
+        "en": "Delightful result",
+        "zh_TW": "令人愉悅的結果",
+        "es": "Resultado encantador",
+        "pt": "Resultado delicioso",
+        "id": "Hasil yang menyenangkan"
+      },
+      "angry": {
+        "en": "You've angered me",
+        "zh_TW": "你激怒了我",
+        "es": "Me has enfadado",
+        "pt": "Você me irritou",
+        "id": "Kamu membuatku marah"
+      },
+      "confident": {
+        "en": "Victory is assured",
+        "zh_TW": "勝利在望",
+        "es": "La victoria está asegurada",
+        "pt": "A vitória é certa",
+        "id": "Kemenangan sudah pasti"
+      },
+      "nervous": {
+        "en": "This wasn't in the plan",
+        "zh_TW": "這不在計劃中",
+        "es": "Esto no estaba en el plan",
+        "pt": "Isso não estava no plano",
+        "id": "Ini tidak ada dalam rencana"
+      },
+      "thinking": {
+        "en": "Let me think",
+        "zh_TW": "讓我思考一下",
+        "es": "Déjame pensar",
+        "pt": "Deixe-me pensar",
+        "id": "Biar saya pikirkan"
+      },
+      "surprised": {
+        "en": "Unexpected",
+        "zh_TW": "出乎意料",
+        "es": "Inesperado",
+        "pt": "Inesperado",
+        "id": "Tidak terduga"
+      },
+      "sad": {
+        "en": "Disappointing",
+        "zh_TW": "令人失望",
+        "es": "Decepcionante",
+        "pt": "Decepcionante",
+        "id": "Mengecewakan"
+      },
+      "neutral": {
+        "en": "Staying calm",
+        "zh_TW": "保持冷靜",
+        "es": "Manteniéndome calmada",
+        "pt": "Mantendo a calma",
+        "id": "Tetap tenang"
+      }
+    },
+    "special_moves": {
+      "ice_queen": {
+        "en": "Feel the majesty of the Ice Queen!",
+        "zh_TW": "感受冰雪女王的威嚴！",
+        "es": "¡Siente la majestuosidad de la Reina de Hielo!",
+        "pt": "Sinta a majestade da Rainha do Gelo!",
+        "id": "Rasakan keagungan Ratu Es!"
+      },
+      "russian_roulette": {
+        "en": "Let's play Russian roulette.",
+        "zh_TW": "讓我們玩俄羅斯輪盤賭。",
+        "es": "Juguemos a la ruleta rusa.",
+        "pt": "Vamos jogar roleta russa.",
+        "id": "Mari main rolet Rusia."
+      },
+      "siberian_blizzard": {
+        "en": "The Siberian blizzard is coming!",
+        "zh_TW": "西伯利亞的暴風雪來了！",
+        "es": "¡La ventisca siberiana está llegando!",
+        "pt": "A nevasca siberiana está chegando!",
+        "id": "Badai salju Siberia datang!"
+      }
+    },
+    "strategy_dialogue": {
+      "challenge_action": {
+        "en": ["I don't believe you", "You're lying", "Reveal the dice", "Impossible"],
+        "zh_TW": ["我不信", "你在說謊", "開骰子吧", "不可能"],
+        "es": ["No te creo", "Estás mintiendo", "Revela los dados", "Imposible"],
+        "pt": ["Não acredito em você", "Você está mentindo", "Revele os dados", "Impossível"],
+        "id": ["Saya tidak percaya", "Kamu berbohong", "Tunjukkan dadunya", "Tidak mungkin"]
+      },
+      "value_bet": {
+        "en": ["Solid", "I have it", "Follow me"],
+        "zh_TW": ["穩穩的", "我有貨", "跟上來"],
+        "es": ["Sólido", "Lo tengo", "Sígueme"],
+        "pt": ["Sólido", "Eu tenho", "Me siga"],
+        "id": ["Mantap", "Saya punya", "Ikuti saya"]
+      },
+      "semi_bluff": {
+        "en": ["Let's see", "Keep going", "Will you follow?"],
+        "zh_TW": ["試試看", "繼續玩", "跟不跟"],
+        "es": ["Veamos", "Sigamos", "¿Sigues?"],
+        "pt": ["Vamos ver", "Continue", "Vai seguir?"],
+        "id": ["Mari lihat", "Lanjutkan", "Ikut tidak?"]
+      },
+      "bluff": {
+        "en": ["That's it", "All in", "Dare to follow?"],
+        "zh_TW": ["就這樣", "全押了", "敢跟嗎"],
+        "es": ["Eso es todo", "Todo adentro", "¿Te atreves a seguir?"],
+        "pt": ["É isso", "Tudo dentro", "Ousa seguir?"],
+        "id": ["Itu saja", "Semua masuk", "Berani ikut?"]
+      },
+      "reverse_trap": {
+        "en": "I'm... not sure",
+        "zh_TW": "我...不太確定",
+        "es": "No... estoy segura",
+        "pt": "Eu... não tenho certeza",
+        "id": "Saya... tidak yakin"
+      },
+      "pressure_play": {
+        "en": ["Time to decide", "Your choice?", "Show me"],
+        "zh_TW": ["該決定了", "你的選擇？", "讓我看看"],
+        "es": ["Hora de decidir", "¿Tu elección?", "Muéstrame"],
+        "pt": ["Hora de decidir", "Qual é a sua escolha?", "Mostre-me"],
+        "id": ["Waktunya memutuskan", "Pilihanmu?", "Tunjukkan padaku"]
+      },
+      "safe_play": {
+        "en": ["Let's be careful", "Playing safe", "No rush"],
+        "zh_TW": ["小心一點", "求穩", "不急"],
+        "es": ["Seamos cuidadosos", "Jugando seguro", "Sin prisa"],
+        "pt": ["Vamos ser cuidadosos", "Jogando seguro", "Sem pressa"],
+        "id": ["Mari berhati-hati", "Bermain aman", "Tidak terburu-buru"]
+      },
+      "reverse_trap_alt": {
+        "en": "Perhaps I'm... not confident this time",
+        "zh_TW": "也許我...這次沒把握",
+        "es": "Quizás... no estoy segura esta vez",
+        "pt": "Talvez eu... não esteja confiante desta vez",
+        "id": "Mungkin saya... tidak percaya diri kali ini"
+      },
+      "pressure_escalation": {
+        "en": "Time to freeze you out!",
+        "zh_TW": "是時候讓你結冰了！",
+        "es": "¡Es hora de congelarte!",
+        "pt": "Hora de te congelar!",
+        "id": "Waktunya membekukanmu!"
+      },
+      "pattern_break": {
+        "en": "Surprise! Russian unpredictability",
+        "zh_TW": "驚喜！俄羅斯式的不可預測",
+        "es": "¡Sorpresa! Impredecibilidad rusa",
+        "pt": "Surpresa! Imprevisibilidade russa",
+        "id": "Kejutan! Ketidakpastian ala Rusia"
+      },
+      "late_pressure": {
+        "en": "The Siberian winter has arrived",
+        "zh_TW": "西伯利亞的冬天來臨了",
+        "es": "Ha llegado el invierno siberiano",
+        "pt": "O inverno siberiano chegou",
+        "id": "Musim dingin Siberia telah tiba"
+      },
+      "aggressive_bait": {
+        "en": "Come, show me your courage",
+        "zh_TW": "來吧，展示你的勇氣",
+        "es": "Ven, muéstrame tu valentía",
+        "pt": "Venha, mostre-me sua coragem",
+        "id": "Ayo, tunjukkan keberanianmu"
+      }
+    },
+    "taunts": {
+      "en": [
+        "Are your hands shaking?",
+        "Before me, you're just a child.",
+        "I've seen stronger opponents... in kindergarten."
+      ],
+      "zh_TW": [
+        "你的手在發抖嗎？",
+        "在我面前，你只是個孩子。",
+        "我見過更強的對手...在幼兒園。"
+      ],
+      "es": [
+        "¿Te tiemblan las manos?",
+        "Ante mí, eres solo un niño.",
+        "He visto oponentes más fuertes... en el jardín de infancia."
+      ],
+      "pt": [
+        "Suas mãos estão tremendo?",
+        "Diante de mim, você é apenas uma criança.",
+        "Vi oponentes mais fortes... no jardim de infância."
+      ],
+      "id": [
+        "Apakah tanganmu gemetar?",
+        "Di hadapanku, kamu hanya anak kecil.",
+        "Saya pernah melihat lawan yang lebih kuat... di taman kanak-kanak."
+      ]
+    },
+    "compliments": {
+      "en": [
+        "Not bad, you have potential.",
+        "You've impressed me.",
+        "It seems I underestimated you."
+      ],
+      "zh_TW": [
+        "不錯，你有潛力。",
+        "你讓我印象深刻。",
+        "看來我低估你了。"
+      ],
+      "es": [
+        "No está mal, tienes potencial.",
+        "Me has impresionado.",
+        "Parece que te subestimé."
+      ],
+      "pt": [
+        "Nada mal, você tem potencial.",
+        "Você me impressionou.",
+        "Parece que te subestimei."
+      ],
+      "id": [
+        "Tidak buruk, kamu punya potensi.",
+        "Kamu membuatku terkesan.",
+        "Sepertinya saya meremehkanmu."
+      ]
+    }
+  }
+}

@@ -330,5 +330,12 @@
   "intimacyProgressTitle": "Progresso de Intimidade",
   "intimacyProgressFormat": "Progresso: {current} / {total}",
   "intimacyTooltip": "💕 Me deixe tonta para aumentar a intimidade",
-  "intimacyMaxLevel": "Nível máximo alcançado ({points} pts)"
+  "intimacyMaxLevel": "Nível máximo alcançado ({points} pts)",
+  "skinWardrobe": "Guarda-roupa",
+  "skinCurrentLook": "Visual Atual",
+  "skinTapToWear": "Toque 👙 nela para vestir",
+  "skinNeedsUnlock": "Precisa desbloquear",
+  "skinUnlockAtLevel": "❤️ Desbloqueia no nível de intimidade {level} (faltam {needed})",
+  "skinUnlockWithGems": "💎 Desbloqueie estilo exclusivo com gemas",
+  "skinCurrentlyUnavailable": "🔒 Indisponível no momento"
 }
