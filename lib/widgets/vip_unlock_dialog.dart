@@ -110,15 +110,16 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 400),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.black,
-        ),
+      backgroundColor: Colors.black87,  // 添加不透明背景
+      insetPadding: EdgeInsets.zero,  // 全屏遮罩
+      child: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.black,
+          ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Column(
@@ -391,7 +392,8 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
             ),
           ),
         ),
-      );
+      ),
+    );
   }
   
   // 构建对话文本

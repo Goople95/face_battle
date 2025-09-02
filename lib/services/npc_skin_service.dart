@@ -76,7 +76,21 @@ class NPCSkinService {
     LoggerUtils.info('  - 已記錄${progress.selectedNPCSkins.length}個NPC的皮膚選擇');
     LoggerUtils.info('  - 已記錄${progress.unlockedNPCSkins.length}個NPC的解鎖皮膚');
     
+    // 檢查數據詳情
+    progress.selectedNPCSkins.forEach((npcId, skinId) {
+      LoggerUtils.debug('NPCSkinService: NPC $npcId 選中皮膚 $skinId');
+    });
+    
     // 不再修改和保存數據，避免觸發不必要的同步
+  }
+  
+  /// 手動刷新並廣播皮膚數據
+  void refreshSkinData() {
+    final progress = _progressService.getProgress();
+    if (progress != null && progress.selectedNPCSkins.isNotEmpty) {
+      LoggerUtils.info('手動刷新皮膚數據: ${progress.selectedNPCSkins}');
+      _skinChangesController.add(Map<String, int>.from(progress.selectedNPCSkins));
+    }
   }
   
   /// 開始監聽Firestore中的皮膚數據變化

@@ -168,6 +168,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // 初始化NPCSkinService（需要在GameProgressService加载之后）
     await NPCSkinService.instance.initialize();
     
+    // 手動刷新皮膚數據，確保監聽器收到最新數據
+    NPCSkinService.instance.refreshSkinData();
+    
     // 更新醒酒状态（DrinkingState.load() 内部已经调用了 updateSoberStatus）
     // drinking.updateSoberStatus();  // 不需要重复调用
     // await drinking.save();  // 如果没有实际变化，不需要保存

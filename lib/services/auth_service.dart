@@ -437,6 +437,10 @@ class AuthService extends ChangeNotifier {
       await NPCSkinService.instance.initialize();
       LoggerUtils.info('皮膚服務初始化完成');
       
+      // 5.1 刷新皮膚數據（確保使用最新的云端數據）
+      NPCSkinService.instance.refreshSkinData();
+      LoggerUtils.info('皮膚數據已刷新');
+      
       // 6. 检查资源版本更新（后台静默）
       CloudNPCService.refreshResourceVersions().then((_) {
         LoggerUtils.info('资源版本检查完成');
