@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../models/ai_personality.dart';
 import '../services/vip_unlock_service.dart';
@@ -7,7 +8,7 @@ import '../services/purchase_service.dart';
 import '../services/analytics_service.dart';
 import '../utils/ad_helper.dart';
 import '../l10n/generated/app_localizations.dart';
-import 'npc_avatar_widget.dart';
+import 'npc_image_widget.dart';
 
 /// VIP解锁对话框
 class VIPUnlockDialog extends StatefulWidget {
@@ -19,18 +20,37 @@ class VIPUnlockDialog extends StatefulWidget {
   State<VIPUnlockDialog> createState() => _VIPUnlockDialogState();
 }
 
-class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
+class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProviderStateMixin {
   final VIPUnlockService _vipService = VIPUnlockService();
   final PurchaseService _purchaseService = PurchaseService();
   int _userGems = 0;
   ProductDetails? _product;
   bool _isLoading = false;
   
+  // 对话控制
+  int _currentDialogIndex = 0;
+  Timer? _dialogTimer;
+  late AnimationController _textAnimationController;
+  late Animation<double> _textAnimation;
+  
   @override
   void initState() {
     super.initState();
     _loadUserGems();
     _loadProductInfo();
+    
+    // 初始化动画控制器
+    _textAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _textAnimation = CurvedAnimation(
+      parent: _textAnimationController,
+      curve: Curves.easeIn,
+    );
+    
+    // 开始对话序列
+    _startDialogSequence();
     
     // 记录对话框显示事件
     AnalyticsService().logDialogShow(
@@ -40,6 +60,23 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
         'npc_name': widget.character.name,
       },
     );
+  }
+  
+  void _startDialogSequence() {
+    _textAnimationController.forward();
+    _dialogTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      setState(() {
+        _currentDialogIndex = (_currentDialogIndex + 1) % 5; // 循环播放5句话
+      });
+      _textAnimationController.forward(from: 0);
+    });
+  }
+  
+  @override
+  void dispose() {
+    _dialogTimer?.cancel();
+    _textAnimationController.dispose();
+    super.dispose();
   }
   
   Future<void> _loadUserGems() async {
@@ -73,143 +110,111 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
       backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        width: MediaQuery.of(context).size.width * 0.9,
+        constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.black87,
-              Colors.grey.shade900,
-            ],
-          ),
-          border: Border.all(
-            color: Colors.amber.withValues(alpha: 0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 20,
-              spreadRadius: 5,
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.black,
         ),
-        child: Stack(
-          children: [
-            // 主要内容
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                
-                // 角色头像 - 增大并添加装饰
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.amber.withValues(alpha: 0.5),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.amber.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: NPCAvatarWidget(
-                  personality: widget.character,
-                  size: 120,
-                  showBorder: false,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            
-            // 角色名称和VIP标签在同一行
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Builder(
-                  builder: (context) {
-                    final locale = Localizations.localeOf(context);
-                    final languageCode = locale.languageCode;
-                    
-                    // 处理中文的特殊情况
-                    String localeCode = languageCode;
-                    if (languageCode == 'zh') {
-                      // 只支持繁体中文
-                      localeCode = 'zh_TW';
-                    }
-                    
-                    return Text(
-                      widget.character.getLocalizedName(localeCode),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 10),
-                // VIP标志移到名字旁边
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.amber.shade400,
-                        Colors.amber.shade600,
-                      ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 大方块头像和对话区域
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // 大方块头像 - 完全撑满
+                    NPCImageWidget(
+                      npcId: widget.character.id,
+                      fileName: '1.jpg',
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                        spreadRadius: 1,
+                    // 渐变遮罩（用于字幕区）
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.8),
+                              Colors.black.withValues(alpha: 0.95),
+                            ],
+                          ),
+                        ),
                       ),
+                    ),
+                    // NPC对话文字
+                    Positioned(
+                      bottom: 15,
+                      left: 20,
+                      right: 20,
+                      child: FadeTransition(
+                        opacity: _textAnimation,
+                        child: _buildDialogText(context),
+                      ),
+                    ),
+                    // VIP标志
+                    Positioned(
+                      top: 15,
+                      right: 15,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.amber.shade400,
+                              Colors.amber.shade600,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withValues(alpha: 0.5),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'VIP',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 解锁选项区域
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.grey.shade900,
+                      Colors.black,
                     ],
                   ),
-                  child: const Text(
-                    'VIP',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            
-            // 解锁说明标题
-            Text(
-              AppLocalizations.of(context)!.unlockVIPCharacter,
-              style: TextStyle(
-                color: Colors.amber.shade300,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // 解锁选项
-            Column(
-              children: [
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
                 // 看广告临时解锁
                 _buildUnlockOption(
                   icon: Icons.play_circle_outline,
@@ -353,70 +358,87 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
                       );
                     },
                   ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            
-            // 取消按钮 - 更精致的样式
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () {
-                // 记录取消操作
-                AnalyticsService().logDialogAction(
-                  dialogName: 'vip_unlock_dialog',
-                  action: 'cancel',
-                  params: {
-                    'npc_id': widget.character.id,
+                // 取消按钮
+                TextButton(
+                  onPressed: () {
+                    // 记录取消操作
+                    AnalyticsService().logDialogAction(
+                      dialogName: 'vip_unlock_dialog',
+                      action: 'cancel',
+                      params: {
+                        'npc_id': widget.character.id,
+                      },
+                    );
+                    Navigator.of(context).pop(false);
                   },
-                );
-                Navigator.of(context).pop(false);
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.laterDecide,
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 14,
-                  letterSpacing: 0.3,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.laterDecide,
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+                const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
               ],
             ),
-            // 关闭按钮
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.grey.shade400,
-                    size: 18,
-                  ),
-                ),
-                onPressed: () {
-                  AnalyticsService().logDialogAction(
-                    dialogName: 'vip_unlock_dialog',
-                    action: 'close',
-                    params: {
-                      'npc_id': widget.character.id,
-                    },
-                  );
-                  Navigator.of(context).pop(false);
-                },
-              ),
-            ),
-          ],
+          ),
         ),
+      );
+  }
+  
+  // 构建对话文本
+  Widget _buildDialogText(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final languageCode = locale.languageCode;
+    String localeCode = languageCode;
+    if (languageCode == 'zh') {
+      localeCode = 'zh_TW';
+    }
+    final localizedName = widget.character.getLocalizedName(localeCode);
+    
+    String dialogText = '';
+    switch (_currentDialogIndex) {
+      case 0:
+        dialogText = AppLocalizations.of(context)!.vipDialogue1(localizedName);
+        break;
+      case 1:
+        dialogText = AppLocalizations.of(context)!.vipDialogue2;
+        break;
+      case 2:
+        dialogText = AppLocalizations.of(context)!.vipDialogue3;
+        break;
+      case 3:
+        dialogText = AppLocalizations.of(context)!.vipDialogue4;
+        break;
+      case 4:
+        dialogText = AppLocalizations.of(context)!.vipDialogue5;
+        break;
+    }
+    
+    return Text(
+      dialogText,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        height: 1.4,
+        shadows: [
+          Shadow(
+            offset: Offset(0, 1),
+            blurRadius: 3,
+            color: Colors.black87,
+          ),
+        ],
       ),
+      textAlign: TextAlign.center,
     );
   }
   

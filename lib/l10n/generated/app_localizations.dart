@@ -993,6 +993,66 @@ abstract class AppLocalizations {
   /// **'Watch an ad to help me sober up~'**
   String get npcDrunkAdHint;
 
+  /// No description provided for @vipDialogue1.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m {name}, looking forward to getting closer with you~'**
+  String vipDialogue1(String name);
+
+  /// No description provided for @vipDialogue2.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch an ad and you can play with me free for 1 hour, want to try?'**
+  String get vipDialogue2;
+
+  /// No description provided for @vipDialogue3.
+  ///
+  /// In en, this message translates to:
+  /// **'If you really like me, you can unlock me permanently...'**
+  String get vipDialogue3;
+
+  /// No description provided for @vipDialogue4.
+  ///
+  /// In en, this message translates to:
+  /// **'After unlocking, our intimacy will grow twice as fast, unlocking my new looks sooner~'**
+  String get vipDialogue4;
+
+  /// No description provided for @vipDialogue5.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll also share my private stories with you, only you can hear them...'**
+  String get vipDialogue5;
+
+  /// No description provided for @playerDrunkDialogue1.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeing you this drunk makes me worried...'**
+  String get playerDrunkDialogue1;
+
+  /// No description provided for @playerDrunkDialogue2.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already had {count} drinks, no more for you~'**
+  String playerDrunkDialogue2(int count);
+
+  /// No description provided for @playerDrunkDialogue3.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a break, your face is all red...'**
+  String get playerDrunkDialogue3;
+
+  /// No description provided for @playerDrunkDialogue4.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to watch an ad to sober up? You\'ll recover instantly~'**
+  String get playerDrunkDialogue4;
+
+  /// No description provided for @playerDrunkDialogue5.
+  ///
+  /// In en, this message translates to:
+  /// **'This won\'t do, you need to sober up now...'**
+  String get playerDrunkDialogue5;
+
   /// No description provided for @watchAdToSober.
   ///
   /// In en, this message translates to:

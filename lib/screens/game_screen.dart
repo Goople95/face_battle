@@ -14,7 +14,7 @@ import '../utils/logger_utils.dart';
 import '../widgets/simple_ai_avatar.dart';
 import '../widgets/auto_play_video_avatar.dart';  // 使用自动轮播版
 import '../widgets/drunk_overlay.dart';
-import '../widgets/sober_dialog.dart';
+import '../widgets/player_drunk_dialog.dart';
 import '../widgets/victory_drunk_animation.dart';
 import '../widgets/animated_intimacy_display.dart';
 import '../services/share_image_service.dart';
@@ -1509,66 +1509,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
   
-  // 显示玩家醉酒动画
+  // 显示玩家醉酒对话框
   void _showDrunkAnimation() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.red.shade900.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '🥴',
-                style: TextStyle(fontSize: 60),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                AppLocalizations.of(context)!.youGotDrunk,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                AppLocalizations.of(context)!.drinksConsumedMessage(_drinkingState!.drinksConsumed),
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _showSoberDialog();
-                },
-                child: Text(AppLocalizations.of(context)!.soberOptions),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  // 显示醒酒对话框
-  void _showSoberDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => SoberDialog(
+      builder: (context) => PlayerDrunkDialog(
         drinkingState: _drinkingState!,
-        fromGameScreen: true, // 标识从游戏页面调用
+        npcPersonality: widget.aiPersonality,
+        fromGameScreen: true,
         onWatchAd: () {
           LoggerUtils.debug('点击观看广告醒酒按钮');
           // 使用公用方法显示广告
@@ -1595,20 +1544,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             },
           );
         },
-        onUsePotion: () {
-          setState(() {
-            _drinkingState!.useSoberPotion();
-            _drinkingState!.save();
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.usedSoberPotion)),
-          );
-        },
         onCancel: () {
-          Navigator.of(context).pop();
+          // 取消操作，留在游戏界面
         },
       ),
     );
+  }
+  
+  // 显示醒酒对话框 - 已合并到_showDrunkAnimation中
+  void _showSoberDialog() {
+    _showDrunkAnimation();
   }
   
   

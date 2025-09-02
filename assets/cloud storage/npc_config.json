@@ -77,7 +77,7 @@
         "challengeThreshold": 0.38,
         "riskAppetite": 0.5
       },
-      "drinkCapacity": 8,
+      "drinkCapacity": 2,
       "country": "Russia",
       "videoCount": 8,
       "skins": [

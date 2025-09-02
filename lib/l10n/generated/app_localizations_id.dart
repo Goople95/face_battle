@@ -503,6 +503,48 @@ class AppLocalizationsId extends AppLocalizations {
   String get npcDrunkAdHint => 'Tonton iklan untuk membantuku sadar~';
 
   @override
+  String vipDialogue1(String name) {
+    return 'Aku $name, sangat menantikan untuk lebih dekat denganmu~';
+  }
+
+  @override
+  String get vipDialogue2 =>
+      'Tonton iklan dan kamu bisa bermain denganku gratis selama 1 jam, mau coba?';
+
+  @override
+  String get vipDialogue3 =>
+      'Jika kamu benar-benar menyukaiku, kamu bisa membuka kunciku selamanya...';
+
+  @override
+  String get vipDialogue4 =>
+      'Setelah membuka kunci, keintiman kita akan tumbuh dua kali lebih cepat, membuka tampilan baruku lebih cepat~';
+
+  @override
+  String get vipDialogue5 =>
+      'Aku juga akan berbagi cerita pribadiku denganmu, hanya kamu yang bisa mendengarnya...';
+
+  @override
+  String get playerDrunkDialogue1 =>
+      'Melihatmu mabuk begini membuatku khawatir...';
+
+  @override
+  String playerDrunkDialogue2(int count) {
+    return 'Kamu sudah minum $count gelas, sudah cukup ya~';
+  }
+
+  @override
+  String get playerDrunkDialogue3 =>
+      'Istirahat dulu ya, wajahmu sudah merah semua...';
+
+  @override
+  String get playerDrunkDialogue4 =>
+      'Mau tonton iklan untuk sadar? Langsung pulih lho~';
+
+  @override
+  String get playerDrunkDialogue5 =>
+      'Begini tidak bisa, kamu harus sadar dulu...';
+
+  @override
   String get watchAdToSober => 'Tonton Iklan';
 
   @override

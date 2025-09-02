@@ -614,6 +614,30 @@
   "npcDrunkMessage1": "Ohhh... I drank too much",
   "npcDrunkMessage2": "My head's spinning... I really can't play now",
   "npcDrunkAdHint": "Watch an ad to help me sober up~",
+  "vipDialogue1": "I'm {name}, looking forward to getting closer with you~",
+  "@vipDialogue1": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "vipDialogue2": "Watch an ad and you can play with me free for 1 hour, want to try?",
+  "vipDialogue3": "If you really like me, you can unlock me permanently...",
+  "vipDialogue4": "After unlocking, our intimacy will grow twice as fast, unlocking my new looks sooner~",
+  "vipDialogue5": "I'll also share my private stories with you, only you can hear them...",
+  "playerDrunkDialogue1": "Seeing you this drunk makes me worried...",
+  "playerDrunkDialogue2": "You've already had {count} drinks, no more for you~",
+  "@playerDrunkDialogue2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDrunkDialogue3": "Take a break, your face is all red...",
+  "playerDrunkDialogue4": "Want to watch an ad to sober up? You'll recover instantly~",
+  "playerDrunkDialogue5": "This won't do, you need to sober up now...",
   "watchAdToSober": "Watch Ad",
   "languageSwitched": "Language switched to {language}",
   "instructionsDetail": "• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they're lying",

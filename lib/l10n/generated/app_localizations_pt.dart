@@ -505,6 +505,48 @@ class AppLocalizationsPt extends AppLocalizations {
       'Assista um anúncio para me ajudar a ficar sóbria~';
 
   @override
+  String vipDialogue1(String name) {
+    return 'Eu sou $name, ansiosa para nos conhecermos melhor~';
+  }
+
+  @override
+  String get vipDialogue2 =>
+      'Assista um anúncio e você pode jogar comigo grátis por 1 hora, quer tentar?';
+
+  @override
+  String get vipDialogue3 =>
+      'Se você realmente gosta de mim, pode me desbloquear permanentemente...';
+
+  @override
+  String get vipDialogue4 =>
+      'Após desbloquear, nossa intimidade crescerá duas vezes mais rápido, desbloqueando meus novos looks antes~';
+
+  @override
+  String get vipDialogue5 =>
+      'Também vou compartilhar minhas histórias privadas com você, só você pode ouvi-las...';
+
+  @override
+  String get playerDrunkDialogue1 =>
+      'Ver você tão bêbado me deixa preocupada...';
+
+  @override
+  String playerDrunkDialogue2(int count) {
+    return 'Você já bebeu $count doses, chega por hoje~';
+  }
+
+  @override
+  String get playerDrunkDialogue3 =>
+      'Descanse um pouco, seu rosto está todo vermelho...';
+
+  @override
+  String get playerDrunkDialogue4 =>
+      'Quer assistir um anúncio para ficar sóbrio? Você vai se recuperar na hora~';
+
+  @override
+  String get playerDrunkDialogue5 =>
+      'Assim não dá, você precisa ficar sóbrio...';
+
+  @override
   String get watchAdToSober => 'Ver Anúncio';
 
   @override

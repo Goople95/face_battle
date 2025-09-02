@@ -11,7 +11,7 @@ import '../models/ai_personality.dart';
 import '../services/game_progress_service.dart';
 import '../models/game_progress.dart';
 import '../models/drinking_state.dart';
-import '../widgets/sober_dialog.dart';
+import '../widgets/player_drunk_dialog.dart';
 import '../widgets/drunk_dialog.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
@@ -447,135 +447,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
           const SizedBox(height: 20),
-          
-          // 玩家饮酒状态
-          if (_drinkingState != null && _drinkingState!.drinksConsumed > 0) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.orange.withValues(alpha: 0.5),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.local_bar,
-                    color: Colors.orange.shade300,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _drinkingState!.statusDescription,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            // 显示酒杯数量
-                            ...List.generate(6, (index) {
-                              return Icon(
-                                Icons.local_bar,
-                                size: 16,
-                                color: index < _drinkingState!.drinksConsumed
-                                  ? Colors.red.shade300
-                                  : Colors.grey.withValues(alpha: 0.8),
-                              );
-                            }),
-                            // 显示醒酒倒计时
-                            if (_drinkingState!.drinksConsumed > 0) ...[
-                              const SizedBox(width: 8),
-                              Text(
-                                _getFormattedPlayerSoberTime(),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green.shade300,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  // 醒酒按钮
-                  if (_drinkingState!.drinksConsumed >= 3)
-                    ElevatedButton(
-                      onPressed: () {
-                        // 显示醒酒对话框
-                        showDialog(
-                          context: context,
-                          builder: (context) => SoberDialog(
-                            drinkingState: _drinkingState!,
-                            onWatchAd: () {
-                              // 使用公用方法显示广告
-                              AdHelper.showRewardedAdWithLoading(
-                                context: context,
-                                onRewarded: (rewardAmount) {
-                                  // 广告观看完成，获得奖励
-                                  setState(() {
-                                    _drinkingState!.watchAdToSoberPlayer();
-                                    _drinkingState!.save();
-                                  });
-                                  // 记录看广告醒酒次数（玩家自己）
-                                  GameProgressService.instance.recordAdSober();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(AppLocalizations.of(context)!.adWatchedSober),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                },
-                                onCompleted: () {
-                                  // 广告流程完成后关闭醒酒对话框
-                                  if (mounted && Navigator.canPop(context)) {
-                                    Navigator.of(context).pop();
-                                  }
-                                },
-                              );
-                            },
-                            onUsePotion: () {
-                              setState(() {
-                                _drinkingState!.useSoberPotion();
-                                _drinkingState!.save();
-                              });
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(AppLocalizations.of(context)!.usedSoberPotion)),
-                              );
-                            },
-                            onCancel: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.sober,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
           
           // Overall Stats
           Container(

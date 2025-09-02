@@ -229,6 +229,30 @@
   "npcDrunkMessage1": "Aduhh... aku minum terlalu banyak",
   "npcDrunkMessage2": "Kepalaku pusing... tidak bisa main sekarang",
   "npcDrunkAdHint": "Tonton iklan untuk membantuku sadar~",
+  "vipDialogue1": "Aku {name}, sangat menantikan untuk lebih dekat denganmu~",
+  "@vipDialogue1": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "vipDialogue2": "Tonton iklan dan kamu bisa bermain denganku gratis selama 1 jam, mau coba?",
+  "vipDialogue3": "Jika kamu benar-benar menyukaiku, kamu bisa membuka kunciku selamanya...",
+  "vipDialogue4": "Setelah membuka kunci, keintiman kita akan tumbuh dua kali lebih cepat, membuka tampilan baruku lebih cepat~",
+  "vipDialogue5": "Aku juga akan berbagi cerita pribadiku denganmu, hanya kamu yang bisa mendengarnya...",
+  "playerDrunkDialogue1": "Melihatmu mabuk begini membuatku khawatir...",
+  "playerDrunkDialogue2": "Kamu sudah minum {count} gelas, sudah cukup ya~",
+  "@playerDrunkDialogue2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDrunkDialogue3": "Istirahat dulu ya, wajahmu sudah merah semua...",
+  "playerDrunkDialogue4": "Mau tonton iklan untuk sadar? Langsung pulih lho~",
+  "playerDrunkDialogue5": "Begini tidak bisa, kamu harus sadar dulu...",
   "watchAdToSober": "Tonton Iklan",
   "languageSwitched": "Bahasa diubah",
   "instructionsDetail": "Instruksi detail",

@@ -231,6 +231,30 @@
   "npcDrunkMessage1": "Ahhh... bebi demais",
   "npcDrunkMessage2": "Minha cabeça está girando... não posso jogar agora",
   "npcDrunkAdHint": "Assista um anúncio para me ajudar a ficar sóbria~",
+  "vipDialogue1": "Eu sou {name}, ansiosa para nos conhecermos melhor~",
+  "@vipDialogue1": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "vipDialogue2": "Assista um anúncio e você pode jogar comigo grátis por 1 hora, quer tentar?",
+  "vipDialogue3": "Se você realmente gosta de mim, pode me desbloquear permanentemente...",
+  "vipDialogue4": "Após desbloquear, nossa intimidade crescerá duas vezes mais rápido, desbloqueando meus novos looks antes~",
+  "vipDialogue5": "Também vou compartilhar minhas histórias privadas com você, só você pode ouvi-las...",
+  "playerDrunkDialogue1": "Ver você tão bêbado me deixa preocupada...",
+  "playerDrunkDialogue2": "Você já bebeu {count} doses, chega por hoje~",
+  "@playerDrunkDialogue2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDrunkDialogue3": "Descanse um pouco, seu rosto está todo vermelho...",
+  "playerDrunkDialogue4": "Quer assistir um anúncio para ficar sóbrio? Você vai se recuperar na hora~",
+  "playerDrunkDialogue5": "Assim não dá, você precisa ficar sóbrio...",
   "watchAdToSober": "Ver Anúncio",
   "languageSwitched": "Idioma alterado",
   "instructionsDetail": "Instruções detalhadas",

@@ -500,6 +500,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
 
   @override
+  String vipDialogue1(String name) {
+    return '我是$name，很期待與你更親密的互動呢~';
+  }
+
+  @override
+  String get vipDialogue2 => '看個廣告就能和我免費玩1小時哦，要不要試試？';
+
+  @override
+  String get vipDialogue3 => '如果你真的很喜歡我，可以永久解鎖我呢...';
+
+  @override
+  String get vipDialogue4 => '解鎖後，我們的親密度會加倍增長，更快解鎖我的新造型~';
+
+  @override
+  String get vipDialogue5 => '我還會和你分享我的私密往事，只有你才能聽到哦...';
+
+  @override
+  String get playerDrunkDialogue1 => '看你醉成这样，真是让人担心呢...';
+
+  @override
+  String playerDrunkDialogue2(int count) {
+    return '你已经喝了$count杯了，不能再喝了哦~';
+  }
+
+  @override
+  String get playerDrunkDialogue3 => '休息一下吧，你的脸都红透了...';
+
+  @override
+  String get playerDrunkDialogue4 => '要不要看个广告清醒一下？马上就能恢复哦~';
+
+  @override
+  String get playerDrunkDialogue5 => '这样下去可不行，你需要醒醒酒了...';
+
+  @override
   String get watchAdToSober => '看廣告';
 
   @override
@@ -1515,6 +1549,40 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
+
+  @override
+  String vipDialogue1(String name) {
+    return '我是$name，很期待與你更親密的互動呢~';
+  }
+
+  @override
+  String get vipDialogue2 => '看個廣告就能和我免費玩1小時哦，要不要試試？';
+
+  @override
+  String get vipDialogue3 => '如果你真的很喜歡我，可以永久解鎖我呢...';
+
+  @override
+  String get vipDialogue4 => '解鎖後，我們的親密度會加倍增長，更快解鎖我的新造型~';
+
+  @override
+  String get vipDialogue5 => '我還會和你分享我的私密往事，只有你才能聽到哦...';
+
+  @override
+  String get playerDrunkDialogue1 => '看你醉成這樣，真是讓人擔心呢...';
+
+  @override
+  String playerDrunkDialogue2(int count) {
+    return '你已經喝了$count杯了，不能再喝了哦~';
+  }
+
+  @override
+  String get playerDrunkDialogue3 => '休息一下吧，你的臉都紅透了...';
+
+  @override
+  String get playerDrunkDialogue4 => '要不要看個廣告清醒一下？馬上就能恢復哦~';
+
+  @override
+  String get playerDrunkDialogue5 => '這樣下去可不行，你需要醒醒酒了...';
 
   @override
   String get watchAdToSober => '看廣告';

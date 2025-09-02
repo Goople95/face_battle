@@ -502,6 +502,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get npcDrunkAdHint => 'Watch an ad to help me sober up~';
 
   @override
+  String vipDialogue1(String name) {
+    return 'I\'m $name, looking forward to getting closer with you~';
+  }
+
+  @override
+  String get vipDialogue2 =>
+      'Watch an ad and you can play with me free for 1 hour, want to try?';
+
+  @override
+  String get vipDialogue3 =>
+      'If you really like me, you can unlock me permanently...';
+
+  @override
+  String get vipDialogue4 =>
+      'After unlocking, our intimacy will grow twice as fast, unlocking my new looks sooner~';
+
+  @override
+  String get vipDialogue5 =>
+      'I\'ll also share my private stories with you, only you can hear them...';
+
+  @override
+  String get playerDrunkDialogue1 =>
+      'Seeing you this drunk makes me worried...';
+
+  @override
+  String playerDrunkDialogue2(int count) {
+    return 'You\'ve already had $count drinks, no more for you~';
+  }
+
+  @override
+  String get playerDrunkDialogue3 => 'Take a break, your face is all red...';
+
+  @override
+  String get playerDrunkDialogue4 =>
+      'Want to watch an ad to sober up? You\'ll recover instantly~';
+
+  @override
+  String get playerDrunkDialogue5 =>
+      'This won\'t do, you need to sober up now...';
+
+  @override
   String get watchAdToSober => 'Watch Ad';
 
   @override

@@ -454,6 +454,7 @@ class DialogueService {
     switch (action) {
       case 'challenge':
         switch (locale) {
+          case 'zh': return '我要挑戰！';
           case 'zh_TW': return '我要挑戰！';
           case 'es': return '¡Lo desafío!';
           case 'pt': return 'Eu desafio isso!';
@@ -462,6 +463,7 @@ class DialogueService {
         }
       case 'valueBet':
         switch (locale) {
+          case 'zh': return '我押實力牌。';
           case 'zh_TW': return '我押實力牌。';
           case 'es': return 'Apuesto por valor.';
           case 'pt': return 'Apostando em valor.';
@@ -470,6 +472,7 @@ class DialogueService {
         }
       case 'bluff':
         switch (locale) {
+          case 'zh': return '看你信不信...';
           case 'zh_TW': return '看你信不信...';
           case 'es': return 'Veamos si lo crees...';
           case 'pt': return 'Vamos ver se você acredita...';
@@ -478,6 +481,7 @@ class DialogueService {
         }
       case 'reverseTrap':
         switch (locale) {
+          case 'zh': return '掉進我的陷阱了？';
           case 'zh_TW': return '掉進我的陷阱了？';
           case 'es': return '¿Cayendo en mi trampa?';
           case 'pt': return 'Caindo na minha armadilha?';
@@ -486,6 +490,7 @@ class DialogueService {
         }
       case 'pressurePlay':
         switch (locale) {
+          case 'zh': return '感受壓力吧！';
           case 'zh_TW': return '感受壓力吧！';
           case 'es': return '¡Siente la presión!';
           case 'pt': return 'Sinta a pressão!';
@@ -494,6 +499,7 @@ class DialogueService {
         }
       case 'safePlay':
         switch (locale) {
+          case 'zh': return '穩妥為上。';
           case 'zh_TW': return '穩妥為上。';
           case 'es': return 'Jugando a lo seguro.';
           case 'pt': return 'Jogando seguro.';
@@ -502,6 +508,7 @@ class DialogueService {
         }
       case 'patternBreak':
         switch (locale) {
+          case 'zh': return '該改變策略了！';
           case 'zh_TW': return '該改變策略了！';
           case 'es': return '¡Hora de cambiar las cosas!';
           case 'pt': return 'Hora de mudar as coisas!';
@@ -510,6 +517,7 @@ class DialogueService {
         }
       case 'induceAggressive':
         switch (locale) {
+          case 'zh': return '來吧，大膽一點！';
           case 'zh_TW': return '來吧，大膽一點！';
           case 'es': return '¡Vamos, sé valiente!';
           case 'pt': return 'Vamos, seja ousado!';
