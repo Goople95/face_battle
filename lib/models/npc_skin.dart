@@ -7,6 +7,7 @@ class NPCSkin {
   final UnlockCondition unlockCondition;  // 解鎖條件
   final String? avatarPath;  // 頭像路徑（可選，默認使用NPC路徑+皮膚ID）
   final String? videosPath;  // 視頻路徑（可選，默認使用NPC路徑+皮膚ID）
+  final int? videoCount;  // 該皮膚的視頻數量（可選）
   
   NPCSkin({
     required this.id,
@@ -16,6 +17,7 @@ class NPCSkin {
     required this.unlockCondition,
     this.avatarPath,
     this.videosPath,
+    this.videoCount,
   });
   
   factory NPCSkin.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class NPCSkin {
       unlockCondition: UnlockCondition.fromJson(json['unlockCondition'] as Map<String, dynamic>),
       avatarPath: json['avatarPath'] as String?,
       videosPath: json['videosPath'] as String?,
+      videoCount: json['videoCount'] as int?,
     );
   }
   
@@ -41,6 +44,7 @@ class NPCSkin {
       'unlockCondition': unlockCondition.toJson(),
       if (avatarPath != null) 'avatarPath': avatarPath,
       if (videosPath != null) 'videosPath': videosPath,
+      if (videoCount != null) 'videoCount': videoCount,
     };
   }
   

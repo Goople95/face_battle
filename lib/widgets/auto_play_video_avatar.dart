@@ -7,6 +7,7 @@ import '../models/ai_personality.dart';
 import '../services/cloud_npc_service.dart';
 import '../services/npc_resource_loader.dart';
 import '../services/npc_skin_service.dart';
+import '../services/npc_config_service.dart';
 import 'npc_image_widget.dart';
 import 'dart:math' as math;
 
@@ -73,8 +74,16 @@ class _AutoPlayVideoAvatarState extends State<AutoPlayVideoAvatar> {
     final oldController = _controller;
     
     try {
-      // 随机选择视频编号，避免连续重复
-      final videoCount = widget.personality?.videoCount ?? 4;
+      // 获取当前皮肤的视频数量
+      int videoCount = 4; // 默认值
+      if (widget.personality != null) {
+        // 使用NPCConfigService获取当前皮肤的视频数量
+        videoCount = NPCConfigService.instance.getVideoCountForNPC(widget.personality!.id);
+      } else if (widget.personality?.videoCount != null) {
+        // 如果没有使用新方法，使用personality中的值作为后备
+        videoCount = widget.personality!.videoCount;
+      }
+      
       LoggerUtils.info('视频数量配置: videoCount=$videoCount, personality=${widget.personality?.id}');
       
       // 如果只有一个视频，直接用它

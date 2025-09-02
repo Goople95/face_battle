@@ -1,7 +1,7 @@
 name: face_battle
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.6+3
+version: 0.1.7+5
 
 environment:
   sdk: ^3.8.1
@@ -62,9 +62,9 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/dice-icon-1024.png"
+  image_path: "assets/icons/app_logo.png"
   min_sdk_android: 21
   adaptive_icon_background: "#1A0000"  # 深黑红色
-  adaptive_icon_foreground: "assets/icons/dice-icon-1024.png"
+  adaptive_icon_foreground: "assets/icons/app_logo.png"
   remove_alpha_ios: true
   ios_background_color: "#1A0000"  # iOS也使用深黑红色背景

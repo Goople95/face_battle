@@ -26,7 +26,6 @@
       },
       "drinkCapacity": 2,
       "country": "Germany",
-      "videoCount": 5,
       "skins": [
         {
           "id": 1,
@@ -37,7 +36,8 @@
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
-          }
+          },
+          "videoCount": 7
         },
         {
           "id": 2,
@@ -49,7 +49,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 3
-          }
+          },
+          "videoCount": 5
         }
       ]
     },
@@ -79,7 +80,6 @@
       },
       "drinkCapacity": 2,
       "country": "Russia",
-      "videoCount": 8,
       "skins": [
         {
           "id": 1,
@@ -90,7 +90,8 @@
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
-          }
+          },
+          "videoCount": 8
         },
         {
           "id": 2,
@@ -102,7 +103,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 5
-          }
+          },
+          "videoCount": 8
         },
         {
           "id": 3,
@@ -114,7 +116,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 8
-          }
+          },
+          "videoCount": 8
         }
       ]
     },
@@ -145,7 +148,6 @@
       },
       "drinkCapacity": 2,
       "country": "Japan",
-      "videoCount": 4,
       "skins": [
         {
           "id": 1,
@@ -156,7 +158,8 @@
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
-          }
+          },
+          "videoCount": 4
         },
         {
           "id": 2,
@@ -168,7 +171,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 4
-          }
+          },
+          "videoCount": 4
         },
         {
           "id": 3,
@@ -180,7 +184,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 7
-          }
+          },
+          "videoCount": 4
         }
       ]
     },
@@ -211,7 +216,6 @@
       },
       "drinkCapacity": 2,
       "country": "Brazil",
-      "videoCount": 5,
       "skins": [
         {
           "id": 1,
@@ -222,7 +226,8 @@
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
-          }
+          },
+          "videoCount": 5
         },
         {
           "id": 2,
@@ -234,7 +239,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 6
-          }
+          },
+          "videoCount": 4
         },
         {
           "id": 3,
@@ -246,7 +252,8 @@
           "unlockCondition": {
             "type": "intimacy",
             "level": 9
-          }
+          },
+          "videoCount": 4
         }
       ]
     }

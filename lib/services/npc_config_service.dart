@@ -1,7 +1,10 @@
 import 'dart:ui' as ui;
 import '../models/ai_personality.dart';
+import '../models/npc_skin.dart';
 import '../utils/logger_utils.dart';
 import 'cloud_npc_service.dart';
+import 'npc_raw_config_service.dart';
+import 'npc_skin_service.dart';
 
 /// NPC配置服务
 /// 负责从JSON文件加载和管理所有NPC配置
@@ -146,9 +149,10 @@ class NPCConfigService {
         LoggerUtils.info('  namesMap: $namesMap');
         LoggerUtils.info('  descriptionsMap: $descriptionsMap');
         
-        // 获取videoCount值
-        final videoCountValue = npcData['videoCount'] ?? 4;
-        LoggerUtils.info('  videoCount: $videoCountValue (原始值: ${npcData['videoCount']})');
+        // videoCount现在从皮肤级别获取，不再从NPC级别读取
+        // AIPersonality中的videoCount字段仅作为兼容性保留
+        final videoCountValue = 4; // 默认值，实际值将从皮肤配置中动态获取
+        LoggerUtils.info('  videoCount将根据选择的皮肤动态获取');
         
         // 创建AIPersonality对象
         final personality = AIPersonality(
@@ -168,7 +172,7 @@ class NPCConfigService {
           isVIP: npcData['isVIP'] ?? false,
           country: npcData['country'],
           drinkCapacity: npcData['drinkCapacity'] ?? 4, // 默认酒量4杯
-          videoCount: videoCountValue, // 使用配置的视频数量
+          videoCount: videoCountValue, // 使用配置的视频数量作为默认值
         );
         
         // 存储NPC
@@ -224,5 +228,34 @@ class NPCConfigService {
     _vipCharacters.clear();
     _isLoaded = false;
     await initialize();
+  }
+  
+  /// 获取NPC当前皮肤的视频数量
+  int getVideoCountForNPC(String npcId) {
+    try {
+      // 导入必要的服务
+      final npcRawConfig = NPCRawConfigService.instance.getNPCById(npcId);
+      if (npcRawConfig == null) {
+        LoggerUtils.warning('无法找到NPC配置: $npcId，使用默认值4');
+        return 4;
+      }
+      
+      // 获取当前选择的皮肤ID
+      final selectedSkinId = NPCSkinService.instance.getSelectedSkinId(npcId);
+      
+      // 获取皮肤信息
+      final skin = npcRawConfig.getSkinById(selectedSkinId);
+      if (skin?.videoCount != null) {
+        LoggerUtils.info('NPC $npcId 皮肤 $selectedSkinId 的视频数量: ${skin!.videoCount}');
+        return skin.videoCount!;
+      }
+      
+      // 默认值
+      LoggerUtils.warning('NPC $npcId 皮肤 $selectedSkinId 没有指定视频数量，使用默认值4');
+      return 4;
+    } catch (e) {
+      LoggerUtils.error('获取NPC视频数量失败: $e');
+      return 4;
+    }
   }
 }
