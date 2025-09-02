@@ -12,6 +12,7 @@ import '../services/game_progress_service.dart';
 import '../models/game_progress.dart';
 import '../models/drinking_state.dart';
 import '../widgets/sober_dialog.dart';
+import '../widgets/drunk_dialog.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/language_service.dart';
@@ -1629,166 +1630,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   // 显示AI醒酒对话框
   void _showAISoberDialog(AIPersonality personality) {
+    if (_drinkingState == null) return;
+    
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.orange.shade900,
-                Colors.red.shade900,
-              ],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // AI头像和状态
-              // 醉酒状态头像
-              NPCAvatarWidget(
-                personality: personality,
-                size: 80,
-                showBorder: true,
-                isUnavailable: true,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                AppLocalizations.of(context)!.aiIsDrunk(_getLocalizedName(context, personality)),
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 10),
-              // 醒酒倒计时
-              if (_drinkingState != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.green.withValues(alpha: 0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.timer,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _getFormattedSoberTime(personality.id),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.aiDrunkMessage,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // 醒酒选项
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // 看广告
-                  ElevatedButton(
-                    onPressed: () {
-                      // 使用公用方法显示广告（先关闭当前对话框）
-                      AdHelper.showRewardedAdAfterDialogClose(
-                        context: context,
-                        onRewarded: (rewardAmount) {
-                          // 广告观看完成，获得奖励
-                          setState(() {
-                            _drinkingState!.watchAdToSoberAI(personality.id);
-                            _drinkingState!.save();
-                          });
-                          // 记录为NPC看广告醒酒次数
-                          GameProgressService.instance.recordAdSober(npcId: personality.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(AppLocalizations.of(context)!.aiSoberSuccess(_getLocalizedName(context, personality))),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: Text(
-                      AppLocalizations.of(context)!.watchAdToSober,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    ),
-                  ),
-                  // 取消
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      AppLocalizations.of(context)!.cancel,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+      barrierDismissible: false,
+      builder: (context) => DrunkDialog(
+        personality: personality,
+        drinkingState: _drinkingState!,
+        onSoberSuccess: () {
+          setState(() {});
+        },
       ),
     );
   }

@@ -343,10 +343,6 @@
   },
   "unlockVIPCharacter": "Unlock VIP Character",
   
-  "@chooseUnlockMethod": {
-    "description": "Choose unlock method subtitle"
-  },
-  "chooseUnlockMethod": "Choose a method to unlock this VIP character",
   
   "@freePlayOneHour": {
     "description": "Free play for one hour"
@@ -614,6 +610,10 @@
   "close": "Close",
   "aiIsDrunk": "{name} is drunk!",
   "aiDrunkMessage": "She's too drunk to play\nHelp her sober up",
+  "npcDrunkFirstPerson": "Ohhh... I drank too much, my head's spinning...\nI really can't play with you right now",
+  "npcDrunkMessage1": "Ohhh... I drank too much",
+  "npcDrunkMessage2": "My head's spinning... I really can't play now",
+  "npcDrunkAdHint": "Watch an ad to help me sober up~",
   "watchAdToSober": "Watch Ad",
   "languageSwitched": "Language switched to {language}",
   "instructionsDetail": "• Each player rolls 5 dice secretly\n• 1s are wildcards, count as any number\n• Bids must increase in quantity or dice value\n• Challenge when you think they're lying",

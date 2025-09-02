@@ -242,9 +242,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unlockVIPCharacter => '解鎖VIP角色';
 
   @override
-  String get chooseUnlockMethod => '選擇以下方式解鎖此VIP角色';
-
-  @override
   String get freePlayOneHour => '免費遊玩1小時';
 
   @override
@@ -489,6 +486,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiDrunkMessage => '她太醉了不能玩\n幫她醒酒吧';
+
+  @override
+  String get npcDrunkFirstPerson => '呜呜...我喝太多了，頭好暈...\n現在真的沒辦法陪你玩了';
+
+  @override
+  String get npcDrunkMessage1 => '嗚嗚...我喝太多了';
+
+  @override
+  String get npcDrunkMessage2 => '頭好暈...現在真的沒辦法陪你玩了';
+
+  @override
+  String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
 
   @override
   String get watchAdToSober => '看廣告';
@@ -1250,9 +1259,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get unlockVIPCharacter => '解鎖VIP角色';
 
   @override
-  String get chooseUnlockMethod => '選擇以下方式解鎖此VIP角色';
-
-  @override
   String get freePlayOneHour => '免費遊玩1小時';
 
   @override
@@ -1497,6 +1503,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aiDrunkMessage => '她太醉了不能玩\n幫她醒酒吧';
+
+  @override
+  String get npcDrunkFirstPerson => '嗚嗚...我喝太多了，頭好暈...\n現在真的沒辦法陪你玩了';
+
+  @override
+  String get npcDrunkMessage1 => '嗚嗚...我喝太多了';
+
+  @override
+  String get npcDrunkMessage2 => '頭好暈...現在真的沒辦法陪你玩了';
+
+  @override
+  String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
 
   @override
   String get watchAdToSober => '看廣告';

@@ -525,12 +525,6 @@ abstract class AppLocalizations {
   /// **'Unlock VIP Character'**
   String get unlockVIPCharacter;
 
-  /// Choose unlock method subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a method to unlock this VIP character'**
-  String get chooseUnlockMethod;
-
   /// Free play for one hour
   ///
   /// In en, this message translates to:
@@ -974,6 +968,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'She\'s too drunk to play\nHelp her sober up'**
   String get aiDrunkMessage;
+
+  /// No description provided for @npcDrunkFirstPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Ohhh... I drank too much, my head\'s spinning...\nI really can\'t play with you right now'**
+  String get npcDrunkFirstPerson;
+
+  /// No description provided for @npcDrunkMessage1.
+  ///
+  /// In en, this message translates to:
+  /// **'Ohhh... I drank too much'**
+  String get npcDrunkMessage1;
+
+  /// No description provided for @npcDrunkMessage2.
+  ///
+  /// In en, this message translates to:
+  /// **'My head\'s spinning... I really can\'t play now'**
+  String get npcDrunkMessage2;
+
+  /// No description provided for @npcDrunkAdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch an ad to help me sober up~'**
+  String get npcDrunkAdHint;
 
   /// No description provided for @watchAdToSober.
   ///

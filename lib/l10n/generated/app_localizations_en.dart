@@ -242,10 +242,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlockVIPCharacter => 'Unlock VIP Character';
 
   @override
-  String get chooseUnlockMethod =>
-      'Choose a method to unlock this VIP character';
-
-  @override
   String get freePlayOneHour => 'Free play for 1 hour';
 
   @override
@@ -490,6 +486,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiDrunkMessage => 'She\'s too drunk to play\nHelp her sober up';
+
+  @override
+  String get npcDrunkFirstPerson =>
+      'Ohhh... I drank too much, my head\'s spinning...\nI really can\'t play with you right now';
+
+  @override
+  String get npcDrunkMessage1 => 'Ohhh... I drank too much';
+
+  @override
+  String get npcDrunkMessage2 =>
+      'My head\'s spinning... I really can\'t play now';
+
+  @override
+  String get npcDrunkAdHint => 'Watch an ad to help me sober up~';
 
   @override
   String get watchAdToSober => 'Watch Ad';

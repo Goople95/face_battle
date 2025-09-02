@@ -242,10 +242,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unlockVIPCharacter => 'Desbloquear Personagem VIP';
 
   @override
-  String get chooseUnlockMethod =>
-      'Escolha um método para desbloquear este personagem VIP';
-
-  @override
   String get freePlayOneHour => 'Jogue grátis por 1 hora';
 
   @override
@@ -492,6 +488,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get aiDrunkMessage =>
       'Ela está bêbada demais para jogar\nAjude-a a ficar sóbria';
+
+  @override
+  String get npcDrunkFirstPerson =>
+      'Ahhh... bebi demais, minha cabeça está girando...\nRealmente não posso jogar com você agora';
+
+  @override
+  String get npcDrunkMessage1 => 'Ahhh... bebi demais';
+
+  @override
+  String get npcDrunkMessage2 =>
+      'Minha cabeça está girando... não posso jogar agora';
+
+  @override
+  String get npcDrunkAdHint =>
+      'Assista um anúncio para me ajudar a ficar sóbria~';
 
   @override
   String get watchAdToSober => 'Ver Anúncio';

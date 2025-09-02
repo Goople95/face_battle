@@ -57,14 +57,11 @@ class DrinkingState {
     return (aiDrinks[aiId] ?? 0) >= capacity;
   }
   
-  /// 特定AI是否不能游戏（达到最大酒量时不能游戏）
+  /// 特定AI是否不能游戏（一旦进入醉酒状态，需要恢复到0杯才能游戏）
   bool isAIUnavailable(String aiId) {
-    // 简单规则：只有当AI当前达到其最大酒量时才不能游戏
-    int capacity = _getAICapacity(aiId);
-    int currentDrinks = aiDrinks[aiId] ?? 0;
-    
-    // 只有当前达到最大酒量时才不能游戏
-    return currentDrinks >= capacity;
+    // 规则：一旦处于醉酒状态，就需要恢复到0杯才算醒酒
+    // 检查醉酒状态标志，而不是比较当前酒量和容量
+    return aiDrunkStates[aiId] ?? false;
   }
   
   /// 获取特定AI的酒杯数
@@ -92,6 +89,26 @@ class DrinkingState {
     final secondsPassed = DateTime.now().difference(aiLastDrinkTimes[aiId]!).inSeconds;
     final nextSoberSeconds = 600 - (secondsPassed % 600); // 10分钟 = 600秒
     return nextSoberSeconds;
+  }
+  
+  /// 获取AI完全醒酒所需的总秒数
+  int getAITotalSoberSeconds(String aiId) {
+    final currentDrinks = aiDrinks[aiId] ?? 0;
+    if (currentDrinks == 0 || aiLastDrinkTimes[aiId] == null) return 0;
+    
+    // 计算已经过去的时间（秒）
+    final secondsPassed = DateTime.now().difference(aiLastDrinkTimes[aiId]!).inSeconds;
+    
+    // 当前时间段内还剩余的秒数（600秒 = 10分钟一个周期）
+    final currentPeriodRemaining = 600 - (secondsPassed % 600);
+    
+    // 还需要醒酒的杯数（减去当前周期会醒的那一杯）
+    final remainingDrinks = currentDrinks - 1;
+    
+    // 总时间 = 当前周期剩余时间 + 剩余杯数 * 10分钟
+    final totalSeconds = currentPeriodRemaining + (remainingDrinks * 600);
+    
+    return totalSeconds;
   }
   
   /// 获取玩家下次醒酒的剩余秒数
@@ -295,7 +312,14 @@ class DrinkingState {
     
     // AI醒酒
     for (var aiId in aiDrinks.keys) {
-      if (aiLastDrinkTimes[aiId] != null && (aiDrinks[aiId] ?? 0) > 0) {
+      // 特殊情况：如果AI酒杯数为0但仍处于醉酒状态（可能由于数据不一致）
+      if ((aiDrinks[aiId] ?? 0) == 0 && (aiDrunkStates[aiId] ?? false)) {
+        aiDrunkStates[aiId] = false;  // 清除醉酒状态
+        aiLastDrinkTimes[aiId] = null;  // 清除最后饮酒时间
+        LoggerUtils.debug('清理AI $aiId 的醉酒状态（酒杯数为0）');
+      }
+      // 正常的醒酒处理
+      else if (aiLastDrinkTimes[aiId] != null && (aiDrinks[aiId] ?? 0) > 0) {
         final minutesPassed = now.difference(aiLastDrinkTimes[aiId]!).inMinutes;
         final soberingAmount = minutesPassed ~/ 10;
         if (soberingAmount > 0) {
@@ -365,6 +389,12 @@ class DrinkingState {
       aiLastDrinkTimes[entry.key] = entry.value.lastDrinkTime;
       aiDrunkStates[entry.key] = entry.value.isDrunkState;
       LoggerUtils.debug('加载AI状态 - ID: ${entry.key}, 饮酒数: ${entry.value.currentDrinks}, 醉酒状态: ${entry.value.isDrunkState}');
+      
+      // 数据一致性检查：如果酒杯数为0但醉酒状态为true，修正状态
+      if (entry.value.currentDrinks == 0 && entry.value.isDrunkState) {
+        aiDrunkStates[entry.key] = false;
+        LoggerUtils.info('修正AI ${entry.key} 的醉酒状态（酒杯数为0但标记为醉酒）');
+      }
     }
     
     // 处理醒酒

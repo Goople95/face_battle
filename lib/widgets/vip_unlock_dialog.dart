@@ -76,135 +76,136 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
+      backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Colors.purple.shade900,
-              Colors.deepPurple.shade900,
+              Colors.black87,
+              Colors.grey.shade900,
             ],
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // VIP标志
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.amber,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'VIP',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+          border: Border.all(
+            color: Colors.amber.withValues(alpha: 0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 20,
+              spreadRadius: 5,
             ),
-            const SizedBox(height: 10),
-            
-            // 角色头像
-            SizedBox(
-              width: 100,
-              height: 100,
+          ],
+        ),
+        child: Stack(
+          children: [
+            // 主要内容
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                
+                // 角色头像 - 增大并添加装饰
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: 0.5),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amber.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
               child: ClipOval(
                 child: NPCAvatarWidget(
                   personality: widget.character,
-                  size: 100,
+                  size: 120,
                   showBorder: false,
                 ),
               ),
             ),
             const SizedBox(height: 10),
             
-            // 角色名称
-            Builder(
-              builder: (context) {
-                final locale = Localizations.localeOf(context);
-                final languageCode = locale.languageCode;
-                
-                // 处理中文的特殊情况
-                String localeCode = languageCode;
-                if (languageCode == 'zh') {
-                  // 只支持繁体中文
-                  localeCode = 'zh_TW';
-                }
-                
-                return Text(
-                  widget.character.getLocalizedName(localeCode),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            // 角色名称和VIP标签在同一行
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Builder(
+                  builder: (context) {
+                    final locale = Localizations.localeOf(context);
+                    final languageCode = locale.languageCode;
+                    
+                    // 处理中文的特殊情况
+                    String localeCode = languageCode;
+                    if (languageCode == 'zh') {
+                      // 只支持繁体中文
+                      localeCode = 'zh_TW';
+                    }
+                    
+                    return Text(
+                      widget.character.getLocalizedName(localeCode),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 10),
+                // VIP标志移到名字旁边
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.amber.shade400,
+                        Colors.amber.shade600,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-            
-            // 角色描述
-            Builder(
-              builder: (context) {
-                final locale = Localizations.localeOf(context);
-                final languageCode = locale.languageCode;
-                final countryCode = locale.countryCode;
-                
-                // 处理中文的特殊情况
-                String localeCode = languageCode;
-                if (languageCode == 'zh') {
-                  // 只支持繁体中文
-                  localeCode = 'zh_TW';
-                }
-                
-                return Text(
-                  widget.character.getLocalizedDescription(localeCode),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                );
-              },
-            ),
-            const SizedBox(height: 15),
-            
-const SizedBox(height: 20),
-            
-            // 解锁说明
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.unlockVIPCharacter,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                  child: const Text(
+                    'VIP',
+                    style: TextStyle(
+                      color: Colors.black87,
                       fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    AppLocalizations.of(context)!.chooseUnlockMethod,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
+            
+            // 解锁说明标题
+            Text(
+              AppLocalizations.of(context)!.unlockVIPCharacter,
+              style: TextStyle(
+                color: Colors.amber.shade300,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 24),
             
             // 解锁选项
             Column(
@@ -214,7 +215,7 @@ const SizedBox(height: 20),
                   icon: Icons.play_circle_outline,
                   title: AppLocalizations.of(context)!.watchAdUnlock,
                   subtitle: AppLocalizations.of(context)!.freePlayOneHour,
-                  color: Colors.blue,
+                  color: Colors.teal.shade400,
                   onTap: () async {
                     // 记录选择看广告
                     AnalyticsService().logDialogAction(
@@ -278,7 +279,7 @@ const SizedBox(height: 20),
                   icon: Icons.diamond,
                   title: AppLocalizations.of(context)!.permanentUnlock,
                   subtitle: _product?.price ?? '\$0.99',  // 显示实际价格或默认价格
-                  color: Colors.amber,
+                  color: Colors.amber.shade600,
                   enabled: !_isLoading,
                   onTap: () async {
                     // 记录点击购买按钮
@@ -356,7 +357,8 @@ const SizedBox(height: 20),
             ),
             const SizedBox(height: 20),
             
-            // 取消按钮
+            // 取消按钮 - 更精致的样式
+            const SizedBox(height: 8),
             TextButton(
               onPressed: () {
                 // 记录取消操作
@@ -369,12 +371,47 @@ const SizedBox(height: 20),
                 );
                 Navigator.of(context).pop(false);
               },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              ),
               child: Text(
                 AppLocalizations.of(context)!.laterDecide,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.grey.shade400,
                   fontSize: 14,
+                  letterSpacing: 0.3,
                 ),
+              ),
+            ),
+              ],
+            ),
+            // 关闭按钮
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.grey.shade400,
+                    size: 18,
+                  ),
+                ),
+                onPressed: () {
+                  AnalyticsService().logDialogAction(
+                    dialogName: 'vip_unlock_dialog',
+                    action: 'close',
+                    params: {
+                      'npc_id': widget.character.id,
+                    },
+                  );
+                  Navigator.of(context).pop(false);
+                },
               ),
             ),
           ],
@@ -391,55 +428,108 @@ const SizedBox(height: 20),
     required VoidCallback onTap,
     bool enabled = true,
   }) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: enabled ? color.withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.3),
-            width: 1.5,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: enabled
+                  ? [
+                      Colors.grey.shade900.withValues(alpha: 0.9),
+                      Colors.black.withValues(alpha: 0.7),
+                    ]
+                  : [
+                      Colors.grey.withValues(alpha: 0.1),
+                      Colors.grey.withValues(alpha: 0.05),
+                    ],
+            ),
+            border: Border.all(
+              color: enabled ? color.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: enabled
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
           ),
-          borderRadius: BorderRadius.circular(12),
-          color: enabled ? color.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: enabled ? color : Colors.grey,
-              size: 32,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: enabled ? Colors.white : Colors.grey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: enabled
+                        ? [
+                            color.withValues(alpha: 0.15),
+                            color.withValues(alpha: 0.08),
+                          ]
+                        : [
+                            Colors.grey.withValues(alpha: 0.1),
+                            Colors.grey.withValues(alpha: 0.05),
+                          ],
                   ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: enabled ? Colors.white70 : Colors.grey.shade600,
-                      fontSize: 13,
-                    ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: enabled ? color.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1),
+                    width: 0.5,
                   ),
-                ],
+                ),
+                child: Icon(
+                  icon,
+                  color: enabled ? color.withValues(alpha: 0.9) : Colors.grey,
+                  size: 26,
+                ),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: enabled ? color : Colors.grey,
-              size: 16,
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: enabled ? Colors.white : Colors.grey.shade400,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: enabled 
+                            ? color.withValues(alpha: 0.8)
+                            : Colors.grey.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: enabled ? color.withValues(alpha: 0.7) : Colors.grey.shade600,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

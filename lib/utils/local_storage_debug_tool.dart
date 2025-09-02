@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../utils/logger_utils.dart';
 import '../services/cloud_npc_service.dart';
+import '../services/resource_version_manager.dart';
+import '../services/storage/local_storage_service.dart';
 
 /// 本地存储调试工具
 /// 用于读取和显示SharedPreferences中的所有数据
@@ -329,12 +331,33 @@ class LocalStorageDebugTool {
         LoggerUtils.debug('获取远程版本信息失败: $e');
       }
       
-      // 获取所有本地保存的版本号
-      for (String key in prefs.getKeys()) {
-        if (key.startsWith('res_ver_')) {
-          final resourcePath = key.substring(8); // 移除 'res_ver_' 前缀
-          final version = prefs.getInt(key) ?? 0;
-          localVersions[resourcePath] = version;
+      // 从ResourceVersionManager获取本地版本（新方式）
+      try {
+        // 确保ResourceVersionManager已加载
+        await ResourceVersionManager.instance.load();
+        
+        // 获取所有本地版本信息
+        final localVersionsData = await LocalStorageService.instance.getGlobalJson('device_file_versions_v4');
+        if (localVersionsData != null && localVersionsData['versions'] != null) {
+          final versions = localVersionsData['versions'] as Map;
+          versions.forEach((key, value) {
+            localVersions[key] = value as int;
+          });
+          LoggerUtils.debug('从ResourceVersionManager读取到 ${localVersions.length} 个版本记录');
+        }
+      } catch (e) {
+        LoggerUtils.debug('从ResourceVersionManager读取版本信息失败: $e');
+        
+        // 备用方案：读取旧格式（res_ver_前缀）以兼容旧数据
+        for (String key in prefs.getKeys()) {
+          if (key.startsWith('res_ver_')) {
+            final resourcePath = key.substring(8); // 移除 'res_ver_' 前缀
+            final version = prefs.getInt(key) ?? 0;
+            localVersions[resourcePath] = version;
+          }
+        }
+        if (localVersions.isNotEmpty) {
+          LoggerUtils.debug('使用旧格式读取到 ${localVersions.length} 个版本记录');
         }
       }
       
