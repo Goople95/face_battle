@@ -24,6 +24,7 @@ class FirestoreService {
     required Map<String, dynamic> locationInfo,
     required String deviceLanguage,
     required String appVersion,
+    String? facebookEmail,  // Facebook登录时传递的email
   }) async {
     try {
       final docRef = _usersCollection.doc(user.uid);
@@ -36,7 +37,7 @@ class FirestoreService {
           'profile': {
             // 基本信息
             'userId': user.uid,
-            'email': user.email ?? '',
+            'email': facebookEmail ?? user.email ?? '',  // 优先使用Facebook email
             'displayName': user.displayName ?? 'Player',
             'photoUrl': user.photoURL,
             
@@ -71,7 +72,10 @@ class FirestoreService {
       } else {
         // 更新已有用户 - 一次性更新所有登录相关字段
         // 包括更新displayName和photoUrl（可能已经改变）
+        final emailToSave = facebookEmail ?? user.email ?? '';
+        LoggerUtils.info('准备更新用户email - facebookEmail: $facebookEmail, user.email: ${user.email}, 最终保存: $emailToSave');
         await docRef.update({
+          'profile.email': emailToSave,  // 优先使用Facebook email
           'profile.displayName': user.displayName ?? 'Player',
           'profile.photoUrl': user.photoURL,
           'profile.lastLoginAt': Timestamp.fromDate(now),

@@ -26,6 +26,7 @@ import '../services/purchase_service.dart';
 import '../services/analytics_service.dart';
 import '../services/npc_skin_service.dart';
 import '../services/cloud_npc_service.dart';
+import '../services/language_service.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../widgets/rules_display.dart';
 import '../widgets/skin_selector_dialog.dart';
@@ -410,8 +411,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       
       // 使用DialogueService获取问候语或轮到谁的提示
       final dialogueService = DialogueService();
-      final locale = Localizations.localeOf(context);
-      final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+      // 使用LanguageService来获取当前设置的语言
+      final languageService = Provider.of<LanguageService>(context, listen: false);
+      final localeCode = languageService.getLanguageCode();
       
       if (_currentRound!.bidHistory.isEmpty && _currentRound!.aiDecisions.isEmpty) {
         // 游戏刚开始，显示问候语
@@ -474,8 +476,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       // 玩家叫牌后，AI随机表情
       // 使用个性化的思考对话
       final dialogueService = DialogueService();
-      final locale = Localizations.localeOf(context);
-      final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+      // 使用LanguageService来获取当前设置的语言
+      final languageService = Provider.of<LanguageService>(context, listen: false);
+      final localeCode = languageService.getLanguageCode();
       _aiDialogue = dialogueService.getThinkingDialogue(widget.aiPersonality.id, locale: localeCode);
     });
     
@@ -515,8 +518,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       wasBluffing = result.$2;
     }
     // 使用本地AI生成表情
-    final locale = Localizations.localeOf(context);
-    final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+    final languageService = Provider.of<LanguageService>(context, listen: false);
+    final localeCode = languageService.getLanguageCode();
     final (dialogue, expression) = _aiService.generateDialogue(
       _currentRound!, 
       decision.action,
@@ -582,8 +585,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         );
         
         // 使用本地AI生成表情
-        final locale = Localizations.localeOf(context);
-        final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+        final languageService = Provider.of<LanguageService>(context, listen: false);
+        final localeCode = languageService.getLanguageCode();
         final (dialogue, expression) = _aiService.generateDialogue(
           _currentRound!, 
           GameAction.bid,
@@ -711,8 +714,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       Future<String>? dialogueFuture;
       if (_drinkingState != null) {
         final dialogueService = DialogueService();
-        final locale = Localizations.localeOf(context);
-        final localeCode = '${locale.languageCode}${locale.countryCode != null ? '_${locale.countryCode}' : ''}';
+        // 使用LanguageService来获取当前设置的语言
+        final languageService = Provider.of<LanguageService>(context, listen: false);
+        final localeCode = languageService.getLanguageCode();
         
         if (playerWon) {
           dialogueFuture = dialogueService.getLoseDialogue(widget.aiPersonality.id, locale: localeCode);
@@ -1723,7 +1727,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 Material(
                                   color: Colors.transparent,
                                   child: InkWell(
-                                    onTap: _showSkinSelector,
+                                    onTap: _showSkinSelector,  // 点击显示选择器
                                     borderRadius: BorderRadius.circular(20),
                                     child: Container(
                                       padding: const EdgeInsets.all(8),

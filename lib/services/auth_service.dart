@@ -115,6 +115,7 @@ class AuthService extends ChangeNotifier {
       
       // 保存用户信息到Firestore
       if (_user != null) {
+        LoggerUtils.info('Google登录成功 - Firebase User email: ${_user!.email}');
         // 首先设置LocalStorageService的用户ID
         // 统一处理登录后的所有更新
         await _handleUserLogin(_user!, 'google');
@@ -142,7 +143,7 @@ class AuthService extends ChangeNotifier {
       
       // 触发Facebook登录流程
       final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['public_profile'],  // 只请求公开资料权限
+        permissions: ['public_profile', 'email'],  // 请求公开资料和邮箱权限
       );
       
       // 检查登录状态
@@ -163,11 +164,13 @@ class AuthService extends ChangeNotifier {
           
           // 获取Facebook用户信息（包括头像）
           if (_user != null) {
+            LoggerUtils.info('Facebook登录成功 - Firebase User email: ${_user!.email}');
+            String? email;  // 将email变量声明移到外层，避免作用域问题
             try {
               // 获取Facebook用户详细信息
-              // 明确请求需要的字段，并设置大尺寸头像
+              // 明确请求需要的字段，包括邮箱，并设置大尺寸头像
               final userData = await FacebookAuth.instance.getUserData(
-                fields: "name,picture.width(200).height(200)",
+                fields: "name,email,picture.width(200).height(200)",
               );
               LoggerUtils.info('Facebook用户信息: $userData');
               
@@ -205,6 +208,14 @@ class AuthService extends ChangeNotifier {
                 LoggerUtils.warning('Facebook用户数据中没有name字段');
               }
               
+              // 获取用户邮箱
+              if (userData.containsKey('email')) {
+                email = userData['email'];
+                LoggerUtils.info('Facebook用户邮箱: $email');
+              } else {
+                LoggerUtils.warning('Facebook用户数据中没有email字段');
+              }
+              
               // 更新Firebase用户信息
               bool needsReload = false;
               
@@ -222,6 +233,11 @@ class AuthService extends ChangeNotifier {
                 LoggerUtils.info('已更新Firebase用户名称');
               }
               
+              // 注意：OAuth用户的email不能通过updateEmail修改，将直接传递给Firestore
+              if (email != null && email.isNotEmpty) {
+                LoggerUtils.info('Facebook用户邮箱将直接保存到Firestore: $email');
+              }
+              
               // 如果有更新，重新加载用户
               if (needsReload) {
                 await _user!.reload();
@@ -232,8 +248,9 @@ class AuthService extends ChangeNotifier {
               LoggerUtils.error('获取Facebook用户详情失败: $e');
             }
             
-            // 统一处理登录后的所有更新
-            await _handleUserLogin(_user!, 'facebook');
+            // 统一处理登录后的所有更新，直接传递Facebook获取的email
+            LoggerUtils.info('调用_handleUserLogin - provider: facebook, facebookEmail: $email');
+            await _handleUserLogin(_user!, 'facebook', facebookEmail: email);
           }
           
           _setLoading(false);
@@ -403,8 +420,9 @@ class AuthService extends ChangeNotifier {
   }
   
   /// 统一处理用户登录后的数据更新
-  Future<void> _handleUserLogin(User user, String provider) async {
+  Future<void> _handleUserLogin(User user, String provider, {String? facebookEmail}) async {
     try {
+      LoggerUtils.info('_handleUserLogin开始 - provider: $provider, facebookEmail: $facebookEmail');
       // 1. 设置 LocalStorage 用户ID
       LocalStorageService.instance.setUserId(user.uid);
       
@@ -421,6 +439,7 @@ class AuthService extends ChangeNotifier {
       final deviceLanguage = Platform.localeName;
       
       // 3. 一次性更新所有用户信息到 Firestore
+      LoggerUtils.info('准备调用updateUserCompleteLoginInfo - facebookEmail: $facebookEmail');
       await FirestoreService().updateUserCompleteLoginInfo(
         user: user,
         provider: provider,
@@ -428,6 +447,7 @@ class AuthService extends ChangeNotifier {
         locationInfo: locationInfo,
         deviceLanguage: deviceLanguage,
         appVersion: appVersion,
+        facebookEmail: facebookEmail,  // 传递Facebook获取的email
       );
       
       // 4. 初始化游戏进度服务

@@ -165,11 +165,14 @@ class _SkinSelectorOverlayState extends State<SkinSelectorOverlay>
                                 final isSelected = skinInfo.skin.id == _selectedSkinId;
                                 
                                 return GestureDetector(
-                                  onTap: () {
+                                  onTap: () async {
                                     if (skinInfo.isUnlocked) {
-                                      setState(() {
+                                      // 如果是已解锁的皮肤，直接切换
+                                      if (!skinInfo.isSelected) {
+                                        // 只有不是当前选中的皮肤才需要切换
                                         _selectedSkinId = skinInfo.skin.id;
-                                      });
+                                        await _onConfirm();
+                                      }
                                     } else {
                                       // 显示解锁条件
                                       _showUnlockHint(skinInfo, t);
@@ -260,41 +263,6 @@ class _SkinSelectorOverlayState extends State<SkinSelectorOverlay>
                                             ),
                                           ),
                                         ),
-                                        
-                                        // 选中时显示比基尼确认按钮
-                                        if (isSelected && !skinInfo.isSelected)
-                                          Positioned(
-                                            bottom: -5,
-                                            right: -5,
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                _onConfirm();
-                                              },
-                                              child: Container(
-                                                padding: const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      Colors.pink.shade400,
-                                                      Colors.purple.shade400,
-                                                    ],
-                                                  ),
-                                                  shape: BoxShape.circle,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.pink.withValues(alpha: 0.6),
-                                                      blurRadius: 8,
-                                                      spreadRadius: 1,
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: const Text(
-                                                  '👙',
-                                                  style: TextStyle(fontSize: 16),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
                                       ],
                                     ),
                                   ),
@@ -303,41 +271,23 @@ class _SkinSelectorOverlayState extends State<SkinSelectorOverlay>
                             ),
                           ),
                           
-                          // 提示文字
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Column(
-                              children: [
-                                // 主要提示
-                                if (_selectedSkinId != null)
-                                  Text(
-                                    _getHintText(t),
-                                    style: TextStyle(
-                                      color: Colors.pink.shade200,
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
+                          // 解锁条件提示
+                          if (_unlockHint != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: Text(
+                                  _unlockHint!,
+                                  key: ValueKey(_unlockHint),
+                                  style: TextStyle(
+                                    color: Colors.amber.shade300,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                // 解锁条件提示
-                                if (_unlockHint != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 200),
-                                      child: Text(
-                                        _unlockHint!,
-                                        key: ValueKey(_unlockHint),
-                                        style: TextStyle(
-                                          color: Colors.amber.shade300,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                                ),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -360,21 +310,6 @@ class _SkinSelectorOverlayState extends State<SkinSelectorOverlay>
         return '💎';
       default:
         return '🔒';
-    }
-  }
-  
-  String _getHintText(AppLocalizations t) {
-    final selectedSkin = _skins.firstWhere(
-      (s) => s.skin.id == _selectedSkinId,
-      orElse: () => _skins.first,
-    );
-    
-    if (selectedSkin.isSelected) {
-      return t.skinCurrentLook;
-    } else if (selectedSkin.isUnlocked) {
-      return t.skinTapToWear;
-    } else {
-      return t.skinNeedsUnlock;
     }
   }
   

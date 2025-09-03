@@ -381,9 +381,14 @@ class DialogueService {
   
   /// 获取策略对话
   String getStrategyDialogue(String npcId, String strategy, {String locale = 'zh_TW'}) {
-    final dialogueData = _dialogues[npcId];
+    // 获取当前选择的皮肤ID
+    final skinId = NPCSkinService.instance.getSelectedSkinId(npcId);
+    // 使用与_loadDialogueForNPC相同的缓存key格式
+    final cacheKey = '${npcId}_$skinId';
+    
+    final dialogueData = _dialogues[cacheKey];
     if (dialogueData == null) {
-      return _getDefaultStrategyDialogue(strategy);
+      return _getDefaultStrategyDialogue(strategy, locale: locale);
     }
     
     String localeCode = _normalizeLocale(locale);
