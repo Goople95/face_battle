@@ -19,6 +19,7 @@ import '../services/language_service.dart';
 import '../utils/ad_helper.dart';
 import '../utils/responsive_utils.dart';
 import '../services/vip_unlock_service.dart';
+import '../services/purchase_service.dart';
 import '../config/character_config.dart';
 import '../services/intimacy_service.dart';
 import '../models/intimacy_data.dart';
@@ -44,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DrinkingState? _drinkingState;
   Timer? _soberTimer;
   PackageInfo? _packageInfo;
+  int _vipRebuildKey = 0; // 用于强制刷新VIP卡片
   
   // 获取当前应用的locale代码
   String _getLocaleCode(BuildContext context) {
@@ -1139,10 +1141,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     int aiDrinks = _drinkingState?.getAIDrinks(personality.id) ?? 0;
     
     return FutureBuilder<VIPStatus>(
+      key: ValueKey('vip_${personality.id}_$_vipRebuildKey'), // 添加key来强制重建
       future: VIPUnlockService().getVIPStatus(personality.id),
       builder: (context, snapshot) {
         final vipStatus = snapshot.data ?? VIPStatus.locked;
-        final isLocked = vipStatus == VIPStatus.locked;
+        // 同时检查内购解锁状态
+        final isPurchased = PurchaseService.instance.isNPCPurchased(personality.id);
+        final isLocked = vipStatus == VIPStatus.locked && !isPurchased;
         
         return GestureDetector(
           onTap: () async {
@@ -1158,13 +1163,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               );
               
               // 对话框关闭后，刷新界面以检查是否已解锁
-              setState(() {});
+              setState(() {
+                _vipRebuildKey++; // 强制刷新VIP卡片
+              });
               
               // 延迟一下让界面刷新
               await Future.delayed(const Duration(milliseconds: 500));
               
               // 再次检查解锁状态和醉酒状态
-              bool nowUnlocked = await VIPUnlockService().isUnlocked(personality.id);
+              bool nowUnlocked = await VIPUnlockService().isUnlocked(personality.id) || 
+                                PurchaseService.instance.isNPCPurchased(personality.id);
               bool stillUnavailable = _drinkingState != null && 
                                     _drinkingState!.isAIUnavailable(personality.id);
               
