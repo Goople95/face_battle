@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -171,7 +172,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                       top: 15,
                       right: 15,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -213,7 +214,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                     ],
                   ),
                 ),
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20.r),
                 child: Column(
                   children: [
                 // 看广告临时解锁
@@ -373,7 +374,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                     Navigator.of(context).pop(false);
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.laterDecide,
@@ -458,7 +459,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -491,7 +492,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,

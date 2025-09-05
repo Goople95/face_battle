@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -299,6 +300,184 @@ class LocalStorageDebugTool {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('已复制到剪贴板')),
       );
+    }
+  }
+  
+  /// 获取完整存储分析（分析所有占用的94MB空间）
+  static Future<Map<String, dynamic>> getCompleteStorageAnalysis() async {
+    try {
+      final Map<String, dynamic> storageInfo = {};
+      
+      // 1. 获取应用各个目录
+      final appDir = await getApplicationDocumentsDirectory();
+      final supportDir = await getApplicationSupportDirectory();  
+      final tempDir = await getTemporaryDirectory();
+      final cacheDir = Platform.isAndroid ? await getExternalStorageDirectory() : null;
+      
+      // 2. 计算各目录大小
+      storageInfo['documentsDir'] = await _analyzeDirectory(appDir);
+      storageInfo['supportDir'] = await _analyzeDirectory(supportDir);
+      storageInfo['tempDir'] = await _analyzeDirectory(tempDir);
+      if (cacheDir != null) {
+        storageInfo['externalCacheDir'] = await _analyzeDirectory(cacheDir);
+      }
+      
+      // 3. 获取SharedPreferences大小
+      final prefs = await SharedPreferences.getInstance();
+      final prefsData = await getAllLocalData();
+      int prefsSize = 0;
+      for (var entry in prefsData.entries) {
+        final value = entry.value;
+        if (value is Map && value['length'] != null) {
+          prefsSize += value['length'] as int;
+        }
+      }
+      storageInfo['sharedPreferences'] = {
+        'size': prefsSize,
+        'sizeText': _formatFileSize(prefsSize),
+        'count': prefs.getKeys().length,
+      };
+      
+      // 4. 查找视频缓存
+      final videoCacheInfo = await _findVideoCaches(appDir);
+      storageInfo['videoCache'] = videoCacheInfo;
+      
+      // 5. 计算总大小
+      int totalSize = 0;
+      if (storageInfo['documentsDir'] != null) {
+        totalSize += storageInfo['documentsDir']['totalSize'] as int;
+      }
+      if (storageInfo['supportDir'] != null) {
+        totalSize += storageInfo['supportDir']['totalSize'] as int;
+      }
+      if (storageInfo['tempDir'] != null) {
+        totalSize += storageInfo['tempDir']['totalSize'] as int;
+      }
+      if (storageInfo['externalCacheDir'] != null) {
+        totalSize += storageInfo['externalCacheDir']['totalSize'] as int;
+      }
+      
+      storageInfo['totalSize'] = totalSize;
+      storageInfo['totalSizeText'] = _formatFileSize(totalSize);
+      storageInfo['totalSizeMB'] = (totalSize / 1024 / 1024).toStringAsFixed(2);
+      
+      return storageInfo;
+    } catch (e) {
+      LoggerUtils.error('完整存储分析失败: $e');
+      return {
+        'error': e.toString(),
+        'totalSize': 0,
+        'totalSizeText': '分析失败',
+      };
+    }
+  }
+  
+  /// 分析目录内容
+  static Future<Map<String, dynamic>> _analyzeDirectory(Directory dir) async {
+    try {
+      if (!await dir.exists()) {
+        return {
+          'path': dir.path,
+          'exists': false,
+          'totalSize': 0,
+          'totalSizeText': '0 B',
+          'fileCount': 0,
+          'dirCount': 0,
+        };
+      }
+      
+      int totalSize = 0;
+      int fileCount = 0;
+      int dirCount = 0;
+      Map<String, int> fileTypes = {};
+      List<Map<String, dynamic>> largeFiles = [];
+      
+      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+        if (entity is File) {
+          fileCount++;
+          final size = await entity.length();
+          totalSize += size;
+          
+          // 统计文件类型
+          final extension = entity.path.split('.').last.toLowerCase();
+          fileTypes[extension] = (fileTypes[extension] ?? 0) + 1;
+          
+          // 记录大文件（超过1MB）
+          if (size > 1024 * 1024) {
+            largeFiles.add({
+              'path': entity.path.replaceAll(dir.path, ''),
+              'size': size,
+              'sizeText': _formatFileSize(size),
+            });
+          }
+        } else if (entity is Directory) {
+          dirCount++;
+        }
+      }
+      
+      // 按大小排序大文件
+      largeFiles.sort((a, b) => b['size'].compareTo(a['size']));
+      
+      return {
+        'path': dir.path,
+        'exists': true,
+        'totalSize': totalSize,
+        'totalSizeText': _formatFileSize(totalSize),
+        'totalSizeMB': (totalSize / 1024 / 1024).toStringAsFixed(2),
+        'fileCount': fileCount,
+        'dirCount': dirCount,
+        'fileTypes': fileTypes,
+        'largeFiles': largeFiles.take(10).toList(), // 只返回前10个最大的文件
+      };
+    } catch (e) {
+      LoggerUtils.error('分析目录失败 ${dir.path}: $e');
+      return {
+        'path': dir.path,
+        'error': e.toString(),
+        'totalSize': 0,
+      };
+    }
+  }
+  
+  /// 查找视频缓存
+  static Future<Map<String, dynamic>> _findVideoCaches(Directory baseDir) async {
+    try {
+      final List<Map<String, dynamic>> videoCaches = [];
+      int totalVideoSize = 0;
+      int videoCount = 0;
+      
+      // 查找所有mp4文件
+      await for (final entity in baseDir.list(recursive: true, followLinks: false)) {
+        if (entity is File && entity.path.toLowerCase().endsWith('.mp4')) {
+          videoCount++;
+          final size = await entity.length();
+          totalVideoSize += size;
+          
+          videoCaches.add({
+            'path': entity.path.replaceAll(baseDir.path, ''),
+            'size': size,
+            'sizeText': _formatFileSize(size),
+          });
+        }
+      }
+      
+      // 按大小排序
+      videoCaches.sort((a, b) => b['size'].compareTo(a['size']));
+      
+      return {
+        'totalSize': totalVideoSize,
+        'totalSizeText': _formatFileSize(totalVideoSize),
+        'totalSizeMB': (totalVideoSize / 1024 / 1024).toStringAsFixed(2),
+        'count': videoCount,
+        'videos': videoCaches.take(20).toList(), // 返回前20个最大的视频
+      };
+    } catch (e) {
+      LoggerUtils.error('查找视频缓存失败: $e');
+      return {
+        'totalSize': 0,
+        'count': 0,
+        'error': e.toString(),
+      };
     }
   }
   
@@ -669,16 +848,16 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
     final type = data['type'];
     
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       child: ExpansionTile(
         title: Text(
           key,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text('类型: $type'),
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.r),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -688,7 +867,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                   const Text('解析后数据:', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
                       color: Colors.grey[900],  // 深灰色背景
                       borderRadius: BorderRadius.circular(4),
@@ -696,7 +875,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                     ),
                     child: SelectableText(
                       const JsonEncoder.withIndent('  ').convert(data['parsed']),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12, 
                         fontFamily: 'monospace',
                         color: Colors.greenAccent,  // 亮绿色文字，类似终端
@@ -707,7 +886,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                   Text('数量: ${data['count']}'),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
                       color: Colors.grey[900],  // 深灰色背景
                       borderRadius: BorderRadius.circular(4),
@@ -715,7 +894,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                     ),
                     child: SelectableText(
                       data['value'].join('\n'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: Colors.greenAccent,  // 亮绿色文字
                       ),
@@ -724,7 +903,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                 ] else ...[
                   SelectableText(
                     '值: ${data['value']}',
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 14),
                   ),
                 ],
                 const SizedBox(height: 8),
@@ -792,11 +971,6 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
             onPressed: _loadData,
             tooltip: '刷新',
           ),
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: () => LocalStorageDebugTool.printAllData(),
-            tooltip: '打印到控制台',
-          ),
           PopupMenuButton<String>(
             onSelected: (value) async {
               switch (value) {
@@ -810,7 +984,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                         content: SingleChildScrollView(
                           child: Container(
                             constraints: const BoxConstraints(maxHeight: 400),
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12.r),
                             decoration: BoxDecoration(
                               color: Colors.grey[900],
                               borderRadius: BorderRadius.circular(4),
@@ -818,7 +992,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                             ),
                             child: SelectableText(
                               json,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12, 
                                 fontFamily: 'monospace',
                                 color: Colors.greenAccent,
@@ -859,6 +1033,12 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                   final cacheInfo = await LocalStorageDebugTool.getNPCCacheInfo();
                   if (mounted) {
                     _showNPCCacheDialog(context, cacheInfo);
+                  }
+                  break;
+                case 'full_analysis':
+                  final storageInfo = await LocalStorageDebugTool.getCompleteStorageAnalysis();
+                  if (mounted) {
+                    _showFullStorageAnalysisDialog(context, storageInfo);
                   }
                   break;
                 case 'clear':
@@ -915,6 +1095,15 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                   dense: true,
                 ),
               ),
+              const PopupMenuItem(
+                value: 'full_analysis',
+                child: ListTile(
+                  leading: Icon(Icons.analytics, color: Colors.green),
+                  title: Text('完整存储分析'),
+                  subtitle: Text('分析所有94MB空间构成'),
+                  dense: true,
+                ),
+              ),
               const PopupMenuDivider(),
               const PopupMenuItem(
                 value: 'clear',
@@ -934,7 +1123,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
               children: [
                 // 统计信息
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16.r),
                   color: Theme.of(context).primaryColor.withOpacity(0.1),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -944,7 +1133,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                           const Text('总数据量', style: TextStyle(fontSize: 12)),
                           Text(
                             '${_data.length} 个',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -953,7 +1142,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                           const Text('存储大小', style: TextStyle(fontSize: 12)),
                           Text(
                             _formatSize(_storageSize),
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -964,7 +1153,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                 // 分类选择
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                   child: Row(
                     children: [
                       FilterChip(
@@ -1041,14 +1230,14 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                       if (needUpdateCount > 0) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                           decoration: BoxDecoration(
                             color: Colors.orange.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '$needUpdateCount个待更新',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               color: Colors.orange,
                               fontWeight: FontWeight.bold,
@@ -1060,7 +1249,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                   ),
                   Text(
                     '总大小: ${LocalStorageDebugTool._formatFileSize(totalSize)} | 角色数: $npcCount | 版本记录: ${localVersions.length}个',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
@@ -1074,9 +1263,9 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (npcs.isEmpty)
-                  const Center(
+                  Center(
                     child: Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(20.r),
                       child: Text('暂无缓存的NPC资源'),
                     ),
                   )
@@ -1098,7 +1287,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                         child: ExpansionTile(
                           title: Text(
                             'NPC #$npcId',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1108,13 +1297,13 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                               if (lastAccessed != null)
                                 Text(
                                   '最后访问: ${_formatLastAccessed(lastAccessed)}',
-                                  style: const TextStyle(fontSize: 11),
+                                  style: TextStyle(fontSize: 11),
                                 ),
                             ],
                           ),
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(12.r),
                               width: double.infinity,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1197,7 +1386,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                                                 Expanded(
                                                   child: Text(
                                                     displayName,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 11,
                                                       fontFamily: 'monospace',
                                                     ),
@@ -1207,7 +1396,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                                                 const SizedBox(width: 8),
                                                 // 版本标签
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
                                                   decoration: BoxDecoration(
                                                     color: needsUpdate 
                                                       ? Colors.orange.withValues(alpha: 0.2)
@@ -1232,7 +1421,7 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
                                                 const SizedBox(width: 8),
                                                 Text(
                                                   LocalStorageDebugTool._formatFileSize(fileSize),
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 10,
                                                     color: Colors.grey,
                                                   ),
@@ -1350,6 +1539,312 @@ class _LocalStorageDebugPageState extends State<LocalStorageDebugPage> {
         ],
       ),
     );
+  }
+  
+  void _showFullStorageAnalysisDialog(BuildContext context, Map<String, dynamic> storageInfo) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.analytics, color: Colors.green),
+            SizedBox(width: 8),
+            Text('完整存储分析'),
+          ],
+        ),
+        content: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 总览
+                Card(
+                  color: Colors.blue.shade50,
+                  child: Padding(
+                    padding: EdgeInsets.all(12.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '存储总览',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade800,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          '总大小: ${storageInfo['totalSizeText'] ?? '未知'}',
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                        Text(
+                          '约 ${storageInfo['totalSizeMB'] ?? '0'} MB',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 16.h),
+                
+                // 各目录详情
+                if (storageInfo['documentsDir'] != null)
+                  _buildDirectoryCard('Documents目录', storageInfo['documentsDir'], Colors.orange),
+                
+                if (storageInfo['supportDir'] != null)
+                  _buildDirectoryCard('Support目录', storageInfo['supportDir'], Colors.purple),
+                
+                if (storageInfo['tempDir'] != null)
+                  _buildDirectoryCard('Temp目录（缓存）', storageInfo['tempDir'], Colors.grey),
+                
+                if (storageInfo['externalCacheDir'] != null)
+                  _buildDirectoryCard('外部缓存目录', storageInfo['externalCacheDir'], Colors.teal),
+                
+                // 视频缓存详情
+                if (storageInfo['videoCache'] != null && storageInfo['videoCache']['count'] > 0)
+                  Card(
+                    margin: EdgeInsets.only(bottom: 12.h),
+                    child: Padding(
+                      padding: EdgeInsets.all(12.r),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.video_library, color: Colors.red, size: 20.r),
+                              SizedBox(width: 8.w),
+                              Text(
+                                '视频缓存',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          Text('总大小: ${storageInfo['videoCache']['totalSizeText']}'),
+                          Text('视频数量: ${storageInfo['videoCache']['count']}'),
+                          if (storageInfo['videoCache']['videos'] != null && 
+                              (storageInfo['videoCache']['videos'] as List).isNotEmpty) ...[
+                            SizedBox(height: 8.h),
+                            Text(
+                              '最大的视频文件:',
+                              style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                            ),
+                            ...(storageInfo['videoCache']['videos'] as List).take(5).map((video) => 
+                              Padding(
+                                padding: EdgeInsets.only(left: 8.w, top: 4.h),
+                                child: Text(
+                                  '${video['path']} - ${video['sizeText']}',
+                                  style: TextStyle(fontSize: 11.sp),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                
+                // SharedPreferences
+                if (storageInfo['sharedPreferences'] != null)
+                  Card(
+                    color: Colors.green.shade50,
+                    child: Padding(
+                      padding: EdgeInsets.all(12.r),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.storage, color: Colors.green, size: 20.r),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'SharedPreferences',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          Text('大小: ${storageInfo['sharedPreferences']['sizeText']}'),
+                          Text('键值对数量: ${storageInfo['sharedPreferences']['count']}'),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () async {
+              // 清理建议
+              final suggestions = _getCleanupSuggestions(storageInfo);
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('清理建议'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: suggestions.map((s) => Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4.h),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('• ', style: TextStyle(fontSize: 14.sp)),
+                            Expanded(
+                              child: Text(s, style: TextStyle(fontSize: 14.sp)),
+                            ),
+                          ],
+                        ),
+                      )).toList(),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('关闭'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.lightbulb_outline),
+            label: const Text('清理建议'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildDirectoryCard(String title, Map<String, dynamic> dirInfo, Color color) {
+    if (dirInfo['exists'] == false) {
+      return const SizedBox.shrink();
+    }
+    
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: Padding(
+        padding: EdgeInsets.all(12.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.folder, color: color, size: 20.r),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text('大小: ${dirInfo['totalSizeText']} (${dirInfo['totalSizeMB']} MB)'),
+            Text('文件数: ${dirInfo['fileCount']} | 文件夹数: ${dirInfo['dirCount']}'),
+            
+            if (dirInfo['fileTypes'] != null && (dirInfo['fileTypes'] as Map).isNotEmpty) ...[
+              SizedBox(height: 8.h),
+              Text(
+                '文件类型分布:',
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+              ),
+              Wrap(
+                spacing: 8.w,
+                children: (dirInfo['fileTypes'] as Map).entries.map((e) => 
+                  Chip(
+                    label: Text(
+                      '.${e.key}: ${e.value}',
+                      style: TextStyle(fontSize: 10.sp),
+                    ),
+                    padding: EdgeInsets.zero,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ).toList(),
+              ),
+            ],
+            
+            if (dirInfo['largeFiles'] != null && (dirInfo['largeFiles'] as List).isNotEmpty) ...[
+              SizedBox(height: 8.h),
+              Text(
+                '大文件 (>1MB):',
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+              ),
+              ...(dirInfo['largeFiles'] as List).take(3).map((file) => 
+                Padding(
+                  padding: EdgeInsets.only(left: 8.w, top: 4.h),
+                  child: Text(
+                    '${file['path']} - ${file['sizeText']}',
+                    style: TextStyle(fontSize: 11.sp),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+  
+  List<String> _getCleanupSuggestions(Map<String, dynamic> storageInfo) {
+    List<String> suggestions = [];
+    
+    // 检查视频缓存
+    if (storageInfo['videoCache'] != null) {
+      final videoSize = storageInfo['videoCache']['totalSize'] ?? 0;
+      if (videoSize > 50 * 1024 * 1024) { // 超过50MB
+        suggestions.add('视频缓存占用 ${storageInfo['videoCache']['totalSizeText']}，建议清理不常用的视频');
+      }
+    }
+    
+    // 检查临时目录
+    if (storageInfo['tempDir'] != null) {
+      final tempSize = storageInfo['tempDir']['totalSize'] ?? 0;
+      if (tempSize > 10 * 1024 * 1024) { // 超过10MB
+        suggestions.add('临时文件占用 ${storageInfo['tempDir']['totalSizeText']}，可以安全清理');
+      }
+    }
+    
+    // 检查大文件
+    ['documentsDir', 'supportDir'].forEach((dirKey) {
+      if (storageInfo[dirKey] != null && storageInfo[dirKey]['largeFiles'] != null) {
+        final largeFiles = storageInfo[dirKey]['largeFiles'] as List;
+        if (largeFiles.isNotEmpty) {
+          suggestions.add('$dirKey 中有 ${largeFiles.length} 个大文件，检查是否需要');
+        }
+      }
+    });
+    
+    if (suggestions.isEmpty) {
+      suggestions.add('存储使用正常，暂无清理建议');
+    }
+    
+    return suggestions;
   }
   
   String _formatLastAccessed(String timestamp) {

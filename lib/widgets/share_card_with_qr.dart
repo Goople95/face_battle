@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../models/ai_personality.dart';
@@ -185,7 +186,7 @@ class ShareCardWithQR extends StatelessWidget {
           bottom: 10,
           right: 10,
           child: Container(
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(6.r),
             decoration: BoxDecoration(
               color: Colors.red,
               shape: BoxShape.circle,
@@ -231,8 +232,8 @@ class ShareCardWithQR extends StatelessWidget {
   
   Widget _buildIntimacyDisplay(AppLocalizations l10n) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40),
-      padding: const EdgeInsets.all(14),
+      margin: EdgeInsets.symmetric(horizontal: 40.w),
+      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -313,8 +314,8 @@ class ShareCardWithQR extends StatelessWidget {
   
   Widget _buildQRCodeSection(AppLocalizations l10n) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: 40.w),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -330,7 +331,7 @@ class ShareCardWithQR extends StatelessWidget {
         children: [
           // 二维码
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black12, width: 1),
               borderRadius: BorderRadius.circular(12),
@@ -373,7 +374,7 @@ class ShareCardWithQR extends StatelessWidget {
   
   Widget _buildGameBranding(AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),

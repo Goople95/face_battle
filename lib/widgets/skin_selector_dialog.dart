@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../models/npc_skin.dart';
 import '../services/npc_skin_service.dart';
@@ -62,7 +63,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
     
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(20),
+      insetPadding: EdgeInsets.all(20.r),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -91,7 +92,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
           children: [
             // 標題欄
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -115,7 +116,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                       children: [
                         Text(
                           widget.npcName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -143,8 +144,8 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
             
             // 皮膚網格（3列）
             if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.all(50),
+              Padding(
+                padding: EdgeInsets.all(50.r),
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
                 ),
@@ -152,7 +153,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
             else
               Container(
                 constraints: const BoxConstraints(maxHeight: 400),
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.r),
                 child: GridView.builder(
                   shrinkWrap: true,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -171,7 +172,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
             
             // 底部按鈕
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
@@ -191,7 +192,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                     ),
                     child: Text(
                       currentLang == 'zh' ? '返回' : 'Back',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -211,7 +212,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                       shadowColor: Colors.pink,
                       elevation: 0,
                     ).copyWith(
@@ -241,10 +242,10 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                             : null,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                       child: Text(
                         currentLang == 'zh' ? '💋 換上' : '💋 Wear',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
@@ -269,12 +270,12 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
       message: _getTooltipMessage(skinInfo, lang, currentIntimacy),
       preferBelow: false,
       verticalOffset: 20,
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8.r),
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(8),
       ),
-      textStyle: const TextStyle(
+      textStyle: TextStyle(
         color: Colors.white,
         fontSize: 12,
       ),
@@ -331,7 +332,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                     child: Center(
                       child: Text(
                         _getUnlockIcon(skin.unlockCondition),
-                        style: const TextStyle(fontSize: 32),
+                        style: TextStyle(fontSize: 32),
                       ),
                     ),
                   ),
@@ -343,7 +344,7 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
                     bottom: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: EdgeInsets.all(6.r),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [

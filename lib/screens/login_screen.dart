@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/auth_service.dart';
 import '../utils/logger_utils.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -70,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(24.r),
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: Column(
@@ -189,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           if (authService.errorMessage != null) ...[
             const SizedBox(height: 24),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.r),
               decoration: BoxDecoration(
                 color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -326,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(2),
+                          padding: EdgeInsets.all(2.r),
                           child: Image.asset(
                             'assets/icons/facebook_logo.png',
                             fit: BoxFit.contain,

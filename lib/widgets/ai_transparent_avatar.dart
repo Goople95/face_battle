@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../config/character_config.dart';
@@ -277,7 +278,7 @@ class TransparentAvatarExample extends StatelessWidget {
             
             // 无背景示例（完全透明）
             Container(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.r),
               decoration: BoxDecoration(
                 // 棋盘格背景，展示透明效果
                 image: DecorationImage(

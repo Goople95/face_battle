@@ -343,6 +343,7 @@ class GameProgressService {
     await saveProgress(progress);
   }
   
+  
   // === 私有方法 ===
   
   /// 保存到本地
@@ -671,7 +672,6 @@ class GameProgressData {
   int totalDrinks;
   int adSoberCount; // 看广告醒酒次数（玩家自己）
   Map<String, int> npcIntimacy; // NPC ID -> 亲密度点数
-  List<String> unlockedNPCs;
   List<String> achievements;
   
   // 玩家风格数据
@@ -706,7 +706,6 @@ class GameProgressData {
     this.totalDrinks = 0,
     this.adSoberCount = 0,
     Map<String, int>? npcIntimacy,
-    List<String>? unlockedNPCs,
     List<String>? achievements,
     this.bluffingTendency = 0.5,
     this.aggressiveness = 0.5,
@@ -721,7 +720,6 @@ class GameProgressData {
     this.lastSyncTime,
     this.lastSyncDirection,
   }) : npcIntimacy = npcIntimacy ?? {},
-       unlockedNPCs = unlockedNPCs ?? [],
        achievements = achievements ?? [],
        vsNPCRecords = vsNPCRecords ?? {},
        selectedNPCSkins = selectedNPCSkins ?? {},
@@ -739,7 +737,6 @@ class GameProgressData {
     'totalDrinks': totalDrinks,
     'adSoberCount': adSoberCount,
     'npcIntimacy': npcIntimacy,
-    'unlockedNPCs': unlockedNPCs,
     'achievements': achievements,
     'bluffingTendency': bluffingTendency,
     'aggressiveness': aggressiveness,
@@ -767,7 +764,6 @@ class GameProgressData {
     'totalDrinks': totalDrinks,
     'adSoberCount': adSoberCount,
     'npcIntimacy': npcIntimacy,
-    'unlockedNPCs': unlockedNPCs,
     'achievements': achievements,
     'bluffingTendency': bluffingTendency,
     'aggressiveness': aggressiveness,
@@ -915,7 +911,6 @@ class GameProgressData {
       totalDrinks: json['totalDrinks'] ?? 0,
       adSoberCount: json['adSoberCount'] ?? 0,
       npcIntimacy: Map<String, int>.from(json['npcIntimacy'] ?? {}),
-      unlockedNPCs: List<String>.from(json['unlockedNPCs'] ?? []),
       achievements: List<String>.from(json['achievements'] ?? []),
       bluffingTendency: (json['bluffingTendency'] ?? 0.5).toDouble(),
       aggressiveness: (json['aggressiveness'] ?? 0.5).toDouble(),

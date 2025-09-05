@@ -43,7 +43,7 @@ class ShareImageService {
         builder: (context) => Center(
           child: Card(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -88,7 +88,7 @@ class ShareImageService {
         builder: (context) => Center(
           child: Card(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -286,7 +286,7 @@ class ShareImageService {
                 ],
               ),
               child: Container(
-                margin: const EdgeInsets.all(4),
+                margin: EdgeInsets.all(4),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
@@ -392,7 +392,7 @@ class ShareImageService {
             // 亲密度展示（核心信息）- 一行显示
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 50),
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
@@ -455,7 +455,7 @@ class ShareImageService {
             // 游戏标识区域（简化版）
             Container(
               margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(20),
@@ -496,7 +496,7 @@ class ShareImageService {
                   ),
                   const SizedBox(width: 15),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),

@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:io';
@@ -158,7 +159,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
     
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(20),
+      insetPadding: EdgeInsets.all(20.r),
       child: Container(
         width: screenSize.width * 0.9,
         decoration: BoxDecoration(
@@ -269,7 +270,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
                     top: 16,
                     right: 16,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(20),
@@ -305,7 +306,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
             
             // 底部操作区域
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.r),
               child: Column(
                 children: [
                   // 按钮区域
@@ -339,7 +340,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
@@ -388,7 +389,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
                             onTap: () => Navigator.of(context).pop(),
                             borderRadius: BorderRadius.circular(16),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [

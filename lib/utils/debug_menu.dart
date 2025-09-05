@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,7 +67,7 @@ class DebugMenu extends StatelessWidget {
             title: const Text('清除当前用户数据'),
             subtitle: Text(
               FirebaseAuth.instance.currentUser?.uid ?? '未登录',
-              style: const TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 12),
             ),
           ),
         ),
@@ -114,7 +115,7 @@ class DebugMenu extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: SelectableText(
                     jsonString,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontFamily: 'monospace',
                     ),
@@ -345,7 +346,7 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                   const Text('NPC缓存详情'),
                   Text(
                     '总大小: ${_formatSize(totalSize)} | 角色数: $npcCount',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
@@ -355,9 +356,9 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
         content: Container(
           constraints: const BoxConstraints(maxHeight: 400, maxWidth: 500),
           child: isLoading 
-            ? const Center(
+            ? Center(
                 child: Padding(
-                  padding: EdgeInsets.all(40),
+                  padding: EdgeInsets.all(40.r),
                   child: CircularProgressIndicator(),
                 ),
               )
@@ -366,9 +367,9 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (npcs.isEmpty)
-                      const Center(
+                      Center(
                         child: Padding(
-                          padding: EdgeInsets.all(20),
+                          padding: EdgeInsets.all(20.r),
                           child: Text('暂无缓存的NPC资源'),
                         ),
                       )
@@ -392,7 +393,7 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                             backgroundColor: Colors.blue.withValues(alpha: 0.1),
                             child: Text(
                               npcId.startsWith('0') ? npcId.substring(2, 4) : npcId.substring(0, 2),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -400,7 +401,7 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                           ),
                           title: Text(
                             'NPC #$npcId',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,13 +411,13 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                               if (lastAccessed != null)
                                 Text(
                                   '最后访问: ${_formatLastAccessed(lastAccessed)}',
-                                  style: const TextStyle(fontSize: 11),
+                                  style: TextStyle(fontSize: 11),
                                 ),
                             ],
                           ),
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(12.r),
                               width: double.infinity,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,7 +485,7 @@ class _NPCCacheDialogState extends State<_NPCCacheDialog> {
                                                 const SizedBox(width: 6),
                                                 Text(
                                                   fileName,
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 11,
                                                     fontFamily: 'monospace',
                                                   ),

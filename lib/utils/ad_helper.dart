@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../utils/logger_utils.dart';
 import '../services/admob_service.dart';
@@ -127,7 +128,7 @@ class AdHelper {
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.r),
             decoration: BoxDecoration(
               color: Colors.black87,
               borderRadius: BorderRadius.circular(10),

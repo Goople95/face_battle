@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/drinking_state.dart';
@@ -142,7 +143,7 @@ class _PlayerDrunkDialogState extends State<PlayerDrunkDialog> with SingleTicker
                     ],
                   ),
                 ),
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20.r),
                 child: Column(
                   children: [
                     // 看广告醒酒 - 主要按钮
@@ -157,7 +158,7 @@ class _PlayerDrunkDialogState extends State<PlayerDrunkDialog> with SingleTicker
                         },
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
@@ -183,7 +184,7 @@ class _PlayerDrunkDialogState extends State<PlayerDrunkDialog> with SingleTicker
                           child: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: EdgeInsets.all(8.r),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
@@ -252,7 +253,7 @@ class _PlayerDrunkDialogState extends State<PlayerDrunkDialog> with SingleTicker
                         }
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                       ),
                       child: Text(
                         AppLocalizations.of(context)!.goHomeToRest,

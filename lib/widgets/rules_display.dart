@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../services/rules_service.dart';
 import '../utils/logger_utils.dart';
@@ -53,7 +54,7 @@ class _RulesDisplayState extends State<RulesDisplay> {
 
   Widget _buildDiceImage(int value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: EdgeInsets.symmetric(horizontal: 2.w),
       child: Image.asset(
         'assets/dice/dice-$value.png',
         width: 18,
@@ -127,7 +128,7 @@ class _RulesDisplayState extends State<RulesDisplay> {
             spans.add(WidgetSpan(
               alignment: PlaceholderAlignment.middle,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
+                padding: EdgeInsets.symmetric(horizontal: 2.w),
                 child: Image.asset(
                   'assets/dice/dice-1.png',
                   width: 16,
@@ -145,7 +146,7 @@ class _RulesDisplayState extends State<RulesDisplay> {
       }
       
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: EdgeInsets.symmetric(vertical: 4.h),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -181,7 +182,7 @@ class _RulesDisplayState extends State<RulesDisplay> {
       parts.add(_buildDiceImage(2));
       
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: EdgeInsets.symmetric(vertical: 4.h),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -205,7 +206,7 @@ class _RulesDisplayState extends State<RulesDisplay> {
     } else {
       // 其他规则直接显示文字
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: EdgeInsets.symmetric(vertical: 4.h),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

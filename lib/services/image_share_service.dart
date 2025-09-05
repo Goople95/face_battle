@@ -31,7 +31,7 @@ class ImageShareService {
         barrierDismissible: false,
         builder: (context) => Center(
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.black87,
               borderRadius: BorderRadius.circular(10),
@@ -215,7 +215,7 @@ class ImageShareService {
           builder: (BuildContext dialogContext) {
             return Dialog(
               backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.all(20),
+              insetPadding: EdgeInsets.all(20),
               child: Stack(
                 children: [
                   // 使用Screenshot包装分享卡片
@@ -236,7 +236,7 @@ class ImageShareService {
                     right: 10,
                     child: IconButton(
                       icon: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: Colors.black54,
                           shape: BoxShape.circle,

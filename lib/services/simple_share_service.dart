@@ -72,7 +72,7 @@ class SimpleShareService {
           builder: (BuildContext dialogContext) {
             return Dialog(
               backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.all(20),
+              insetPadding: EdgeInsets.all(20),
               child: Stack(
                 children: [
                   // 分享卡片
@@ -88,7 +88,7 @@ class SimpleShareService {
                     right: 10,
                     child: IconButton(
                       icon: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: Colors.black54,
                           shape: BoxShape.circle,

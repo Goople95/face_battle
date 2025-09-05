@@ -817,14 +817,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 80),
+        insetPadding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 80.h),
         child: Container(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.7,
             maxWidth: MediaQuery.of(context).size.width * 0.9,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             color: Colors.black.withValues(alpha: 0.9),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.1),
@@ -837,7 +837,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               children: [
                 // 标题栏 - 简洁设计
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
@@ -852,8 +852,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       Center(
                         child: Text(
                           AppLocalizations.of(context)!.gameInstructions,
-                          style: const TextStyle(
-                            fontSize: 18,
+                          style: TextStyle(
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -865,10 +865,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         top: 0,
                         bottom: 0,
                         child: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
                             color: Colors.white70,
-                            size: 20,
+                            size: 20.r,
                           ),
                           onPressed: () => Navigator.of(context).pop(),
                           padding: EdgeInsets.zero,
@@ -882,7 +882,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 // 规则内容
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(20.r),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: const RulesDisplay(),
@@ -925,7 +925,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       barrierDismissible: true,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Container(
           constraints: BoxConstraints(
@@ -936,27 +936,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             children: [
               // Title
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade700,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20.r),
+                    topRight: Radius.circular(20.r),
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.analytics,
                       color: Colors.white,
-                      size: 28,
+                      size: 28.r,
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10.w),
                     Text(
                       '${_getLocalizedAIName(context)}思考复盘',
-                      style: const TextStyle(
-                        fontSize: 22,
+                      style: TextStyle(
+                        fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -968,7 +968,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               // Content
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16.r),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -976,23 +976,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       Text(
                         AppLocalizations.of(context)!.aiDecisionProcess(_getLocalizedAIName(context)),
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       
                       ..._currentRound!.aiDecisions.asMap().entries.map((entry) {
                         int index = entry.key;
                         AIDecision decision = entry.value;
                         
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(10),
+                          margin: EdgeInsets.only(bottom: 8.h),
+                          padding: EdgeInsets.all(10.r),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                             border: Border.all(
                               color: Colors.grey.shade400,
                               width: 1,
@@ -1017,13 +1017,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                       : Colors.blue.shade100,
                                     child: Text(
                                       '${index + 1}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8.w),
                                   Expanded(
                                     child: Text(
                                       decision.action == GameAction.challenge 
@@ -1035,23 +1035,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                             ? AppLocalizations.of(context)!.openingBidAction(decision.aiBid!.quantity.toString(), decision.aiBid!.value.toString())
                                             : AppLocalizations.of(context)!.respondToBidAction(decision.playerBid!.quantity.toString(), decision.playerBid!.value.toString(), decision.aiBid!.quantity.toString(), decision.aiBid!.value.toString())
                                           : AppLocalizations.of(context)!.continueBiddingAction,
-                                      style: const TextStyle(
-                                        fontSize: 14,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black87,
                                       ),
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                                     decoration: BoxDecoration(
                                       color: _getProbabilityColor(decision.probability),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(12.r),
                                     ),
                                     child: Text(
                                       '${(decision.probability * 100).toStringAsFixed(1)}%',
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1059,11 +1059,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4.h),
                               Text(
                                 decision.reasoning,
-                                style: const TextStyle(
-                                  fontSize: 13,
+                                style: TextStyle(
+                                  fontSize: 13.sp,
                                   color: Colors.black,
                                   fontWeight: FontWeight.w500,
                                   height: 1.3,
@@ -1071,16 +1071,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               ),
                               // 显示Elite AI的决策选项
                               if (decision.eliteOptions != null && decision.eliteOptions!.isNotEmpty) ...[
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8.h),
                                 Text(
                                   '${_getLocalizedAIName(context)}考虑的选项:',
-                                  style: const TextStyle(
-                                    fontSize: 12,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
                                     color: Colors.black54,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: 4.h),
                                 ...decision.eliteOptions!.map((option) {
                                   String optionText = '';
                                   String strategyText = option['strategy'] ?? '';
@@ -1119,8 +1119,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   }
                                   
                                   return Container(
-                                    margin: const EdgeInsets.only(bottom: 4),
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    margin: EdgeInsets.only(bottom: 4),
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: Colors.grey.shade100,
                                       borderRadius: BorderRadius.circular(6),
@@ -1131,48 +1131,48 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                           option['type'] == 'challenge' 
                                             ? Icons.gavel 
                                             : Icons.casino,
-                                          size: 14,
+                                          size: 14.r,
                                           color: Colors.grey.shade600,
                                         ),
-                                        const SizedBox(width: 6),
+                                        SizedBox(width: 6.w),
                                         Expanded(
                                           child: Text(
                                             optionText,
-                                            style: const TextStyle(
-                                              fontSize: 12,
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
                                               color: Colors.black87,
                                             ),
                                           ),
                                         ),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: _getProbabilityColor(confidence),
                                                     ),
                                           child: Text(
                                             '${(confidence * 100).toStringAsFixed(0)}%',
-                                            style: const TextStyle(
-                                              fontSize: 10,
+                                            style: TextStyle(
+                                              fontSize: 10.sp,
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
+                                        SizedBox(width: 6.w),
                                         Text(
                                           strategyDisplay,
                                           style: TextStyle(
-                                            fontSize: 11,
+                                            fontSize: 11.sp,
                                             color: Colors.grey.shade700,
                                             fontStyle: FontStyle.italic,
                                           ),
                                         ),
                                         if (option['reasoning'] != null) ...[
-                                          const SizedBox(width: 6),
+                                          SizedBox(width: 6.w),
                                           Text(
                                             'EV:${(option['expectedValue'] ?? 0.0).toStringAsFixed(1)}',
                                             style: TextStyle(
-                                              fontSize: 11,
+                                              fontSize: 11.sp,
                                               color: Colors.blue.shade700,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -1188,11 +1188,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         );
                       }),
                       
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       
                       // AI Personality Info
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -1211,14 +1211,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             Icon(
                               Icons.psychology,
                               color: Colors.amber.shade800,
-                              size: 20,
+                              size: 20.r,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${_getLocalizedAIName(context)}的风格：${widget.aiPersonality.localizedDescription}',
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 13.sp,
                                   color: Colors.amber.shade900,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1234,14 +1234,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               
               // Actions - Close button
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.r),
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade600,
-                    padding: const EdgeInsets.symmetric(
+                    padding: EdgeInsets.symmetric(
                       horizontal: 40,
                       vertical: 12,
                     ),
@@ -1249,10 +1249,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     '关闭',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16.sp,
                     ),
                   ),
                 ),
@@ -1419,7 +1419,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(25),
+          padding: EdgeInsets.all(25),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -1429,7 +1429,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 Color(0xFF880E4F),
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
                 color: Color(0xFFE91E63).withValues(alpha: 0.3),
@@ -1442,22 +1442,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             mainAxisSize: MainAxisSize.min,
             children: [
               // 暧昧的图标
-              const Text(
+              Text(
                 '💕',
-                style: TextStyle(fontSize: 50),
+                style: TextStyle(fontSize: 50.sp),
               ),
-              const SizedBox(height: 15),
+              SizedBox(height: 15.h),
               // 主标题
-              const Text(
+              Text(
                 '夜已深',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.w300,
                   letterSpacing: 3,
                 ),
               ),
-              const SizedBox(height: 15),
+              SizedBox(height: 15.h),
               // 暧昧的描述
               Text(
                 AppLocalizations.of(context)!.drunkDescription(_getLocalizedAIName(context)),
@@ -1467,7 +1467,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   fontStyle: FontStyle.italic,
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10.h),
               Text(
                 '你们之间的关系变得更亲密了',
                 style: TextStyle(
@@ -1475,7 +1475,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 25),
+              SizedBox(height: 25.h),
               // 按钮
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1487,9 +1487,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       Navigator.of(context).pop(); // 返回主页
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(20.r),
                         side: BorderSide(
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
@@ -1609,7 +1609,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               children: [
                 // Top Bar - empty for now, will be used for other controls if needed
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  padding: EdgeInsets.symmetric(horizontal: 15.w),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -1621,7 +1621,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 
                 // AI Face and Info with Dialogue - 大面积视频展示
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  padding: EdgeInsets.symmetric(horizontal: 15.w),
                   // NPC大面积视频展示
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -1684,7 +1684,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.home,
                                   color: Colors.white,
                                   size: 24,
@@ -1721,27 +1721,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                     });
                                   },
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8.h),
                                 // 皮膚切換按鈕
                                 Material(
                                   color: Colors.transparent,
                                   child: InkWell(
                                     onTap: _showSkinSelector,  // 点击显示选择器
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(20.r),
                                     child: Container(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: EdgeInsets.all(8.r),
                                       decoration: BoxDecoration(
                                         color: Colors.black.withValues(alpha: 0.3),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: BorderRadius.circular(20.r),
                                         border: Border.all(
                                           color: Colors.amber.withValues(alpha: 0.5),
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         '👙',
                                         style: TextStyle(
-                                          fontSize: 24,
+                                          fontSize: 24.sp,
                                         ),
                                       ),
                                     ),
@@ -1756,7 +1756,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               top: 60,
                               right: 10,
                               child: Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.8),
                                   border: Border.all(
@@ -1776,36 +1776,36 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                           color: Colors.pink.shade400,
                                           size: 16,
                                         ),
-                                        const SizedBox(width: 6),
+                                        SizedBox(width: 6.w),
                                         Text(
                                           AppLocalizations.of(context)!.intimacyProgressTitle,
                                           style: TextStyle(
                                             color: Colors.pink.shade400,
-                                            fontSize: 14,
+                                            fontSize: 14.sp,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 8),
+                                    SizedBox(height: 8.h),
                                     FutureBuilder<String>(
                                       future: _getIntimacyProgress(),
                                       builder: (context, snapshot) {
                                         return Text(
                                           snapshot.data ?? '加载中...',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: 12,
+                                            fontSize: 12.sp,
                                           ),
                                         );
                                       },
                                     ),
-                                    const SizedBox(height: 6),
+                                    SizedBox(height: 6.h),
                                     Text(
                                       AppLocalizations.of(context)!.intimacyTooltip,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 11,
+                                        fontSize: 11.sp,
                                       ),
                                     ),
                                   ],
@@ -1821,7 +1821,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               child: Text(
                                 _aiDialogue,
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   shadows: [
@@ -1851,8 +1851,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 // Game Board
                 Container(
                   height: MediaQuery.of(context).size.height * 0.28,
-                  margin: const EdgeInsets.symmetric(horizontal: 15),
-                  padding: const EdgeInsets.all(8),
+                  margin: EdgeInsets.symmetric(horizontal: 15.w),
+                  padding: EdgeInsets.all(8.r),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -1876,10 +1876,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(20.r),
                             onTap: _showRulesDialog,
                             child: Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.3),
                                 shape: BoxShape.circle,
@@ -1888,7 +1888,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   width: 1,
                                 ),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.help_outline,
                                 color: Colors.white,
                                 size: 16,
@@ -1914,7 +1914,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       _currentRound?.isRoundOver == true
                         ? _buildResultCenter()
                         : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(12),
@@ -1931,12 +1931,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: _currentRound?.onesAreCalled == true
                                       ? Colors.grey.shade800.withValues(alpha: 0.5)
                                       : Colors.yellow.shade900.withValues(alpha: 0.5),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(8.r),
                                     border: Border.all(
                                       color: _currentRound?.onesAreCalled == true
                                         ? Colors.grey.shade600
@@ -1947,14 +1947,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      _getDiceImage(1, size: 20),
-                                      const SizedBox(width: 6),
+                                      _getDiceImage(1, size: 20.r),
+                                      SizedBox(width: 6.w),
                                       Text(
                                         _currentRound?.onesAreCalled == true
                                           ? AppLocalizations.of(context)!.notWildcard
                                           : AppLocalizations.of(context)!.wildcard,
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 12.sp,
                                           fontWeight: FontWeight.bold,
                                           color: _currentRound?.onesAreCalled == true
                                             ? Colors.grey.shade400
@@ -1962,10 +1962,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       if (_currentRound?.onesAreCalled != true) ...[
-                                        const SizedBox(width: 4),
+                                        SizedBox(width: 4),
                                         Icon(
                                           Icons.star,
-                                          size: 14,
+                                          size: 14.r,
                                           color: Colors.yellow.shade300,
                                         ),
                                       ],
@@ -1974,7 +1974,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: 6.h),
                             // Current bid display
                             _currentRound?.currentBid != null 
                               ? Row(
@@ -1987,7 +1987,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                               TextSpan(
                                                 text: _getLocalizedAIName(context),
                                                 style: TextStyle(
-                                                  fontSize: 14,
+                                                  fontSize: 14.sp,
                                                   color: _getNPCColor(),
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -1995,7 +1995,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                               TextSpan(
                                                 text: ': ',
                                                 style: TextStyle(
-                                                  fontSize: 14,
+                                                  fontSize: 14.sp,
                                                   color: Colors.amber.shade200,
                                                 ),
                                               ),
@@ -2005,7 +2005,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                       : Text(
                                           '${AppLocalizations.of(context)!.yourTurn.replaceAll(' Turn', '')}: ',
                                           style: TextStyle(
-                                            fontSize: 14,
+                                            fontSize: 14.sp,
                                             color: Colors.amber.shade200,
                                           ),
                                         ),
@@ -2013,13 +2013,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                       children: [
                                         Text(
                                           '${_currentRound!.currentBid!.quantity} × ',
-                                          style: const TextStyle(
-                                            fontSize: 24,
+                                          style: TextStyle(
+                                            fontSize: 24.sp,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
                                           ),
                                         ),
-                                        _getDiceImage(_currentRound!.currentBid!.value, size: 24),
+                                        _getDiceImage(_currentRound!.currentBid!.value, size: 24.r),
                                       ],
                                     ),
                                   ],
@@ -2028,8 +2028,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   _currentRound?.isPlayerTurn == true 
                                     ? AppLocalizations.of(context)!.pleaseBid 
                                     : AppLocalizations.of(context)!.pleaseWaitThinking(_getLocalizedAIName(context)),
-                                  style: const TextStyle(
-                                    fontSize: 16,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
                                     color: Colors.white70,
                                   ),
                                 ),
@@ -2083,9 +2083,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.local_bar,
-                                    size: 28,
+                                    size: 28.r,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -2169,7 +2169,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             // Left side drinks (first 3)
             if (_drinkingState != null) ...[
               _buildCompactDrinks(isAI, true),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
             ],
             // Label text - using full localized label
             Text(
@@ -2182,12 +2182,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ),
             // Right side drinks (last 3)
             if (_drinkingState != null) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               _buildCompactDrinks(isAI, false),
             ],
           ],
         ),
-        const SizedBox(height: 5),
+        SizedBox(height: 5.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: dice?.values.map((value) {
@@ -2212,7 +2212,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             }
             
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
+              padding: EdgeInsets.symmetric(horizontal: 3),
               child: hidden 
                 ? Container(
                     width: 38,
@@ -2251,7 +2251,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     child: Center(
                       child: _getDiceImage(
                         value,
-                        size: 36,  // Slightly smaller to account for border
+                        size: 36.r,  // Slightly smaller to account for border
                       ),
                     ),
                   ),
@@ -2278,7 +2278,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             // Left side drinks (first 3)
             if (_drinkingState != null) ...[
               _buildCompactDrinks(isAI, true),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
             ],
             // Label text - using full localized label
             Text(
@@ -2291,12 +2291,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ),
             // Right side drinks (last 3)
             if (_drinkingState != null) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               _buildCompactDrinks(isAI, false),
             ],
           ],
         ),
-        const SizedBox(height: 5),
+        SizedBox(height: 5.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: dice.values.map((value) {
@@ -2305,7 +2305,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             bool shouldHighlight = isWild || isCalledValue;
             
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
+              padding: EdgeInsets.symmetric(horizontal: 3),
               child: Container(
                 width: 42,  // Fixed width to prevent layout shifts
                 height: 42, // Fixed height to prevent layout shifts
@@ -2347,7 +2347,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final winner = _currentRound!.winner ?? '';
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: winner == 'Player' 
@@ -2376,33 +2376,33 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Icon(
                 winner == 'Player' ? Icons.emoji_events : Icons.sentiment_dissatisfied,
                 color: Colors.white,
                 size: 18,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               winner == 'Player' 
                 ? Text(
                     AppLocalizations.of(context)!.youWin,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   )
                 : Text(
                     AppLocalizations.of(context)!.aiWins(_getLocalizedAIName(context)),
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           // Bid result in one line with dice icons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2410,14 +2410,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               // 叫牌部分
               Text(
                 '${AppLocalizations.of(context)!.bidShort}: ',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: Colors.white60,
                 ),
               ),
               Text(
                 '${currentBid.quantity}×',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   color: Colors.white70,
                   fontWeight: FontWeight.w500,
@@ -2428,11 +2428,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 width: 18,
                 height: 18,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               // 实际结果
               Text(
                 '${AppLocalizations.of(context)!.actualShort}: ',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: Colors.white60,
                 ),
@@ -2451,7 +2451,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 height: 18,
               ),
               if (!_currentRound!.onesAreCalled && currentBid.value != 1) ...[
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   '(${AppLocalizations.of(context)!.inclShort} ',
                   style: TextStyle(
@@ -2498,15 +2498,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           // Start Button
           ElevatedButton.icon(
             onPressed: _startGame,
-            icon: const Icon(Icons.casino, size: 28),
+            icon: Icon(Icons.casino, size: 28.r),
             label: Text(
               AppLocalizations.of(context)!.startGame,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
@@ -2533,8 +2533,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      padding: const EdgeInsets.all(10),
+      margin: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -2557,7 +2557,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 color: Colors.indigo.shade300,
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context)!.completeBidHistory,
                 style: TextStyle(
@@ -2576,7 +2576,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           
           // 显示完整叫牌历史（包括双方的行为标签）
           Container(
@@ -2602,8 +2602,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 }
                 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  margin: EdgeInsets.only(bottom: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isPlayerBid 
@@ -2621,7 +2621,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     children: [
                       // 显示是谁叫的牌
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: isPlayerBid ? Colors.blue.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                         ),
@@ -2634,7 +2634,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       
                       // 显示叫牌内容
                       Expanded(
@@ -2642,24 +2642,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           children: [
                             Text(
                               '${bid.quantity} × ',
-                              style: const TextStyle(
-                                fontSize: 16,
+                              style: TextStyle(
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            _getDiceImage(bid.value, size: 20),
+                            _getDiceImage(bid.value, size: 20.r),
                             if (bid.value == 1)
                               Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                margin: EdgeInsets.only(left: 4),
+                                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: Colors.amber.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                                 child: Text(
                                   AppLocalizations.of(context)!.wildcard,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.amber,
                                   ),
@@ -2667,10 +2667,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               ),
                             // 显示行为标签（游戏结束后双方都显示）
                             if (behaviorTags.isNotEmpty) ...[
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               ...behaviorTags.map((tag) => Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                margin: EdgeInsets.only(left: 4),
+                                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: tag == '虚张' 
                                     ? Colors.orange.withValues(alpha: 0.3)
@@ -2734,8 +2734,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      padding: const EdgeInsets.all(10),
+      margin: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -2758,7 +2758,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 color: Colors.purple.shade300,
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context)!.bidHistory,
                 style: TextStyle(
@@ -2777,7 +2777,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           
           // 显示叫牌历史
           Container(
@@ -2806,8 +2806,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 }
                 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  margin: EdgeInsets.only(bottom: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isPlayerBid 
@@ -2825,7 +2825,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     children: [
                       // 显示是谁叫的牌
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: isPlayerBid ? Colors.blue.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
                         ),
@@ -2838,7 +2838,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       
                       // 显示叫牌内容
                       Expanded(
@@ -2846,24 +2846,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           children: [
                             Text(
                               '${bid.quantity} × ',
-                              style: const TextStyle(
-                                fontSize: 16,
+                              style: TextStyle(
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            _getDiceImage(bid.value, size: 20),
+                            _getDiceImage(bid.value, size: 20.r),
                             if (bid.value == 1)
                               Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                margin: EdgeInsets.only(left: 4),
+                                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: Colors.amber.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                                 child: Text(
                                   AppLocalizations.of(context)!.wildcard,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.amber,
                                   ),
@@ -2871,10 +2871,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               ),
                             // 显示行为标签
                             if (behaviorTags.isNotEmpty) ...[
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               ...behaviorTags.map((tag) => Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                margin: EdgeInsets.only(left: 4),
+                                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: tag == '虚张' 
                                     ? Colors.orange.withValues(alpha: 0.3)
@@ -2920,8 +2920,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           // 显示当前叫牌要求提示
           if (_currentRound!.currentBid != null && _currentRound!.isPlayerTurn)
             Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.all(8),
+              margin: EdgeInsets.only(top: 8),
+              padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.yellow.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -2937,7 +2937,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     size: 14,
                     color: Colors.yellow.shade300,
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       AppLocalizations.of(context)!.nextBidHint(_currentRound!.currentBid!.quantity, _currentRound!.currentBid!.value),
@@ -2958,8 +2958,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Build player analysis panel (游戏结束后显示)
   Widget _buildPlayerAnalysisPanel() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      padding: const EdgeInsets.all(10),
+      margin: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -2982,7 +2982,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 color: Colors.blue.shade300,
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context)!.playerDataAnalysis,
                 style: TextStyle(
@@ -2993,7 +2993,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
@@ -3001,7 +3001,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.totalGames(_gameProgress!.totalGames),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -3010,7 +3010,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           // Stats Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -3037,11 +3037,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           // VS Current AI Record
           if (_gameProgress!.vsNPCRecords[widget.aiPersonality.id] != null) ...[
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -3062,15 +3062,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     color: Colors.orange.shade300,
                     size: 16,
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Text(
                     'vs ${_getLocalizedAIName(context)}: ',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: Colors.white70,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     '${_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0}${AppLocalizations.of(context)!.win}',
                     style: TextStyle(
@@ -3079,7 +3079,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       color: Colors.green.shade400,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Text(
                     '${_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses'] ?? 0}${AppLocalizations.of(context)!.lose}',
                     style: TextStyle(
@@ -3093,7 +3093,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   if ((_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0) + 
                       (_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses'] ?? 0) > 0) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: (_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins']! > 
                                 _gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses']!)
@@ -3105,7 +3105,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         '${AppLocalizations.of(context)!.winRate}: ${((_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0) * 100.0 / 
                           ((_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['wins'] ?? 0) + 
                            (_gameProgress!.vsNPCRecords[widget.aiPersonality.id]!['losses'] ?? 0))).toStringAsFixed(0)}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -3116,11 +3116,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
           ],
           // Play Style
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
@@ -3132,11 +3132,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   color: Colors.purple.shade300,
                   size: 16,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     '${AppLocalizations.of(context)!.gameStyle}: ${_gameProgress!.getStyleDescription(context)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       color: Colors.white70,
                     ),
@@ -3168,13 +3168,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ? Image.network(
                 user!.photoURL!,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(
+                errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.person,
                   color: Colors.blue,
                   size: 30,
                 ),
               )
-            : const Icon(
+            : Icon(
                 Icons.person,
                 color: Colors.blue,
                 size: 30,
@@ -3267,7 +3267,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 8,
             color: Colors.white54,
           ),
@@ -3279,20 +3279,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Build result buttons
   Widget _buildResultButtons() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 8),
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: _startNewRound,
-          icon: const Icon(Icons.play_arrow),
+          icon: Icon(Icons.play_arrow),
           label: Text(
             AppLocalizations.of(context)!.continueGame,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green.shade700,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(25),
             ),
@@ -3305,8 +3305,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   
   Widget _buildControlPanel() {
     return Container(
-      padding: const EdgeInsets.all(8),
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.all(8),
+      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -3344,7 +3344,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 },
               ),
               
-              const SizedBox(width: 40),
+              SizedBox(width: 40),
               
               // Value selector
               _buildSelector(
@@ -3373,7 +3373,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ],
           ),
           
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           
           // Main Bid Button (Reduced height)
           SizedBox(
@@ -3398,13 +3398,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     children: [
                       Text(
                         '$_selectedQuantity × ',
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      _getDiceImage(_selectedValue, size: 20),
+                      _getDiceImage(_selectedValue, size: 20.r),
                       if (_currentRound != null && _currentRound!.onesAreCalled && _selectedValue != 1)
                         Text(
                           ' ${AppLocalizations.of(context)!.noWildcard}',
@@ -3415,7 +3415,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     AppLocalizations.of(context)!.challengeSuccessRateDisplay((_calculateBidProbability() * 100).toStringAsFixed(0)),
                     style: TextStyle(
@@ -3435,7 +3435,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           
           // Challenge Button (Reduced)
           if (_currentRound?.currentBid != null) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               height: 42,
@@ -3459,11 +3459,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           size: 20,
                           color: Colors.red.shade400,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                         Text(
                           AppLocalizations.of(context)!.showDice,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.red.shade400,
                           ),
@@ -3509,7 +3509,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.1),
@@ -3528,7 +3528,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   size: 22,
                 ),
                 onPressed: onDecrease,
-                padding: const EdgeInsets.all(4),
+                padding: EdgeInsets.all(4),
                 constraints: const BoxConstraints(
                   minWidth: 36,
                   minHeight: 36,
@@ -3537,7 +3537,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               Container(
                 width: 40,
                 alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
                   color: isWild 
                     ? Colors.amber.withValues(alpha: 0.3)
@@ -3560,7 +3560,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   size: 22,
                 ),
                 onPressed: onIncrease,
-                padding: const EdgeInsets.all(4),
+                padding: EdgeInsets.all(4),
                 constraints: const BoxConstraints(
                   minWidth: 36,
                   minHeight: 36,

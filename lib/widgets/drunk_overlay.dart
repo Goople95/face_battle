@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../models/drinking_state.dart';
 
@@ -136,7 +137,7 @@ class DrinkingIndicator extends StatelessWidget {
       children: [
         // 玩家饮酒状态
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(10.r),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(15),
@@ -189,7 +190,7 @@ class DrinkingIndicator extends StatelessWidget {
         
         // AI饮酒状态
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(10.r),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(15),

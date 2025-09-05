@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../services/cloud_npc_service.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -138,7 +139,7 @@ class _NPCManagerWidgetState extends State<NPCManagerWidget> {
         children: [
           // 标题栏
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.3),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -171,7 +172,7 @@ class _NPCManagerWidgetState extends State<NPCManagerWidget> {
                     child: CircularProgressIndicator(color: Colors.white),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16.r),
                     itemCount: _npcConfigs.length,
                     itemBuilder: (context, index) {
                       final npc = _npcConfigs[index];
@@ -204,7 +205,7 @@ class _NPCManagerWidgetState extends State<NPCManagerWidget> {
                           },
                           borderRadius: BorderRadius.circular(12),
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12.r),
                             child: Row(
                               children: [
                                 // NPC头像
@@ -364,7 +365,7 @@ class _NPCManagerWidgetState extends State<NPCManagerWidget> {
                                   )
                                 else if (isSelected)
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: EdgeInsets.all(8.r),
                                     decoration: BoxDecoration(
                                       color: Colors.amber,
                                       shape: BoxShape.circle,
@@ -377,7 +378,7 @@ class _NPCManagerWidgetState extends State<NPCManagerWidget> {
                                   )
                                 else if (!npc.isLocal)
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: EdgeInsets.all(8.r),
                                     decoration: BoxDecoration(
                                       color: Colors.blue.withOpacity(0.3),
                                       shape: BoxShape.circle,
@@ -399,7 +400,7 @@ class _NPCManagerWidgetState extends State<NPCManagerWidget> {
           
           // 底部提示
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.3),
             ),

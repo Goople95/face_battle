@@ -140,7 +140,7 @@
       "avatarPath": "assets/npcs/1001/1/",
       "videosPath": "assets/npcs/1001/1/",
       "isVIP": true,
-      "unlockItemId": "vip_npc_1001",
+      "unlockItemId": "npc_1001",
       "personality": {
         "bluffRatio": 0.48,
         "challengeThreshold": 0.42,
@@ -208,7 +208,7 @@
       "avatarPath": "assets/npcs/1002/1/",
       "videosPath": "assets/npcs/1002/1/",
       "isVIP": true,
-      "unlockItemId": "vip_npc_1002",
+      "unlockItemId": "npc_1002",
       "personality": {
         "bluffRatio": 0.55,
         "challengeThreshold": 0.45,

@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../models/intimacy_data.dart';
 import '../services/intimacy_service.dart';
@@ -34,7 +35,7 @@ class IntimacyDisplay extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -104,7 +105,7 @@ class IntimacyDisplay extends StatelessWidget {
   
   Widget _buildDetailedDisplay(BuildContext context, IntimacyData intimacy) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -155,7 +156,7 @@ class IntimacyDisplay extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: _getColorForLevel(intimacy.intimacyLevel).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),

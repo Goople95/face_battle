@@ -12,6 +12,7 @@ import 'ip_location_service.dart';
 import 'analytics_service.dart';
 import 'cloud_npc_service.dart';
 import 'npc_skin_service.dart';
+import 'purchase_service.dart';
 import '../utils/logger_utils.dart';
 
 /// 认证服务 - 管理用户登录状态
@@ -426,16 +427,33 @@ class AuthService extends ChangeNotifier {
       // 1. 设置 LocalStorage 用户ID
       LocalStorageService.instance.setUserId(user.uid);
       
-      // 2. 并发收集所有需要的信息
-      final results = await Future.wait([
-        DeviceInfoService.instance.collectDeviceInfo(),
-        IpLocationService.instance.getUserCountryInfo(),
-        _getAppVersion(),
+      // 2. 并发收集信息，但每个操作都有独立的错误处理
+      final futures = await Future.wait([
+        DeviceInfoService.instance.collectDeviceInfo().catchError((e) {
+          LoggerUtils.warning('收集设备信息失败: $e');
+          return <String, dynamic>{'platform': 'unknown'};
+        }),
+        IpLocationService.instance.getUserCountryInfo().catchError((e) {
+          LoggerUtils.warning('收集位置信息失败: $e');
+          return {
+            'country': 'Unknown',
+            'countryCode': 'XX',
+            'region': 'Unknown',
+            'city': 'Unknown',
+            'timezone': 'Unknown',
+            'isp': 'Unknown',
+          };
+        }),
+        _getAppVersion().catchError((e) {
+          LoggerUtils.warning('获取应用版本失败: $e');
+          return '0.1.2+1';
+        }),
       ]);
       
-      final deviceInfo = results[0] as Map<String, dynamic>;
-      final locationInfo = results[1] as Map<String, dynamic>;
-      final appVersion = results[2] as String;
+      final deviceInfo = futures[0] as Map<String, dynamic>;
+      final locationInfo = futures[1] as Map<String, dynamic>;
+      final appVersion = futures[2] as String;
+      
       final deviceLanguage = Platform.localeName;
       
       // 3. 一次性更新所有用户信息到 Firestore
@@ -453,7 +471,11 @@ class AuthService extends ChangeNotifier {
       // 4. 初始化游戏进度服务
       await GameProgressService.instance.initialize();
       
-      // 5. 初始化皮膚服務
+      // 5. 重新加载当前用户的购买记录
+      await PurchaseService.instance.reloadForCurrentUser();
+      LoggerUtils.info('已重新加载用户 ${user.uid} 的购买记录');
+      
+      // 6. 初始化皮膚服務
       await NPCSkinService.instance.initialize();
       LoggerUtils.info('皮膚服務初始化完成');
       

@@ -3,6 +3,8 @@
 /// 当NPC被喝醉时展示的胜利动画和成就感增强界面
 library;
 
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
@@ -16,6 +18,7 @@ import '../services/cloud_npc_service.dart';
 import '../services/npc_resource_loader.dart';
 import '../services/npc_skin_service.dart';
 import '../utils/logger_utils.dart';
+import 'npc_image_widget.dart';
 import '../l10n/generated/app_localizations.dart';
 
 /// 醉倒胜利动画
@@ -247,7 +250,40 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
       }
     } catch (e) {
       LoggerUtils.error('醉倒视频加载失败: $e');
-      // 加载失败不影响动画展示，继续显示其他内容
+      // 视频加载失败时，立即触发亲密度结算，不等待5秒
+      if (mounted) {
+        setState(() {
+          _videoInitialized = false; // 标记视频未初始化
+        });
+        
+        // 立即触发亲密度结算（如果还没有结算）
+        if (_intimacyMinutes == 0) {
+          _intimacyMinutes = 20 + math.Random().nextInt(41);
+          IntimacyService().recordNPCDrunk(widget.defeatedAI.id, _intimacyMinutes).then((leveledUp) {
+            if (leveledUp && mounted) {
+              setState(() {
+                _hasLeveledUp = true;
+              });
+            }
+          });
+        }
+        
+        // 延迟2秒后直接显示亲密度界面
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted && !_showingIntimacy) {
+            _fadeController.reverse().then((_) {
+              setState(() {
+                _showingIntimacy = true;
+              });
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted) {
+                  _fadeController.forward();
+                }
+              });
+            });
+          }
+        });
+      }
     }
       
       // 视频播放完毕后显示亲密度场景
@@ -376,7 +412,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                     SlideTransition(
                       position: _slideAnimation,
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all(20.r),
                         child: Column(
                           children: [
                             // 胜利标题
@@ -560,7 +596,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
                             
                             // 神秘的中心文字
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 15.h),
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   color: Color(0xFFE91E63).withValues(alpha: 0.3),
@@ -646,8 +682,37 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   /// 构建视频视图
   Widget _buildVideoView() {
     if (!_videoInitialized || _videoController == null || !_videoController!.value.isInitialized) {
-      // 加载中显示空容器
-      return Container();
+      // 视频加载中或失败时显示备用内容
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // NPC静态图片作为备用
+          ClipOval(
+            child: NPCImageWidget(
+              npcId: widget.defeatedAI.id,
+              width: 200,
+              height: 200,
+            ),
+          ),
+          SizedBox(height: 30),
+          // 醉倒提示文字
+          Text(
+            '${widget.defeatedAI.getLocalizedName(Localizations.localeOf(context).languageCode)} 醉倒了...',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.white.withValues(alpha: 0.8),
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          SizedBox(height: 10),
+          // 加载中提示
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Color(0xFFF8BBD0).withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      );
     }
     
     // 播放视频 - 使用AspectRatio确保正确的宽高比
@@ -693,8 +758,8 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 40),
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+        margin: EdgeInsets.symmetric(horizontal: 40.w),
+        padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 40.h),
         decoration: BoxDecoration(
           color: Color(0xFF1a0a14).withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(25),
@@ -710,7 +775,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             if (_hasLeveledUp) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -844,7 +909,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
             
             // 第三行：升级提示文案
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
@@ -890,7 +955,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   /// 构建统计行
   Widget _buildStatRow(String label, String value, Color color) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -917,7 +982,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
   /// 构建成就徽章
   Widget _buildAchievementBadge(String icon, String label) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+      margin: EdgeInsets.symmetric(horizontal: 10.w),
       child: Column(
         children: [
           Container(
@@ -960,7 +1025,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     // 统计场景显示简化的按钮
     if (_showingStats) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 20.h),
         child: Center(
           // 只保留继续按钮（返回主页）
           child: SizedBox(
@@ -979,7 +1044,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
     
     // 其他场景的按钮（保持原样）
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.r),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -1097,7 +1162,7 @@ class _VictoryDrunkAnimationState extends State<VictoryDrunkAnimation>
         onTap: onTap,
         borderRadius: BorderRadius.circular(25),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

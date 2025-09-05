@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import '../models/npc_skin.dart';
 import '../services/npc_skin_service.dart';
@@ -128,7 +129,7 @@ class _SkinSelectorOverlayState extends State<SkinSelectorOverlay>
                     color: Colors.transparent,
                     child: Container(
                       width: 280,
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12.r),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
@@ -242,7 +243,7 @@ class _SkinSelectorOverlayState extends State<SkinSelectorOverlay>
                                                     top: 4,
                                                     right: 4,
                                                     child: Container(
-                                                      padding: const EdgeInsets.all(4),
+                                                      padding: EdgeInsets.all(4.r),
                                                       decoration: BoxDecoration(
                                                         gradient: LinearGradient(
                                                           colors: [

@@ -183,6 +183,75 @@ class CloudStorageService {
   
   // === 特定数据类型的便捷方法 ===
   
+  /// 保存已购买的NPCs列表
+  Future<bool> savePurchasedNPCs(List<String> npcIds) async {
+    final userId = currentUserId;
+    if (userId == null) return false;
+    
+    try {
+      // purchased_npcs保存在用户文档的purchased_npcs字段下，与gameProgress平级
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .set({
+            'purchased_npcs': npcIds,
+            'purchased_npcs_updated': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+      
+      LoggerUtils.info('已购买NPCs已同步到云端: $npcIds');
+      return true;
+    } catch (e) {
+      LoggerUtils.error('保存已购买NPCs失败: $e');
+      return false;
+    }
+  }
+  
+  /// 获取已购买的NPCs列表
+  Future<List<String>> getPurchasedNPCs() async {
+    final userId = currentUserId;
+    if (userId == null) return [];
+    
+    try {
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && data['purchased_npcs'] != null) {
+          return List<String>.from(data['purchased_npcs']);
+        }
+      }
+      return [];
+    } catch (e) {
+      LoggerUtils.error('获取已购买NPCs失败: $e');
+      return [];
+    }
+  }
+  
+  /// 添加新购买的NPC
+  Future<bool> addPurchasedNPC(String npcId) async {
+    final userId = currentUserId;
+    if (userId == null) return false;
+    
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .update({
+            'purchased_npcs': FieldValue.arrayUnion([npcId]),
+            'purchased_npcs_updated': FieldValue.serverTimestamp(),
+          });
+      
+      LoggerUtils.info('新购买的NPC已添加到云端: $npcId');
+      return true;
+    } catch (e) {
+      LoggerUtils.error('添加新购买NPC失败: $e');
+      return false;
+    }
+  }
+  
   /// 保存游戏进度
   Future<bool> saveGameProgress(Map<String, dynamic> progress) async {
     final userId = currentUserId;

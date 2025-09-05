@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         backgroundColor: Color(0xFF1A0000),  // 深黑红色
         leading: kDebugMode 
             ? IconButton(
-                icon: const Icon(Icons.bug_report, color: Colors.orange),
+                icon: Icon(Icons.bug_report, color: Colors.orange),
                 tooltip: AppLocalizations.of(context)!.debugTool,
                 onPressed: () {
                   Navigator.push(
@@ -292,8 +292,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             : null,
         title: Text(
           AppLocalizations.of(context)!.appTitle,
-          style: const TextStyle(
-            fontSize: 24,
+          style: TextStyle(
+            fontSize: 24.sp,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () => _showSettingsDialog(context, authService, userService),
           ),
         ],
@@ -327,8 +327,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 // AI Personality Selection
                 Text(
                   AppLocalizations.of(context)!.selectOpponent,
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: TextStyle(
+                    fontSize: 20.sp,
                     color: Colors.white,
                   ),
                 ),
@@ -345,8 +345,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 // VIP Characters Section
                 Text(
                   AppLocalizations.of(context)!.vipOpponents,
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: TextStyle(
+                    fontSize: 20.sp,
                     color: Colors.amber,
                     fontWeight: FontWeight.bold,
                   ),
@@ -367,19 +367,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   padding: EdgeInsets.all(20.w),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(15.r),
                   ),
                   child: Column(
                     children: [
                       Text(
                         AppLocalizations.of(context)!.gameInstructions,
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: TextStyle(
+                          fontSize: 18.sp,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
                       const RulesDisplay(),
                     ],
                   ),
@@ -407,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.2),
           width: 1,
@@ -418,44 +418,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.analytics,
                 color: Colors.white,
-                size: 28,
+                size: 28.r,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10.w),
               Text(
                 AppLocalizations.of(context)!.playerDataAnalysis,
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(color: Colors.green, width: 1),
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.totalGames(_gameProgress!.totalGames.toString()),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           
           // Overall Stats
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
@@ -482,18 +482,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
           
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           
           // VS AI Records
           Text(
             AppLocalizations.of(context)!.vsRecord,
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           
           ..._gameProgress!.vsNPCRecords.entries.map((entry) {
             final aiId = entry.key;
@@ -534,7 +534,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
@@ -559,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         style: TextStyle(
                           color: aiColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 16.sp,
                         ),
                       ),
                     ),
@@ -571,29 +571,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       children: [
                         Text(
                           aiName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 14.sp,
                           ),
                         ),
                         Text(
                           '$wins${AppLocalizations.of(context)!.win} $losses${AppLocalizations.of(context)!.lose}',
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
-                            fontSize: 12,
+                            fontSize: 12.sp,
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                     decoration: BoxDecoration(
                       color: winRate >= 50 
                         ? Colors.green.withValues(alpha: 0.2)
                         : Colors.red.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
                         color: winRate >= 50 ? Colors.green : Colors.red,
                         width: 1,
@@ -604,7 +604,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       style: TextStyle(
                         color: winRate >= 50 ? Colors.green : Colors.red,
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: 12.sp,
                       ),
                     ),
                   ),
@@ -613,12 +613,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             );
           }),
           
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           
           // Player Style
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -637,17 +637,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               children: [
                 Text(
                   AppLocalizations.of(context)!.gameStyle,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   _gameProgress!.getStyleDescription(context),
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 13.sp,
                     color: Colors.white.withValues(alpha: 0.9),
                     height: 1.4,
                   ),
@@ -666,16 +666,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Text(
           value,
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 20.sp,
             fontWeight: FontWeight.bold,
             color: color,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 11.sp,
             color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
@@ -710,9 +710,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       backgroundColor: Colors.white.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: isSelected ? Colors.white : Colors.white70,
-        fontSize: 14,
+        fontSize: 14.sp,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
     );
   }
   
@@ -724,7 +724,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return Center(
         child: Text(
           AppLocalizations.of(context)!.loading,
-          style: const TextStyle(color: Colors.white54),
+          style: TextStyle(color: Colors.white54),
         ),
       );
     }
@@ -779,7 +779,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return Center(
         child: Text(
           AppLocalizations.of(context)!.noVIPCharacters,
-          style: const TextStyle(color: Colors.amber),
+          style: TextStyle(color: Colors.amber),
         ),
       );
     }
@@ -817,7 +817,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
       if (i + 2 < vipCharacters.length) {
-        rows.add(const SizedBox(height: 12));
+        rows.add(SizedBox(height: 12.h));
       }
     }
     
@@ -908,7 +908,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               color.withValues(alpha: 0.4),
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.3),
             width: 2,
@@ -928,7 +928,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // 头像
                     NPCAvatarWidget(
                       personality: personality,
-                      size: 60,
+                      size: 60.r,
                       showBorder: true,
                       isUnavailable: isUnavailable,
                     ),
@@ -944,7 +944,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 1),
                           ),
-                          child: const Text(
+                          child: Text(
                             '🥴',
                             style: TextStyle(fontSize: 12),
                           ),
@@ -952,17 +952,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6.h),
                 Text(
                   _getLocalizedName(context, personality),
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 // 显示亲密度
-                const SizedBox(height: 2),
+                SizedBox(height: 2.h),
                 Builder(
                   builder: (context) {
                     final intimacy = IntimacyService().getIntimacy(personality.id);
@@ -974,14 +974,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           children: [
                             Icon(
                               Icons.favorite,
-                              size: 12,
+                              size: 12.r,
                               color: Colors.pink.shade400,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               'Lv.${intimacy.intimacyLevel}',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 11.sp,
                                 color: Colors.pink.shade400,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -990,13 +990,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               '${intimacy.currentLevelPoints}',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 10.sp,
                                 color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         // 进度条
                         Container(
                           width: 120,
@@ -1028,14 +1028,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   },
                 ),
                 // 显示AI酒杯数量和倒计时 (始终显示)
-                const SizedBox(height: 2),
+                SizedBox(height: 2.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ...List.generate(personality.drinkCapacity, (index) {
                       return Icon(
                         Icons.local_bar,
-                        size: 12,
+                        size: 12.r,
                         color: index < aiDrinks
                           ? Colors.red.shade300
                           : Colors.grey.withValues(alpha: 0.8),
@@ -1047,7 +1047,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Text(
                         _getFormattedSoberTime(personality.id),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.sp,
                           color: Colors.green.shade300,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1055,15 +1055,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Flexible(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
                       _getLocalizedDescription(context, personality),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: 11.sp,
                         color: Colors.white70,
                       ),
                       maxLines: 2,
@@ -1072,9 +1072,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 // VS Record - 始终显示战绩（即使是0胜0负）
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(10),
@@ -1089,7 +1089,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Text(
                         '${_gameProgress?.vsNPCRecords[personality.id]?['wins'] ?? 0}',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.bold,
                           color: Colors.green.shade300,
                         ),
@@ -1097,7 +1097,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Text(
                         AppLocalizations.of(context)!.win,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.sp,
                             color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
@@ -1105,7 +1105,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Text(
                           '${_gameProgress?.vsNPCRecords[personality.id]?['losses'] ?? 0}',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.red.shade300,
                           ),
@@ -1113,7 +1113,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Text(
                           AppLocalizations.of(context)!.lose,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 10.sp,
                             color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
@@ -1145,9 +1145,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       future: VIPUnlockService().getVIPStatus(personality.id),
       builder: (context, snapshot) {
         final vipStatus = snapshot.data ?? VIPStatus.locked;
-        // 同时检查内购解锁状态
-        final isPurchased = PurchaseService.instance.isNPCPurchased(personality.id);
-        final isLocked = vipStatus == VIPStatus.locked && !isPurchased;
+        // 使用PurchaseService检查永久解锁状态
+        final isPermanentlyUnlocked = PurchaseService.instance.isNPCPurchased(personality.id);
+        final isLocked = vipStatus == VIPStatus.locked && !isPermanentlyUnlocked;
         
         return GestureDetector(
           onTap: () async {
@@ -1216,7 +1216,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   color.withValues(alpha: 0.4),
                 ],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               border: Border.all(
                 color: Colors.amber,
                 width: 2,
@@ -1236,17 +1236,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   top: 8,
                   left: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                     decoration: BoxDecoration(
                       color: Colors.amber,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
+                    child: Text(
                       'VIP',
                       style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
-                        fontSize: 10,
+                        fontSize: 10.sp,
                       ),
                     ),
                   ),
@@ -1263,10 +1263,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         color: Colors.black.withValues(alpha: 0.7),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.lock,
                         color: Colors.white,
-                        size: 16,
+                        size: 16.r,
                       ),
                     ),
                   )
@@ -1280,16 +1280,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         if (snapshot.hasData && snapshot.data != null) {
                           final minutes = snapshot.data!.inMinutes;
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                             decoration: BoxDecoration(
                               color: Colors.orange,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               AppLocalizations.of(context)!.tempUnlockTime(minutes),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
+                                fontSize: 10.sp,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1312,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           // VIP卡片头像
                           NPCAvatarWidget(
                             personality: personality,
-                            size: 60,
+                            size: 60.r,
                             showBorder: true,
                             isUnavailable: isUnavailable,
                           ),
@@ -1328,7 +1328,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   shape: BoxShape.circle,
                                   border: Border.all(color: Colors.white, width: 1),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   '🥴',
                                   style: TextStyle(fontSize: 12),
                                 ),
@@ -1336,13 +1336,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6.h),
                       
                       // 名字
                       Text(
                         _getLocalizedName(context, personality),
-                        style: const TextStyle(
-                          fontSize: 14,
+                        style: TextStyle(
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -1352,7 +1352,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                       
                       // 显示亲密度（锁定和未锁定都显示）
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2.h),
                       Builder(
                         builder: (context) {
                           final intimacy = IntimacyService().getIntimacy(personality.id);
@@ -1364,14 +1364,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 children: [
                                   Icon(
                                     Icons.favorite,
-                                    size: 10,
+                                    size: 10.r,
                                     color: Colors.pink.shade400,
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
                                     'Lv.${intimacy.intimacyLevel}',
                                     style: TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 10.sp,
                                       color: Colors.pink.shade400,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1380,13 +1380,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   Text(
                                     '${intimacy.currentLevelPoints}',
                                     style: TextStyle(
-                                      fontSize: 9,
+                                      fontSize: 9.sp,
                                       color: Colors.white.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 3),
+                              SizedBox(height: 3.h),
                               // 进度条
                               Container(
                                 width: 100,
@@ -1416,14 +1416,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                       
                       // 酒杯状态（显示在描述之前）
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           ...List.generate(personality.drinkCapacity, (index) {
                             return Icon(
                               Icons.local_bar,
-                              size: 10,
+                              size: 10.r,
                               color: index < aiDrinks
                                 ? Colors.red.shade300
                                 : Colors.grey.withValues(alpha: 0.8),
@@ -1433,15 +1433,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                       
                       // 描述
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Flexible(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             _getLocalizedDescription(context, personality),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 11,
+                            style: TextStyle(
+                              fontSize: 11.sp,
                               color: Colors.white70,
                             ),
                             maxLines: 2,
@@ -1451,9 +1451,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                       
                       // VS Record - 显示战绩（即使是0胜0负）
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(8),
@@ -1468,7 +1468,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               '${_gameProgress?.vsNPCRecords[personality.id]?['wins'] ?? 0}',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 12.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green.shade300,
                               ),
@@ -1476,7 +1476,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               AppLocalizations.of(context)!.win,
                               style: TextStyle(
-                                fontSize: 9,
+                                fontSize: 9.sp,
                                 color: Colors.white60,
                               ),
                             ),
@@ -1484,7 +1484,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               '${_gameProgress?.vsNPCRecords[personality.id]?['losses'] ?? 0}',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 12.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.red.shade300,
                               ),
@@ -1492,7 +1492,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             Text(
                               AppLocalizations.of(context)!.lose,
                               style: TextStyle(
-                                fontSize: 9,
+                                fontSize: 9.sp,
                                 color: Colors.white60,
                               ),
                             ),
@@ -1533,12 +1533,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -1554,13 +1554,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               // 标题
               Text(
                 AppLocalizations.of(context)!.settings,
-                style: const TextStyle(
-                  fontSize: 24,
+                style: TextStyle(
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               
               // 用户头像
               CircleAvatar(
@@ -1574,33 +1574,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         authService.isAnonymous
                             ? Icons.person_outline
                             : Icons.person,
-                        size: 40,
+                        size: 40.r,
                         color: Colors.white,
                       )
                     : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               
               // 用户名
               Text(
                 userService.displayName,
-                style: const TextStyle(
-                  fontSize: 18,
+                style: TextStyle(
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               
               // 用户ID
               Container(
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.7, // 最大宽度为屏幕的70%
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1608,8 +1608,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Expanded(
                       child: Text(
                         'ID: ${authService.uid ?? "未登录"}',
-                        style: const TextStyle(
-                          fontSize: 12,  // 减小2号，从14改为12
+                        style: TextStyle(
+                          fontSize: 12.sp,  // 减小2号，从14改为12
                           color: Colors.white70,
                           letterSpacing: -0.2,  // 稍微减小字母间距以显示更多内容
                         ),
@@ -1630,43 +1630,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           );
                         }
                       },
-                      child: const Icon(
+                      child: Icon(
                         Icons.copy,
-                        size: 14,  // 图标也相应减小
+                        size: 14.r,  // 图标也相应减小
                         color: Colors.white70,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               
               // 版本号显示
               if (_packageInfo != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(15.r),
                   ),
                   child: Text(
                     '${AppLocalizations.of(context)!.version}: ${_packageInfo!.version}+${_packageInfo!.buildNumber}',
-                    style: const TextStyle(
-                      fontSize: 11,
+                    style: TextStyle(
+                      fontSize: 11.sp,
                       color: Colors.white60,
                       letterSpacing: -0.2,
                     ),
                   ),
                 ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               
               // 统计信息
               if (userService.playerProfile != null) ...[
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12.r),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Column(
                     children: [
@@ -1698,33 +1698,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               
               // 语言选择
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12.r),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.language,
                           color: Colors.white70,
-                          size: 20,
+                          size: 20.r,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           AppLocalizations.of(context)!.language,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: 16.sp,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12.h),
                     // 语言选项
                     Wrap(
                       spacing: 8,
@@ -1740,7 +1740,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               
               // 登出按钮
               SizedBox(
@@ -1758,7 +1758,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Navigator.pushReplacementNamed(context, '/login');
                     }
                   },
-                  icon: const Icon(Icons.logout),
+                  icon: Icon(Icons.logout),
                   label: Text(AppLocalizations.of(context)!.logout),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.shade600,
@@ -1771,14 +1771,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
               
-              const SizedBox(height: 10),
+              SizedBox(height: 10.h),
               
               // 关闭按钮
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   AppLocalizations.of(context)!.close,
-                  style: const TextStyle(color: Colors.white70),
+                  style: TextStyle(color: Colors.white70),
                 ),
               ),
             ],

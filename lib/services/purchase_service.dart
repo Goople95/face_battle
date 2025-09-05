@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:logger/logger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/logger_utils.dart';
 import 'cloud_npc_service.dart';
+import 'storage/cloud_storage_service.dart';
 
 class PurchaseService {
   static final PurchaseService _instance = PurchaseService._internal();
@@ -17,7 +17,8 @@ class PurchaseService {
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   
-  // 已购买的NPC ID列表
+  // 已购买的NPC ID列表（仅用于初始数据迁移，实际数据源是GameProgressService）
+  // TODO: 在确认所有用户数据迁移完成后，可以移除此本地存储
   final Set<String> _purchasedNPCs = {};
   
   // 购买回调
@@ -40,8 +41,8 @@ class PurchaseService {
       return;
     }
     
-    // 加载已购买的NPCs
-    await _loadPurchasedNPCs();
+    // 从云端和本地同步已购买的NPCs
+    await _syncPurchasedNPCs();
     
     // 监听购买更新
     final purchaseUpdated = _inAppPurchase.purchaseStream;
@@ -51,29 +52,54 @@ class PurchaseService {
       onError: _onPurchaseError,
     );
     
-    // 恢复之前的购买
-    await restorePurchases();
+    // 不自动恢复购买，以Firestore数据为准
+    // 用户可以在设置中手动恢复购买（如果需要的话）
+    // await restorePurchases();
     
     LoggerUtils.info('内购服务初始化完成');
   }
   
-  /// 加载已购买的NPC列表
-  Future<void> _loadPurchasedNPCs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final purchased = prefs.getStringList('purchased_npcs') ?? [];
-    _purchasedNPCs.addAll(purchased);
-    LoggerUtils.info('已加载已购买NPCs: $_purchasedNPCs');
+  /// 从云端加载已购买的NPCs
+  Future<void> _syncPurchasedNPCs() async {
+    LoggerUtils.info('从云端加载已购买的NPCs...');
+    
+    // 清空内存中的购买记录
+    _purchasedNPCs.clear();
+    
+    // 只从云端获取数据
+    if (CloudStorageService.instance.isUserLoggedIn) {
+      final cloudPurchased = await CloudStorageService.instance.getPurchasedNPCs();
+      _purchasedNPCs.addAll(cloudPurchased);
+      LoggerUtils.info('云端已购买NPCs: $_purchasedNPCs');
+    } else {
+      LoggerUtils.warning('用户未登录，无法加载购买记录');
+    }
   }
   
-  /// 保存已购买的NPC
+  /// 保存已购买的NPC（只保存到云端）
   Future<void> _savePurchasedNPC(String npcId) async {
+    // 添加到内存缓存
     _purchasedNPCs.add(npcId);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('purchased_npcs', _purchasedNPCs.toList());
-    LoggerUtils.info('保存已购买NPC: $npcId');
+    
+    // 直接保存到云端（这是唯一的数据源）
+    if (CloudStorageService.instance.isUserLoggedIn) {
+      await CloudStorageService.instance.addPurchasedNPC(npcId);
+      LoggerUtils.info('已保存购买的NPC到云端: $npcId');
+    } else {
+      LoggerUtils.error('用户未登录，无法保存购买记录');
+      // 这种情况不应该发生，因为购买前应该已经登录
+      throw Exception('用户未登录，无法保存购买记录');
+    }
   }
   
-  /// 检查NPC是否已购买
+  /// 用户切换时重新加载购买记录
+  /// 应该在用户登录/切换账号后调用
+  Future<void> reloadForCurrentUser() async {
+    LoggerUtils.info('重新加载当前用户的购买记录...');
+    await _syncPurchasedNPCs();
+  }
+  
+  /// 检查NPC是否已购买（使用purchased_npcs作为单一数据源）
   bool isNPCPurchased(String npcId) {
     return _purchasedNPCs.contains(npcId);
   }
@@ -157,21 +183,24 @@ class PurchaseService {
       return;
     }
     
-    // 创建购买参数
+    // 创建购买参数，绑定当前Firebase用户
+    final currentUserId = CloudStorageService.instance.currentUserId;
     final PurchaseParam purchaseParam = PurchaseParam(
       productDetails: product,
-      applicationUserName: null,
+      applicationUserName: currentUserId, // 将Firebase UID绑定到购买
     );
     
-    // 发起购买
+    // 发起购买（使用消耗品方式，允许多个用户购买）
     try {
-      final success = await _inAppPurchase.buyNonConsumable(
+      final success = await _inAppPurchase.buyConsumable(
         purchaseParam: purchaseParam,
       );
       
       if (!success) {
         LoggerUtils.error('购买请求失败');
         callback?.call(npcId, false, '购买请求失败');
+      } else {
+        LoggerUtils.info('购买请求已发送，等待Google Play处理');
       }
     } catch (e) {
       LoggerUtils.error('购买异常: $e');
@@ -199,11 +228,27 @@ class PurchaseService {
         case PurchaseStatus.error:
           // 购买失败
           LoggerUtils.error('购买失败: ${purchase.error}');
-          _purchaseCallback?.call(
-            _getNPCIdFromProductId(purchase.productID),
-            false,
-            purchase.error?.message ?? '购买失败',
-          );
+          final errorMessage = purchase.error?.message ?? '购买失败';
+          
+          // 检查是否是"已拥有"错误（通常包含"already own"或类似文字）
+          if (errorMessage.toLowerCase().contains('already own') || 
+              errorMessage.toLowerCase().contains('already purchased')) {
+            LoggerUtils.warning('Google Play提示已拥有，但当前用户未记录此购买');
+            // 可以选择：
+            // 1. 提示用户使用原账号登录
+            // 2. 或者为当前用户也解锁（风险：可能被滥用）
+            _purchaseCallback?.call(
+              _getNPCIdFromProductId(purchase.productID),
+              false,
+              '此商品已被其他账号购买。请使用原账号登录或联系客服。',
+            );
+          } else {
+            _purchaseCallback?.call(
+              _getNPCIdFromProductId(purchase.productID),
+              false,
+              errorMessage,
+            );
+          }
           break;
           
         case PurchaseStatus.canceled:
@@ -227,6 +272,29 @@ class PurchaseService {
   /// 处理成功的购买
   Future<void> _handleSuccessfulPurchase(PurchaseDetails purchase) async {
     LoggerUtils.info('购买成功: ${purchase.productID}');
+    LoggerUtils.info('购买详情 - 用户: ${purchase.purchaseID}, 状态: ${purchase.status}');
+    
+    // 对于消耗型商品，立即标记为已消耗
+    if (purchase.status == PurchaseStatus.purchased) {
+      LoggerUtils.info('处理消耗型商品购买，立即消耗: ${purchase.productID}');
+    }
+    
+    // 检查是否是恢复购买（手动触发时才会执行到这里）
+    if (purchase.status == PurchaseStatus.restored) {
+      LoggerUtils.info('处理手动恢复购买: ${purchase.productID}');
+      
+      // 手动恢复购买时，检查是否应该恢复到当前账号
+      final npcId = _getNPCIdFromProductId(purchase.productID);
+      final currentUserId = CloudStorageService.instance.currentUserId;
+      
+      if (currentUserId == null) {
+        LoggerUtils.error('用户未登录，无法恢复购买');
+        return;
+      }
+      
+      // 记录恢复的购买，让用户决定是否要恢复到当前账号
+      LoggerUtils.info('恢复购买 $npcId 到用户 $currentUserId');
+    }
     
     // 验证购买（这里可以添加服务器验证）
     final isValid = await _verifyPurchase(purchase);
@@ -243,8 +311,15 @@ class PurchaseService {
     // 获取NPC ID
     final npcId = _getNPCIdFromProductId(purchase.productID);
     
-    // 保存购买状态
-    await _savePurchasedNPC(npcId);
+    // 保存到purchased_npcs（本地和云端）
+    try {
+      await _savePurchasedNPC(npcId);
+      LoggerUtils.info('已保存购买的NPC $npcId');
+    } catch (e) {
+      LoggerUtils.error('保存购买失败: $e');
+      _purchaseCallback?.call(npcId, false, '保存失败: $e');
+      return;
+    }
     
     // 回调成功
     _purchaseCallback?.call(npcId, true, null);
@@ -261,16 +336,20 @@ class PurchaseService {
   
   /// 从商品ID获取NPC ID
   String _getNPCIdFromProductId(String productId) {
-    // 商品ID格式: vip_npc_1001
+    // 商品ID格式: npc_1001 或旧格式 vip_npc_1001
     if (productId.startsWith('vip_npc_')) {
       return productId.replaceFirst('vip_npc_', '');
+    }
+    if (productId.startsWith('npc_')) {
+      return productId.replaceFirst('npc_', '');
     }
     return productId;
   }
   
-  /// 恢复购买
+  /// 手动恢复购买（用户主动触发）
+  /// 可以在设置页面提供"恢复购买"按钮调用此方法
   Future<void> restorePurchases() async {
-    LoggerUtils.info('恢复购买...');
+    LoggerUtils.info('用户手动触发恢复购买...');
     
     if (!_isAvailable) {
       LoggerUtils.warning('内购服务不可用，无法恢复购买');
