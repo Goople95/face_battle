@@ -326,5 +326,9 @@
   "skinNeedsUnlock": "需要解锁",
   "skinUnlockAtLevel": "❤️ 亲密度达到 {level} 级解锁 (还差 {needed} 级)",
   "skinUnlockWithGems": "💎 使用宝石解锁专属造型",
-  "skinCurrentlyUnavailable": "🔒 暂时无法解锁"
+  "skinCurrentlyUnavailable": "🔒 暂时无法解锁",
+  "purchaseUnavailable": "内购服务暂时不可用，请稍后再试",
+  "purchaseFailed": "购买失败",
+  "skinSelectFailed": "选择皮肤失败",
+  "bidAfterOnes": "叫了1之后，必须增加数量才能叫其他数字"
 }

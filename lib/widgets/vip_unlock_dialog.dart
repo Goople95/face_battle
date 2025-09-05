@@ -301,8 +301,8 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                     // 如果没有商品信息，显示提示
                     if (_product == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('内购服务暂时不可用，请稍后再试'),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.purchaseUnavailable),
                           backgroundColor: Colors.orange,
                         ),
                       );
@@ -349,7 +349,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                               // 购买失败
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(error ?? '购买失败'),
+                                  content: Text(error ?? AppLocalizations.of(context)!.purchaseFailed),
                                   backgroundColor: Colors.red,
                                 ),
                               );

@@ -1933,6 +1933,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'🔒 Currently unavailable'**
   String get skinCurrentlyUnavailable;
+
+  /// In-app purchase service temporarily unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'In-app purchase service is temporarily unavailable. Please try again later.'**
+  String get purchaseUnavailable;
+
+  /// Purchase failed
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase failed'**
+  String get purchaseFailed;
+
+  /// Failed to select skin
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to select skin'**
+  String get skinSelectFailed;
+
+  /// After bidding 1s, must increase quantity to bid other values
+  ///
+  /// In en, this message translates to:
+  /// **'After bidding 1s, must increase quantity to bid other values'**
+  String get bidAfterOnes;
 }
 
 class _AppLocalizationsDelegate

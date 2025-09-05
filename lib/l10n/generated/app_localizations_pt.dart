@@ -1073,4 +1073,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get skinCurrentlyUnavailable => '🔒 Indisponível no momento';
+
+  @override
+  String get purchaseUnavailable =>
+      'In-app purchase service is temporarily unavailable. Please try again later.';
+
+  @override
+  String get purchaseFailed => 'Purchase failed';
+
+  @override
+  String get skinSelectFailed => 'Failed to select skin';
+
+  @override
+  String get bidAfterOnes =>
+      'After bidding 1s, must increase quantity to bid other values';
 }

@@ -1,1 +1,29 @@
-{}
+{
+  "es": [
+    "purchaseUnavailable",
+    "purchaseFailed",
+    "skinSelectFailed",
+    "bidAfterOnes"
+  ],
+
+  "id": [
+    "purchaseUnavailable",
+    "purchaseFailed",
+    "skinSelectFailed",
+    "bidAfterOnes"
+  ],
+
+  "pt": [
+    "purchaseUnavailable",
+    "purchaseFailed",
+    "skinSelectFailed",
+    "bidAfterOnes"
+  ],
+
+  "zh_TW": [
+    "purchaseUnavailable",
+    "purchaseFailed",
+    "skinSelectFailed",
+    "bidAfterOnes"
+  ]
+}

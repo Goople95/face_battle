@@ -1053,6 +1053,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get skinCurrentlyUnavailable => '🔒 暂时无法解锁';
+
+  @override
+  String get purchaseUnavailable => '内购服务暂时不可用，请稍后再试';
+
+  @override
+  String get purchaseFailed => '购买失败';
+
+  @override
+  String get skinSelectFailed => '选择皮肤失败';
+
+  @override
+  String get bidAfterOnes => '叫了1之后，必须增加数量才能叫其他数字';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).

@@ -464,8 +464,8 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
       LoggerUtils.error('選擇皮膚失敗');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to select skin'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.skinSelectFailed),
             backgroundColor: Colors.red,
           ),
         );

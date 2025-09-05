@@ -461,8 +461,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         !newBid.isHigherThan(_currentRound!.currentBid!, onesAreCalled: _currentRound!.onesAreCalled)) {
       // 特殊提示：如果之前叫了1，换其他数字必须增加数量
       if (_currentRound!.currentBid!.value == 1 && newBid.value != 1) {
-        // TODO: Add localization for this message
-        _showSnackBar('After bidding 1s, must increase quantity to bid other values');
+        _showSnackBar(AppLocalizations.of(context)!.bidAfterOnes);
       } else {
         _showSnackBar(AppLocalizations.of(context)!.bidMustBeHigher);
       }

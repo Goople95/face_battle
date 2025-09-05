@@ -1010,5 +1010,25 @@
   "@skinCurrentlyUnavailable": {
     "description": "Skin currently unavailable"
   },
-  "skinCurrentlyUnavailable": "🔒 Currently unavailable"
+  "skinCurrentlyUnavailable": "🔒 Currently unavailable",
+  
+  "@purchaseUnavailable": {
+    "description": "In-app purchase service temporarily unavailable"
+  },
+  "purchaseUnavailable": "In-app purchase service is temporarily unavailable. Please try again later.",
+  
+  "@purchaseFailed": {
+    "description": "Purchase failed"
+  },
+  "purchaseFailed": "Purchase failed",
+  
+  "@skinSelectFailed": {
+    "description": "Failed to select skin"
+  },
+  "skinSelectFailed": "Failed to select skin",
+  
+  "@bidAfterOnes": {
+    "description": "After bidding 1s, must increase quantity to bid other values"
+  },
+  "bidAfterOnes": "After bidding 1s, must increase quantity to bid other values"
 }
