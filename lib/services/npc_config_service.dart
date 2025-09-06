@@ -116,13 +116,11 @@ class NPCConfigService {
         // 解析personality数据
         final personalityData = npcData['personality'] as Map<String, dynamic>;
         
-        // 解析多语言名称和描述
+        // 解析多语言名称
         final namesMap = npcData['names'] as Map<String, dynamic>?;
-        final descriptionsMap = npcData['descriptions'] as Map<String, dynamic>?;
         
-        // 获取默认名称和描述（用于向后兼容）
+        // 获取默认名称（用于向后兼容）
         String name = '';
-        String description = '';
         
         if (namesMap != null) {
           // 使用英文作为默认值
@@ -134,20 +132,9 @@ class NPCConfigService {
           name = npcData['name'] ?? '';
         }
         
-        if (descriptionsMap != null) {
-          // 使用英文作为默认值
-          description = descriptionsMap['en'] ?? 
-                       descriptionsMap['zh_TW'] ?? 
-                       npcData['description'] ?? '';
-        } else {
-          // 兼容旧格式
-          description = npcData['description'] ?? '';
-        }
-        
         // 调试输出
         LoggerUtils.info('Loading NPC $id:');
         LoggerUtils.info('  namesMap: $namesMap');
-        LoggerUtils.info('  descriptionsMap: $descriptionsMap');
         
         // videoCount现在从皮肤级别获取，不再从NPC级别读取
         // AIPersonality中的videoCount字段仅作为兼容性保留
@@ -158,9 +145,9 @@ class NPCConfigService {
         final personality = AIPersonality(
           id: id,
           name: name,
-          description: description,
+          description: '',  // 不再使用描述
           namesMap: namesMap?.cast<String, String>(),
-          descriptionsMap: descriptionsMap?.cast<String, String>(),
+          descriptionsMap: null,  // 不再使用描述映射
           avatarPath: npcData['avatarPath'] ?? '',
           bluffRatio: (personalityData['bluffRatio'] ?? 0.5).toDouble(),
           challengeThreshold: (personalityData['challengeThreshold'] ?? 0.5).toDouble(),

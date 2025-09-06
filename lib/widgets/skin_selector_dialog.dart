@@ -391,28 +391,28 @@ class _SkinSelectorDialogState extends State<SkinSelectorDialog> {
   // Tooltip信息
   String _getTooltipMessage(SkinInfo skinInfo, String lang, int currentIntimacy) {
     final skin = skinInfo.skin;
-    String message = '${skin.getLocalizedName(lang)}\n\n';
+    String message = '';  // 不再显示皮肤名称
     
     if (skinInfo.isSelected) {
-      message += lang == 'zh' ? '✅ 當前造型' : '✅ Currently Wearing';
+      message = lang == 'zh' ? '✅ 當前造型' : '✅ Currently Wearing';
     } else if (skinInfo.isUnlocked) {
-      message += lang == 'zh' ? '🎭 點擊選擇此造型' : '🎭 Click to select this style';
+      message = lang == 'zh' ? '🎭 點擊選擇此造型' : '🎭 Click to select this style';
     } else {
       switch (skin.unlockCondition.type) {
         case 'intimacy':
           final needed = skin.unlockCondition.level! - currentIntimacy;
-          message += lang == 'zh' 
+          message = lang == 'zh' 
             ? '🔒 需要親密度等級 ${skin.unlockCondition.level}\n(還差 $needed 級)'
             : '🔒 Requires intimacy level ${skin.unlockCondition.level}\n($needed more levels needed)';
           break;
         case 'payment':
         case 'vip_exclusive':
-          message += lang == 'zh' 
+          message = lang == 'zh' 
             ? '💎 使用寶石解鎖此造型'
             : '💎 Use gems to unlock this style';
           break;
         default:
-          message += lang == 'zh' ? '🔒 未解鎖' : '🔒 Locked';
+          message = lang == 'zh' ? '🔒 未解鎖' : '🔒 Locked';
       }
     }
     

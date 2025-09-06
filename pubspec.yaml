@@ -64,7 +64,7 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icons/app_logo.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#1A0000"  # 深黑红色
+  adaptive_icon_background: "#8B0000"  # 中等暗红色 (DarkRed)
   adaptive_icon_foreground: "assets/icons/app_logo.png"
   remove_alpha_ios: true
-  ios_background_color: "#1A0000"  # iOS也使用深黑红色背景
+  ios_background_color: "#8B0000"  # iOS也使用中等暗红色背景

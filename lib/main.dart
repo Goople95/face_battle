@@ -48,6 +48,7 @@ void main() async {
     LoggerUtils.error('Firebase初始化失败: $e');
   }
   
+  
   // AdMob异步初始化（不阻塞启动）
   // 节省约2.1秒的启动时间
   AdMobService.initialize().then((_) {
@@ -139,14 +140,40 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+  
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 在第一帧渲染后保存原始的文字显示设置
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (mounted) {
+        final mediaQuery = MediaQuery.of(context);
+        final originalTextScaleFactor = mediaQuery.textScaleFactor;
+        final originalBoldText = mediaQuery.boldText;
+        
+        // 保存原始值（只保存文字相关设置）
+        await LocalStorageService.instance.saveOriginalTextScaleFactor(originalTextScaleFactor);
+        await LocalStorageService.instance.saveOriginalBoldText(originalBoldText);
+        
+        LoggerUtils.info('保存原始文字显示设置:');
+        LoggerUtils.info('  - textScaleFactor: $originalTextScaleFactor');
+        LoggerUtils.info('  - boldText: $originalBoldText');
+      }
+    });
+  }
   
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      // 设计稿的宽高，这里使用iPhone 14的尺寸作为设计基准
-      designSize: const Size(390, 844),
+      // 设计稿的宽高，统一使用 Pixel 7 的尺寸作为设计基准
+      designSize: const Size(412, 915),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
@@ -161,6 +188,19 @@ class MyApp extends StatelessWidget {
               return AppLifecycleObserver(
                 child: MaterialApp(
                   title: 'Dice Girls',
+                  builder: (context, child) {
+                    final mediaQueryData = MediaQuery.of(context);
+                    
+                    // 只强制调整文字相关的MediaQuery参数
+                    // Android系统不允许app修改display ratio，只能修改文字设置
+                    return MediaQuery(
+                      data: mediaQueryData.copyWith(
+                        textScaleFactor: 1.0,  // 强制标准字体大小
+                        boldText: false,  // 强制禁用系统粗体文字设置
+                      ),
+                      child: child!,
+                    );
+                  },
                 theme: ThemeData(
                   primarySwatch: Colors.blue,
                   useMaterial3: true,

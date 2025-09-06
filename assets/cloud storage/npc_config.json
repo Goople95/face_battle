@@ -9,13 +9,6 @@
         "pt": "Lena",
         "id": "Lena"
       },
-      "descriptions": {
-        "en": "Her calm gaze hides a quiet allure.",
-        "zh_TW": "冷靜的眼神裡，藏著低調的魅力。",
-        "es": "Su mirada serena esconde un encanto silencioso.",
-        "pt": "Seu olhar calmo esconde un charme discreto.",
-        "id": "Tatapan tenangnya menyimpan pesona yang diam-diam menggoda."
-      },
       "avatarPath": "assets/npcs/0001/1/",
       "videosPath": "assets/npcs/0001/1/",
       "isVIP": false,
@@ -29,10 +22,6 @@
       "skins": [
         {
           "id": 1,
-          "name": {
-            "en": "Classic",
-            "zh_TW": "經典"
-          },
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
@@ -41,10 +30,6 @@
         },
         {
           "id": 2,
-          "name": {
-            "en": "Summer Beach",
-            "zh_TW": "夏日海灘"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",
@@ -63,13 +48,6 @@
         "pt": "Katerina",
         "id": "Katerina"
       },
-      "descriptions": {
-        "en": "Graceful and distant, she draws you closer without a word.",
-        "zh_TW": "高貴而疏離，她無聲地吸引著你靠近。",
-        "es": "Elegante y distante, te atrae sin decir una palabra.",
-        "pt": "Elegante e distante, ela te atrai sem dizer una palabra.",
-        "id": "Anggun dan berjarak, ia menarikmu tanpa sepatah kata pun."
-      },
       "avatarPath": "assets/npcs/0002/1/",
       "videosPath": "assets/npcs/0002/1/",
       "isVIP": false,
@@ -83,10 +61,6 @@
       "skins": [
         {
           "id": 1,
-          "name": {
-            "en": "Classic",
-            "zh_TW": "經典"
-          },
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
@@ -95,10 +69,6 @@
         },
         {
           "id": 2,
-          "name": {
-            "en": "Winter Elegance",
-            "zh_TW": "冬日優雅"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",
@@ -108,10 +78,6 @@
         },
         {
           "id": 3,
-          "name": {
-            "en": "Party Night",
-            "zh_TW": "派對之夜"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",
@@ -130,13 +96,6 @@
         "pt": "Aki",
         "id": "Aki"
       },
-      "descriptions": {
-        "en": "Her sweet smile makes you wonder what she's truly thinking.",
-        "zh_TW": "甜美的笑容，讓人忍不住猜想她真正的心思。",
-        "es": "Su dulce sonrisa te hace preguntarte qué piensa en realidad.",
-        "pt": "Seu doce sorriso faz você imaginar o que ela realmente pensa.",
-        "id": "Senyum manisnya membuatmu bertanya-tanya apa yang sebenarnya ia pikirkan."
-      },
       "avatarPath": "assets/npcs/1001/1/",
       "videosPath": "assets/npcs/1001/1/",
       "isVIP": true,
@@ -151,10 +110,6 @@
       "skins": [
         {
           "id": 1,
-          "name": {
-            "en": "Classic",
-            "zh_TW": "經典"
-          },
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
@@ -163,10 +118,6 @@
         },
         {
           "id": 2,
-          "name": {
-            "en": "Kimono",
-            "zh_TW": "和服"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",
@@ -176,10 +127,6 @@
         },
         {
           "id": 3,
-          "name": {
-            "en": "School Uniform",
-            "zh_TW": "學生制服"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",
@@ -198,13 +145,6 @@
         "pt": "Isabella",
         "id": "Isabella"
       },
-      "descriptions": {
-        "en": "Her words flow like music, impossible to resist.",
-        "zh_TW": "她的話語像音樂般流淌，令人難以抗拒。",
-        "es": "Sus palabras fluyen como música, imposibles de resistir.",
-        "pt": "Suas palavras fluem como música, impossíveis de resistir.",
-        "id": "Kata-katanya mengalir seperti musik, mustahil untuk ditolak."
-      },
       "avatarPath": "assets/npcs/1002/1/",
       "videosPath": "assets/npcs/1002/1/",
       "isVIP": true,
@@ -219,10 +159,6 @@
       "skins": [
         {
           "id": 1,
-          "name": {
-            "en": "Classic",
-            "zh_TW": "經典"
-          },
           "unlocked": true,
           "unlockCondition": {
             "type": "default"
@@ -231,10 +167,6 @@
         },
         {
           "id": 2,
-          "name": {
-            "en": "Carnival",
-            "zh_TW": "嘉年華"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",
@@ -244,10 +176,6 @@
         },
         {
           "id": 3,
-          "name": {
-            "en": "Beach Sunset",
-            "zh_TW": "海灘夕陽"
-          },
           "unlocked": false,
           "unlockCondition": {
             "type": "intimacy",

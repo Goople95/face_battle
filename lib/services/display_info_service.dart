@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' show View;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/logger_utils.dart';
+import 'storage/local_storage_service.dart';
 
 /// 显示设置信息服务 - 收集和记录影响游戏显示的设置
 class DisplayInfoService {
@@ -16,7 +18,7 @@ class DisplayInfoService {
   String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
   
   /// 收集显示相关设置（Flutter原生API，无需插件）
-  Map<String, dynamic> collectDisplaySettings(BuildContext context) {
+  Future<Map<String, dynamic>> collectDisplaySettings(BuildContext context) async {
     final mediaQuery = MediaQuery.of(context);
     
     // 获取文字缩放因子（兼容旧版本）
@@ -29,23 +31,38 @@ class DisplayInfoService {
       textScale = mediaQuery.textScaleFactor;
     }
     
+    // 获取用户原始的文字显示设置（系统设置的值）
+    final originalTextScale = await LocalStorageService.instance.getOriginalTextScaleFactor();
+    final originalBoldText = await LocalStorageService.instance.getOriginalBoldText();
+    
+    // 直接从View获取更多系统信息
+    final view = View.of(context);
+    final physicalSize = view.physicalSize;
+    final viewPadding = view.padding;
+    final viewInsets = view.viewInsets;
+    
     final displayData = {
-      // 屏幕信息
+      // 屏幕信息（当前实际值，不做强制修改）
       'screen': {
-        'width': mediaQuery.size.width,
-        'height': mediaQuery.size.height,
-        'pixelRatio': mediaQuery.devicePixelRatio,
-        'aspectRatio': mediaQuery.size.aspectRatio,
-        'orientation': mediaQuery.orientation.toString().split('.').last,
-        'physicalWidth': mediaQuery.size.width * mediaQuery.devicePixelRatio,
-        'physicalHeight': mediaQuery.size.height * mediaQuery.devicePixelRatio,
+        'width': mediaQuery.size.width,  // 当前逻辑宽度（MediaQuery直接提供）
+        'height': mediaQuery.size.height,  // 当前逻辑高度（MediaQuery直接提供）
+        'pixelRatio': view.devicePixelRatio,  // 像素密度（View直接提供）
+        'physicalWidth': physicalSize.width,  // 物理像素宽度（View直接提供）
+        'physicalHeight': physicalSize.height,  // 物理像素高度（View直接提供）
+        'aspectRatio': mediaQuery.size.aspectRatio,  // 宽高比（MediaQuery计算值）
+        'orientation': mediaQuery.orientation.toString().split('.').last,  // 方向（MediaQuery直接提供）
+        'statusBarHeight': viewPadding.top / view.devicePixelRatio,  // 状态栏高度（逻辑像素）
+        'navigationBarHeight': viewPadding.bottom / view.devicePixelRatio,  // 导航栏高度（逻辑像素）
+        'keyboardHeight': viewInsets.bottom / view.devicePixelRatio,  // 键盘高度（逻辑像素）
       },
       
-      // 字体和文字设置
+      // 字体和文字设置（保存原始值和强制值）
       'text': {
-        'scaleFactor': textScale,
-        'scaleCategory': _getTextScaleCategory(textScale),
-        'boldText': mediaQuery.boldText,
+        'scaleFactor': textScale,  // 应用内强制的缩放因子（始终为1.0）
+        'originalScaleFactor': originalTextScale ?? textScale,  // 用户系统设置的原始缩放因子
+        'scaleCategory': _getTextScaleCategory(originalTextScale ?? textScale),  // 基于原始值分类
+        'boldText': mediaQuery.boldText,  // 应用内的粗体设置（强制为false）
+        'originalBoldText': originalBoldText ?? mediaQuery.boldText,  // 用户系统的原始粗体设置
       },
       
       // 时间戳
@@ -74,7 +91,7 @@ class DisplayInfoService {
     }
     
     try {
-      final displayData = collectDisplaySettings(context);
+      final displayData = await collectDisplaySettings(context);
       
       // 保存到用户文档的display字段（与profile、device等平级）
       await _firestore

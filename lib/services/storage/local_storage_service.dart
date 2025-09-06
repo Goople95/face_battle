@@ -316,6 +316,54 @@ class LocalStorageService {
   
   // === 全局存储方法（设备级别，不依赖用户ID）===
   
+  /// 保存原始的textScaleFactor（设备级别，登录前保存）
+  Future<bool> saveOriginalTextScaleFactor(double scaleFactor) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final result = await prefs.setDouble('original_text_scale_factor', scaleFactor);
+      LoggerUtils.debug('保存原始textScaleFactor: $scaleFactor');
+      return result;
+    } catch (e) {
+      LoggerUtils.error('保存原始textScaleFactor失败: $e');
+      return false;
+    }
+  }
+  
+  /// 获取原始的textScaleFactor（设备级别）
+  Future<double?> getOriginalTextScaleFactor() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getDouble('original_text_scale_factor');
+    } catch (e) {
+      LoggerUtils.error('获取原始textScaleFactor失败: $e');
+      return null;
+    }
+  }
+  
+  /// 保存原始的boldText设置（设备级别，登录前保存）
+  Future<bool> saveOriginalBoldText(bool boldText) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final result = await prefs.setBool('original_bold_text', boldText);
+      LoggerUtils.debug('保存原始boldText: $boldText');
+      return result;
+    } catch (e) {
+      LoggerUtils.error('保存原始boldText失败: $e');
+      return false;
+    }
+  }
+  
+  /// 获取原始的boldText设置（设备级别）
+  Future<bool?> getOriginalBoldText() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('original_bold_text');
+    } catch (e) {
+      LoggerUtils.error('获取原始boldText失败: $e');
+      return null;
+    }
+  }
+  
   /// 保存全局JSON对象（设备级别）
   Future<bool> setGlobalJson(String key, Map<String, dynamic> json) async {
     try {

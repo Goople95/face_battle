@@ -3346,7 +3346,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 },
               ),
               
-              SizedBox(width: 40),
+              SizedBox(width: 20),  // 减小间距，避免横向越界
               
               // Value selector
               _buildSelector(
@@ -3527,19 +3527,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 icon: Icon(
                   Icons.remove_circle_outline,
                   color: Colors.white.withValues(alpha: 0.8),
-                  size: 22,
+                  size: 20.r,  // 使用响应式尺寸
                 ),
                 onPressed: onDecrease,
-                padding: EdgeInsets.all(4),
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
+                padding: EdgeInsets.all(2),
+                constraints: BoxConstraints(
+                  minWidth: 32.w,  // 使用响应式宽度
+                  minHeight: 32.h,  // 使用响应式高度
                 ),
               ),
               Container(
-                width: 40,
+                width: 36.w,  // 使用响应式宽度
                 alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.symmetric(vertical: 2),
                 decoration: BoxDecoration(
                   color: isWild 
                     ? Colors.amber.withValues(alpha: 0.3)
@@ -3549,7 +3549,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Text(
                   value.toString(),
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 20.sp,  // 使用响应式字体
                     fontWeight: FontWeight.bold,
                     color: isWild ? Colors.amber : Colors.white,
                   ),
@@ -3559,13 +3559,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 icon: Icon(
                   Icons.add_circle_outline,
                   color: Colors.white.withValues(alpha: 0.8),
-                  size: 22,
+                  size: 20.r,  // 使用响应式尺寸
                 ),
                 onPressed: onIncrease,
-                padding: EdgeInsets.all(4),
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
+                padding: EdgeInsets.all(2),
+                constraints: BoxConstraints(
+                  minWidth: 32.w,  // 使用响应式宽度
+                  minHeight: 32.h,  // 使用响应式高度
                 ),
               ),
             ],

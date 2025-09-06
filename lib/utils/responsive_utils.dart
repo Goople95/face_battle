@@ -49,9 +49,9 @@ class ResponsiveUtils {
   
   /// 获取卡片高度（根据屏幕大小自适应）
   static double get cardHeight {
-    if (isTablet) return 240.h;
-    if (isSmallPhone) return 180.h;
-    return 200.h;
+    if (isTablet) return 210.h;
+    if (isSmallPhone) return 160.h;
+    return 180.h;  // 移除介绍文字后可以适当增加高度
   }
   
   /// 获取按钮高度

@@ -21,9 +21,21 @@ class NPCSkin {
   });
   
   factory NPCSkin.fromJson(Map<String, dynamic> json) {
+    // 生成默认的皮肤名称
+    final skinId = json['id'] as int;
+    final defaultName = {
+      'en': 'Skin $skinId',
+      'zh_TW': '皮膚 $skinId',
+      'es': 'Aspecto $skinId',
+      'pt': 'Visual $skinId',
+      'id': 'Kulit $skinId',
+    };
+    
     return NPCSkin(
-      id: json['id'] as int,
-      name: Map<String, String>.from(json['name'] as Map),
+      id: skinId,
+      name: json['name'] != null 
+        ? Map<String, String>.from(json['name'] as Map)
+        : defaultName,  // 如果没有name字段，使用默认名称
       description: json['description'] != null 
         ? Map<String, String>.from(json['description'] as Map)
         : null,
@@ -135,8 +147,8 @@ extension NPCSkinExtension on Map<String, dynamic> {
       return [
         NPCSkin(
           id: 1,
-          name: {'en': 'Classic', 'zh_TW': '經典'},
-          description: {'en': 'Default appearance', 'zh_TW': '預設外觀'},
+          name: {'en': 'Skin 1', 'zh_TW': '皮膚 1', 'es': 'Aspecto 1', 'pt': 'Visual 1', 'id': 'Kulit 1'},
+          description: null,  // 不再使用描述
           unlocked: true,
           unlockCondition: UnlockCondition(type: 'default'),
         ),

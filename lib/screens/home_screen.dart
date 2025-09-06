@@ -67,11 +67,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String _getLocalizedName(BuildContext context, AIPersonality personality) {
     return personality.getLocalizedName(_getLocaleCode(context));
   }
-  
-  // 获取本地化的NPC描述
-  String _getLocalizedDescription(BuildContext context, AIPersonality personality) {
-    return personality.getLocalizedDescription(_getLocaleCode(context));
-  }
 
   @override
   void initState() {
@@ -939,7 +934,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // 头像
                     NPCAvatarWidget(
                       personality: personality,
-                      size: 60.r,
+                      size: 50.r,
                       showBorder: true,
                       isUnavailable: isUnavailable,
                     ),
@@ -963,17 +958,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                   ],
                 ),
-                SizedBox(height: 6.h),
+                SizedBox(height: 3.h),
                 Text(
                   _getLocalizedName(context, personality),
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 // 显示亲密度
-                SizedBox(height: 2.h),
+                SizedBox(height: 1.h),
                 Builder(
                   builder: (context) {
                     final intimacy = IntimacyService().getIntimacy(personality.id);
@@ -985,42 +980,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           children: [
                             Icon(
                               Icons.favorite,
-                              size: 12.r,
+                              size: 10.r,  // 减小图标尺寸
                               color: Colors.pink.shade400,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               'Lv.${intimacy.intimacyLevel}',
                               style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 10.sp,
                                 color: Colors.pink.shade400,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 3),  // 减小间距
                             Text(
                               '${intimacy.currentLevelPoints}',
                               style: TextStyle(
-                                fontSize: 10.sp,
-                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 9.sp,  // 减小字体
+                                color: Colors.white.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 4.h),
+                        SizedBox(height: 2.h),
                         // 进度条
                         Container(
-                          width: 120,
-                          height: 3,
+                          width: 100,  // 减小宽度
+                          height: 2.5,  // 减小高度
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(2),
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(1.5),
                           ),
                           child: Stack(
                             children: [
                               Container(
-                                width: 120 * intimacy.levelProgress,
-                                height: 3,
+                                width: 100 * intimacy.levelProgress,
+                                height: 2.5,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
@@ -1028,7 +1023,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       Colors.pink.shade500,
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(2),
+                                  borderRadius: BorderRadius.circular(1.5),
                                 ),
                               ),
                             ],
@@ -1039,14 +1034,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   },
                 ),
                 // 显示AI酒杯数量和倒计时 (始终显示)
-                SizedBox(height: 2.h),
+                SizedBox(height: 1.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ...List.generate(personality.drinkCapacity, (index) {
                       return Icon(
                         Icons.local_bar,
-                        size: 12.r,
+                        size: 10.r,  // 减小酒杯图标
                         color: index < aiDrinks
                           ? Colors.red.shade300
                           : Colors.grey.withValues(alpha: 0.8),
@@ -1066,32 +1061,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ],
                   ],
                 ),
-                SizedBox(height: 4.h),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      _getLocalizedDescription(context, personality),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: Colors.white70,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
                 // VS Record - 始终显示战绩（即使是0胜0负）
                 SizedBox(height: 4.h),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      width: 0.5,
                     ),
                   ),
                   child: Row(
@@ -1100,7 +1079,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Text(
                         '${_gameProgress?.vsNPCRecords[personality.id]?['wins'] ?? 0}',
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 12.sp,  // 减小字体
                           fontWeight: FontWeight.bold,
                           color: Colors.green.shade300,
                         ),
@@ -1108,15 +1087,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       Text(
                         AppLocalizations.of(context)!.win,
                         style: TextStyle(
-                          fontSize: 10.sp,
-                            color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 9.sp,  // 减小字体
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),  // 减小间距
                         Text(
                           '${_gameProgress?.vsNPCRecords[personality.id]?['losses'] ?? 0}',
                           style: TextStyle(
-                            fontSize: 14.sp,
+                            fontSize: 12.sp,  // 减小字体
                             fontWeight: FontWeight.bold,
                             color: Colors.red.shade300,
                           ),
@@ -1124,8 +1103,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Text(
                           AppLocalizations.of(context)!.lose,
                           style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 9.sp,  // 减小字体
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -1309,7 +1288,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           // VIP卡片头像
                           NPCAvatarWidget(
                             personality: personality,
-                            size: 60.r,
+                            size: 50.r,
                             showBorder: true,
                             isUnavailable: isUnavailable,
                           ),
@@ -1333,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ),
                         ],
                       ),
-                      SizedBox(height: 6.h),
+                      SizedBox(height: 3.h),
                       
                       // 名字
                       Text(
@@ -1349,7 +1328,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                       
                       // 显示亲密度（锁定和未锁定都显示）
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 1.h),
                       Builder(
                         builder: (context) {
                           final intimacy = IntimacyService().getIntimacy(personality.id);
@@ -1383,7 +1362,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 3.h),
+                              SizedBox(height: 2.h),
                               // 进度条
                               Container(
                                 width: 100,
@@ -1413,7 +1392,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                       
                       // 酒杯状态（显示在描述之前）
-                      SizedBox(height: 4.h),
+                      SizedBox(height: 2.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -1429,28 +1408,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ],
                       ),
                       
-                      // 描述
-                      SizedBox(height: 4.h),
-                      Flexible(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            _getLocalizedDescription(context, personality),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.white70,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      
                       // VS Record - 显示战绩（即使是0胜0负）
                       SizedBox(height: 4.h),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(8),
@@ -1693,46 +1654,81 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 SizedBox(height: 20.h),
               ],
               
-              // 语言选择
+              // 语言选择（下拉菜单）
               Container(
                 padding: EdgeInsets.all(12.r),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.language,
-                          color: Colors.white70,
-                          size: 20.r,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.language,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    Icon(
+                      Icons.language,
+                      color: Colors.white70,
+                      size: 20.r,
                     ),
-                    SizedBox(height: 12.h),
-                    // 语言选项
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildLanguageChip('English', 'en', context),
-                        _buildLanguageChip('中文繁體', 'zh_TW', context),
-                        _buildLanguageChip('Español', 'es', context),
-                        _buildLanguageChip('Português', 'pt', context),
-                        _buildLanguageChip('Bahasa', 'id', context),
-                      ],
+                    const SizedBox(width: 8),
+                    Text(
+                      AppLocalizations.of(context)!.language,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    // 下拉菜单
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: DropdownButton<String>(
+                        value: Provider.of<LanguageService>(context).getLanguageCode(),
+                        items: [
+                          DropdownMenuItem(value: 'en', child: Text('English')),
+                          DropdownMenuItem(value: 'zh', child: Text('中文繁體')),
+                          DropdownMenuItem(value: 'es', child: Text('Español')),
+                          DropdownMenuItem(value: 'pt', child: Text('Português')),
+                          DropdownMenuItem(value: 'id', child: Text('Bahasa')),
+                          DropdownMenuItem(value: 'vi', child: Text('Tiếng Việt')),
+                        ],
+                        onChanged: (String? newValue) async {
+                          if (newValue != null) {
+                            final languageService = Provider.of<LanguageService>(context, listen: false);
+                            await languageService.changeLanguage(newValue);
+                            // 显示提示
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(AppLocalizations.of(context)!.languageChanged('')),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                              // 关闭对话框并重新打开，以刷新UI
+                              Navigator.of(context).pop();
+                              _showSettingsDialog(context, authService, userService);
+                            }
+                          }
+                        },
+                        dropdownColor: Color(0xFF3D0000),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14.sp,
+                        ),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white70,
+                        ),
+                        underline: SizedBox(),  // 移除下划线
+                        isDense: true,
+                      ),
                     ),
                   ],
                 ),
