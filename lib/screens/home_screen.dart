@@ -1267,7 +1267,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                     ),
                   )
-                else if (vipStatus == VIPStatus.tempUnlocked)
+                else if (vipStatus == VIPStatus.tempUnlocked && !isPermanentlyUnlocked)
                   Positioned(
                     top: 8,
                     right: 8,

@@ -140,6 +140,7 @@
   "aiSoberedUp": "✨ {name}醒酒了，繼續對戰！",
   "vipFreeSober": "VIP特權：{name}已免費醒酒！",
   "vipInstantSober": "VIP特權·直接醒酒",
+  "unlockForeverSober": "解鎖我·永久直接醒酒",
   "challengeProbability": "質疑概率計算",
   "challengeWillSucceed": "質疑必定成功",
   "challengeWillFail": "質疑必定失敗",
@@ -214,8 +215,9 @@
   "aiDrunkMessage": "她太醉了不能玩\n幫她醒酒吧",
   "npcDrunkFirstPerson": "呜呜...我喝太多了，頭好暈...\n現在真的沒辦法陪你玩了",
   "npcDrunkMessage1": "嗚嗚...我喝太多了",
-  "npcDrunkMessage2": "頭好暈...現在真的沒辦法陪你玩了",
   "npcDrunkAdHint": "看個廣告讓我醒醒酒吧~",
+  "npcDrunkUnlockHint": "喜歡我就幫我解鎖，永遠直接醒酒",
+  "npcDrunkIntimacyHint": "親密度增長翻倍，快速知道我的一切秘密",
   "vipDialogue1": "我是{name}，很期待與你更親密的互動呢~",
   "@vipDialogue1": {
     "placeholders": {

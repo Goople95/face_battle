@@ -178,6 +178,7 @@
   "aiSoberedUp": "✨ {name} sadar, lanjutkan permainan!",
   "vipFreeSober": "Hak Istimewa VIP: {name} langsung sadar!",
   "vipInstantSober": "Hak Istimewa VIP: Langsung Sadar",
+  "unlockForeverSober": "Buka Kunciku - Selalu Sadar",
   "challengeProbability": "Probabilitas tantangan",
   "challengeWillSucceed": "Tantangan akan berhasil",
   "challengeWillFail": "Tantangan akan gagal",
@@ -366,5 +367,7 @@
   "skinNeedsUnlock": "Perlu dibuka",
   "skinUnlockAtLevel": "❤️ Buka di level keintiman {level} (kurang {needed})",
   "skinUnlockWithGems": "💎 Buka gaya eksklusif dengan permata",
-  "skinCurrentlyUnavailable": "🔒 Belum tersedia"
+  "skinCurrentlyUnavailable": "🔒 Belum tersedia",
+  "npcDrunkUnlockHint": "Jika kamu menyukaiku, buka kunciku untuk selalu sadar seketika",
+  "npcDrunkIntimacyHint": "Pertumbuhan keintiman dua kali lipat, cepat temukan semua rahasiaku"
 }

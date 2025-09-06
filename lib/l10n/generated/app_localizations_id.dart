@@ -497,10 +497,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get npcDrunkMessage1 => 'Aduhh... aku minum terlalu banyak';
 
   @override
-  String get npcDrunkMessage2 => 'Kepalaku pusing... tidak bisa main sekarang';
+  String get npcDrunkAdHint => 'Tonton iklan untuk membantuku sadar~';
 
   @override
-  String get npcDrunkAdHint => 'Tonton iklan untuk membantuku sadar~';
+  String get npcDrunkUnlockHint =>
+      'Jika kamu menyukaiku, buka kunciku untuk selalu sadar seketika';
+
+  @override
+  String get npcDrunkIntimacyHint =>
+      'Pertumbuhan keintiman dua kali lipat, cepat temukan semua rahasiaku';
 
   @override
   String vipDialogue1(String name) {
@@ -748,6 +753,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get vipInstantSober => 'Hak Istimewa VIP: Langsung Sadar';
+
+  @override
+  String get unlockForeverSober => 'Buka Kunciku - Selalu Sadar';
 
   @override
   String get minimumBidTwo => 'Taruhan minimum adalah 2';

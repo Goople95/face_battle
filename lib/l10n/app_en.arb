@@ -612,8 +612,9 @@
   "aiDrunkMessage": "She's too drunk to play\nHelp her sober up",
   "npcDrunkFirstPerson": "Ohhh... I drank too much, my head's spinning...\nI really can't play with you right now",
   "npcDrunkMessage1": "Ohhh... I drank too much",
-  "npcDrunkMessage2": "My head's spinning... I really can't play now",
   "npcDrunkAdHint": "Watch an ad to help me sober up~",
+  "npcDrunkUnlockHint": "If you like me, unlock me for instant sobriety forever",
+  "npcDrunkIntimacyHint": "Double intimacy growth, quickly discover all my secrets",
   "vipDialogue1": "I'm {name}, looking forward to getting closer with you~",
   "@vipDialogue1": {
     "placeholders": {
@@ -724,6 +725,7 @@
   "aiSoberedUp": "✨ {name} sobered up, continue the game!",
   "vipFreeSober": "VIP Privilege: {name} is instantly sober!",
   "vipInstantSober": "VIP Privilege: Instant Sober",
+  "unlockForeverSober": "Unlock Me - Forever Sober",
   "minimumBidTwo": "Minimum bid is 2",
   "languageChanged": "Language changed to {language}",
   "tempUnlocked": "✨ Temporarily unlocked {name} for 1 hour",

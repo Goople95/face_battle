@@ -981,17 +981,23 @@ abstract class AppLocalizations {
   /// **'Ohhh... I drank too much'**
   String get npcDrunkMessage1;
 
-  /// No description provided for @npcDrunkMessage2.
-  ///
-  /// In en, this message translates to:
-  /// **'My head\'s spinning... I really can\'t play now'**
-  String get npcDrunkMessage2;
-
   /// No description provided for @npcDrunkAdHint.
   ///
   /// In en, this message translates to:
   /// **'Watch an ad to help me sober up~'**
   String get npcDrunkAdHint;
+
+  /// No description provided for @npcDrunkUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If you like me, unlock me for instant sobriety forever'**
+  String get npcDrunkUnlockHint;
+
+  /// No description provided for @npcDrunkIntimacyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double intimacy growth, quickly discover all my secrets'**
+  String get npcDrunkIntimacyHint;
 
   /// No description provided for @vipDialogue1.
   ///
@@ -1376,6 +1382,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'VIP Privilege: Instant Sober'**
   String get vipInstantSober;
+
+  /// No description provided for @unlockForeverSober.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Me - Forever Sober'**
+  String get unlockForeverSober;
 
   /// No description provided for @minimumBidTwo.
   ///

@@ -56,7 +56,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
         setState(() {
           // 每3秒切换一次文案
           if (timer.tick % 3 == 0) {
-            _currentMessageIndex = (_currentMessageIndex + 1) % 3; // 3句话轮流
+            _currentMessageIndex = (_currentMessageIndex + 1) % 4; // 4句话轮流
           }
         });
       }
@@ -147,9 +147,11 @@ class _DrunkDialogState extends State<DrunkDialog> {
       case 0:
         return l10n.npcDrunkMessage1; // "呜呜...我喝太多了"
       case 1:
-        return l10n.npcDrunkMessage2; // "頭好暈...現在真的沒辦法陪你玩了"
-      case 2:
         return l10n.npcDrunkAdHint; // "看個廣告讓我醒醒酒吧~"
+      case 2:
+        return l10n.npcDrunkUnlockHint; // "喜欢我就帮我解锁，永远直接醒酒"
+      case 3:
+        return l10n.npcDrunkIntimacyHint; // "亲密度增长翻倍，快速知道我的一切秘密"
       default:
         return l10n.npcDrunkMessage1;
     }
@@ -379,110 +381,199 @@ class _DrunkDialogState extends State<DrunkDialog> {
                           ),
                         );
                       } else {
-                        // 非VIP用户：显示两个按钮
-                        return Row(
+                        // 非VIP用户：显示两个按钮 + 购买解锁按钮
+                        return Column(
                           children: [
-                            // 看广告醒酒按钮
-                            Expanded(
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    AdHelper.showRewardedAdAfterDialogClose(
-                                      context: context,
-                                      onRewarded: (rewardAmount) {
-                                        widget.drinkingState.watchAdToSoberAI(widget.personality.id);
-                                        widget.drinkingState.save();
-                                        GameProgressService.instance.recordAdSober(npcId: widget.personality.id);
-                                        widget.onSoberSuccess();
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              AppLocalizations.of(context)!.aiSoberSuccess(
-                                                _getLocalizedName(context)
+                            // 原有的两个按钮
+                            Row(
+                              children: [
+                                // 看广告醒酒按钮
+                                Expanded(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        AdHelper.showRewardedAdAfterDialogClose(
+                                          context: context,
+                                          onRewarded: (rewardAmount) {
+                                            widget.drinkingState.watchAdToSoberAI(widget.personality.id);
+                                            widget.drinkingState.save();
+                                            GameProgressService.instance.recordAdSober(npcId: widget.personality.id);
+                                            widget.onSoberSuccess();
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  AppLocalizations.of(context)!.aiSoberSuccess(
+                                                    _getLocalizedName(context)
+                                                  ),
+                                                ),
+                                                backgroundColor: Colors.green,
                                               ),
-                                            ),
-                                            backgroundColor: Colors.green,
-                                          ),
+                                            );
+                                          },
                                         );
                                       },
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.teal.shade700,
-                                          Colors.teal.shade900,
-                                        ],
-                                      ),
                                       borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.teal.withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.play_circle_outline,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          AppLocalizations.of(context)!.watchAdToSober,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.teal.shade700,
+                                              Colors.teal.shade900,
+                                            ],
                                           ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.teal.withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.play_circle_outline,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              AppLocalizations.of(context)!.watchAdToSober,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // 取消按钮
-                            Expanded(
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => Navigator.of(context).pop(),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.grey.shade700,
-                                          Colors.grey.shade800,
-                                        ],
-                                      ),
+                                const SizedBox(width: 12),
+                                // 取消按钮
+                                Expanded(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => Navigator.of(context).pop(),
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: Colors.grey.shade600,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        AppLocalizations.of(context)!.cancel,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.grey.shade700,
+                                              Colors.grey.shade800,
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: Colors.grey.shade600,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            AppLocalizations.of(context)!.cancel,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // 购买解锁按钮
+                            const SizedBox(height: 10),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  // 直接触发购买
+                                  final purchaseService = PurchaseService.instance;
+                                  await purchaseService.purchaseNPC(
+                                    widget.personality.id,
+                                    (npcId, success, error) {
+                                      if (success) {
+                                        // 购买成功，醒酒并关闭对话框
+                                        widget.drinkingState.watchAdToSoberAI(widget.personality.id);
+                                        widget.drinkingState.save();
+                                        widget.onSoberSuccess();
+                                        
+                                        if (mounted) {
+                                          Navigator.of(context).pop();
+                                          // 显示购买成功提示
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(AppLocalizations.of(context)!.vipFreeSober(
+                                                _getLocalizedName(context)
+                                              )),
+                                              backgroundColor: Colors.purple,
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        // 购买失败或取消
+                                        if (mounted && error != null) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(AppLocalizations.of(context)!.purchaseFailed),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.amber.shade700,
+                                        Colors.orange.shade900,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.orange.withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.lock_open,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        AppLocalizations.of(context)!.unlockForeverSober,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),

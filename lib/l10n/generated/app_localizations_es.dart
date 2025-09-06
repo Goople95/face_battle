@@ -496,11 +496,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get npcDrunkMessage1 => 'Ay... bebí demasiado';
 
   @override
-  String get npcDrunkMessage2 =>
-      'Me da vueltas la cabeza... no puedo jugar ahora';
+  String get npcDrunkAdHint => 'Mira un anuncio para ayudarme a despejarme~';
 
   @override
-  String get npcDrunkAdHint => 'Mira un anuncio para ayudarme a despejarme~';
+  String get npcDrunkUnlockHint =>
+      'Si te gusto, desbloquéame para sobriedad instantánea siempre';
+
+  @override
+  String get npcDrunkIntimacyHint =>
+      'Doble crecimiento de intimidad, descubre rápidamente todos mis secretos';
 
   @override
   String vipDialogue1(String name) {
@@ -747,6 +751,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get vipInstantSober => 'Privilegio VIP: Sobriedad Instantánea';
+
+  @override
+  String get unlockForeverSober => 'Desbloquéame - Siempre Sobria';
 
   @override
   String get minimumBidTwo => 'La apuesta mínima es 2';

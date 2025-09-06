@@ -233,6 +233,7 @@
   "aiSoberedUp": "✨ ¡{name} se desembriagó, continúa el juego!",
   "vipFreeSober": "Privilegio VIP: ¡{name} está sobria instantáneamente!",
   "vipInstantSober": "Privilegio VIP: Sobriedad Instantánea",
+  "unlockForeverSober": "Desbloquéame - Siempre Sobria",
   "challengeProbability": "Probabilidad de desafío",
   "challengeWillSucceed": "El desafío tendrá éxito",
   "challengeWillFail": "El desafío fallará",
@@ -327,5 +328,7 @@
   "skinNeedsUnlock": "Necesita desbloqueo",
   "skinUnlockAtLevel": "❤️ Desbloquea en nivel de intimidad {level} (faltan {needed})",
   "skinUnlockWithGems": "💎 Desbloquea estilo exclusivo con gemas",
-  "skinCurrentlyUnavailable": "🔒 No disponible actualmente"
+  "skinCurrentlyUnavailable": "🔒 No disponible actualmente",
+  "npcDrunkUnlockHint": "Si te gusto, desbloquéame para sobriedad instantánea siempre",
+  "npcDrunkIntimacyHint": "Doble crecimiento de intimidad, descubre rápidamente todos mis secretos"
 }

@@ -494,10 +494,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get npcDrunkMessage1 => '嗚嗚...我喝太多了';
 
   @override
-  String get npcDrunkMessage2 => '頭好暈...現在真的沒辦法陪你玩了';
+  String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
 
   @override
-  String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
+  String get npcDrunkUnlockHint => '喜歡我就幫我解鎖，永遠直接醒酒';
+
+  @override
+  String get npcDrunkIntimacyHint => '親密度增長翻倍，快速知道我的一切秘密';
 
   @override
   String vipDialogue1(String name) {
@@ -734,6 +737,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get vipInstantSober => 'VIP特權·直接醒酒';
+
+  @override
+  String get unlockForeverSober => '解鎖我·永久直接醒酒';
 
   @override
   String get minimumBidTwo => '起叫最少2個';
@@ -1565,10 +1571,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get npcDrunkMessage1 => '嗚嗚...我喝太多了';
 
   @override
-  String get npcDrunkMessage2 => '頭好暈...現在真的沒辦法陪你玩了';
+  String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
 
   @override
-  String get npcDrunkAdHint => '看個廣告讓我醒醒酒吧~';
+  String get npcDrunkUnlockHint => '喜歡我就幫我解鎖，永遠直接醒酒';
+
+  @override
+  String get npcDrunkIntimacyHint => '親密度增長翻倍，快速知道我的一切秘密';
 
   @override
   String vipDialogue1(String name) {
@@ -1805,6 +1814,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get vipInstantSober => 'VIP特權·直接醒酒';
+
+  @override
+  String get unlockForeverSober => '解鎖我·永久直接醒酒';
 
   @override
   String get minimumBidTwo => '起叫最少2個';
