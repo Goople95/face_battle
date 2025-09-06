@@ -56,7 +56,9 @@ class _DrunkDialogState extends State<DrunkDialog> {
         setState(() {
           // 每3秒切换一次文案
           if (timer.tick % 3 == 0) {
-            _currentMessageIndex = (_currentMessageIndex + 1) % 4; // 4句话轮流
+            // 非VIP NPC只循环2条消息，VIP NPC循环4条消息
+            final maxMessages = widget.personality.isVIP ? 4 : 2;
+            _currentMessageIndex = (_currentMessageIndex + 1) % maxMessages;
           }
         });
       }
@@ -143,6 +145,20 @@ class _DrunkDialogState extends State<DrunkDialog> {
   
   String _getCurrentMessage(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    // 非VIP NPC只显示前两条消息
+    if (!widget.personality.isVIP) {
+      switch (_currentMessageIndex % 2) {  // 只循环前两条
+        case 0:
+          return l10n.npcDrunkMessage1; // "呜呜...我喝太多了"
+        case 1:
+          return l10n.npcDrunkAdHint; // "看個廣告讓我醒醒酒吧~"
+        default:
+          return l10n.npcDrunkMessage1;
+      }
+    }
+    
+    // VIP NPC显示全部四条消息
     switch (_currentMessageIndex) {
       case 0:
         return l10n.npcDrunkMessage1; // "呜呜...我喝太多了"
@@ -381,7 +397,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
                           ),
                         );
                       } else {
-                        // 非VIP用户：显示两个按钮 + 购买解锁按钮
+                        // 非VIP用户：显示两个按钮，如果是VIP NPC则额外显示购买解锁按钮
                         return Column(
                           children: [
                             // 原有的两个按钮
@@ -494,9 +510,10 @@ class _DrunkDialogState extends State<DrunkDialog> {
                                 ),
                               ],
                             ),
-                            // 购买解锁按钮
-                            const SizedBox(height: 10),
-                            Material(
+                            // 购买解锁按钮（仅对VIP NPC显示）
+                            if (widget.personality.isVIP) ...[
+                              const SizedBox(height: 10),
+                              Material(
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () async {
@@ -578,6 +595,7 @@ class _DrunkDialogState extends State<DrunkDialog> {
                                 ),
                               ),
                             ),
+                            ],
                           ],
                         );
                       }

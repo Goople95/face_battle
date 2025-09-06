@@ -1854,7 +1854,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 Container(
                   height: MediaQuery.of(context).size.height * 0.28,
                   margin: EdgeInsets.symmetric(horizontal: 15.w),
-                  padding: EdgeInsets.all(8.r),
+                  padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -1905,18 +1905,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         child: !_gameStarted 
                           ? _buildStartScreen()
                           : Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // AI Dice (hidden or revealed)
                       _currentRound?.isRoundOver == true
                         ? _buildResultDiceRow(AppLocalizations.of(context)!.aiDiceLabel(_getLocalizedAIName(context)), _currentRound?.aiDice, _currentRound?.currentBid)
                         : _buildDiceRow(AppLocalizations.of(context)!.aiDiceLabel(_getLocalizedAIName(context)), _currentRound?.aiDice, !_showDice),
                       
+                      SizedBox(height: 6.h),
+                      
                       // Center Area - Show result or current bid
                       _currentRound?.isRoundOver == true
                         ? _buildResultCenter()
                         : Container(
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(12),
@@ -1928,100 +1930,101 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Wild card status indicator
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
+                            // 万能骰子指示器 - 单独一行（游戏进行中始终显示）
+                            if (_currentRound != null && !_currentRound!.isRoundOver)
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                margin: EdgeInsets.only(bottom: 4),
+                                decoration: BoxDecoration(
+                                  color: _currentRound?.onesAreCalled == true
+                                    ? Colors.grey.shade800.withValues(alpha: 0.5)
+                                    : Colors.yellow.shade900.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                  border: Border.all(
                                     color: _currentRound?.onesAreCalled == true
-                                      ? Colors.grey.shade800.withValues(alpha: 0.5)
-                                      : Colors.yellow.shade900.withValues(alpha: 0.5),
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    border: Border.all(
-                                      color: _currentRound?.onesAreCalled == true
-                                        ? Colors.grey.shade600
-                                        : Colors.yellow.shade600,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      _getDiceImage(1, size: 20.r),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        _currentRound?.onesAreCalled == true
-                                          ? AppLocalizations.of(context)!.notWildcard
-                                          : AppLocalizations.of(context)!.wildcard,
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: _currentRound?.onesAreCalled == true
-                                            ? Colors.grey.shade400
-                                            : Colors.yellow.shade200,
-                                        ),
-                                      ),
-                                      if (_currentRound?.onesAreCalled != true) ...[
-                                        SizedBox(width: 4),
-                                        Icon(
-                                          Icons.star,
-                                          size: 14.r,
-                                          color: Colors.yellow.shade300,
-                                        ),
-                                      ],
-                                    ],
+                                      ? Colors.grey.shade600
+                                      : Colors.yellow.shade600,
+                                    width: 0.8,
                                   ),
                                 ),
-                              ],
-                            ),
-                            SizedBox(height: 6.h),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _getDiceImage(1, size: 16.r),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      _currentRound?.onesAreCalled == true
+                                        ? AppLocalizations.of(context)!.notWildcard
+                                        : AppLocalizations.of(context)!.wildcard,
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: _currentRound?.onesAreCalled == true
+                                          ? Colors.grey.shade400
+                                          : Colors.yellow.shade200,
+                                      ),
+                                    ),
+                                    if (_currentRound?.onesAreCalled != true) ...[
+                                      SizedBox(width: 3),
+                                      Icon(
+                                        Icons.star,
+                                        size: 11.r,
+                                        color: Colors.yellow.shade300,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             // Current bid display
                             _currentRound?.currentBid != null 
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    _currentRound!.isPlayerTurn 
-                                      ? RichText(
-                                          text: TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                text: _getLocalizedAIName(context),
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  color: _getNPCColor(),
-                                                  fontWeight: FontWeight.bold,
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                          _currentRound!.isPlayerTurn 
+                                            ? RichText(
+                                                text: TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: _getLocalizedAIName(context),
+                                                      style: TextStyle(
+                                                        fontSize: 14.sp,
+                                                        color: _getNPCColor(),
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                      text: ': ',
+                                                      style: TextStyle(
+                                                        fontSize: 14.sp,
+                                                        color: Colors.amber.shade200,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
-                                              TextSpan(
-                                                text: ': ',
+                                              )
+                                            : Text(
+                                                '${AppLocalizations.of(context)!.yourTurn.replaceAll(' Turn', '')}: ',
                                                 style: TextStyle(
                                                   fontSize: 14.sp,
                                                   color: Colors.amber.shade200,
                                                 ),
                                               ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '${_currentRound!.currentBid!.quantity} × ',
+                                                style: TextStyle(
+                                                  fontSize: 24.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              _getDiceImage(_currentRound!.currentBid!.value, size: 24.r),
                                             ],
                                           ),
-                                        )
-                                      : Text(
-                                          '${AppLocalizations.of(context)!.yourTurn.replaceAll(' Turn', '')}: ',
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            color: Colors.amber.shade200,
-                                          ),
-                                        ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          '${_currentRound!.currentBid!.quantity} × ',
-                                          style: TextStyle(
-                                            fontSize: 24.sp,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        _getDiceImage(_currentRound!.currentBid!.value, size: 24.r),
                                       ],
                                     ),
                                   ],
@@ -2038,6 +2041,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
+                      
+                      SizedBox(height: 6.h),
                       
                       // Player Dice
                       _currentRound?.isRoundOver == true
@@ -2189,7 +2194,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ],
           ],
         ),
-        SizedBox(height: 5.h),
+        SizedBox(height: 3.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: dice?.values.map((value) {
@@ -2203,13 +2208,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               if (value == 1 && !onesAreCalled && highlightValue != 1) {
                 shouldHighlight = true;
                 highlightColor = Colors.amber.shade400;
-                borderWidth = 2.5;
+                borderWidth = 2;  // 边框宽度2
               }
               // Highlight the selected/called value
               else if (value == highlightValue) {
                 shouldHighlight = true;
                 highlightColor = Colors.amber.shade400;
-                borderWidth = 2.5;
+                borderWidth = 2;  // 边框宽度2
               }
             }
             
@@ -2217,8 +2222,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.symmetric(horizontal: 3),
               child: hidden 
                 ? Container(
-                    width: 38,
-                    height: 38,
+                    width: 30,
+                    height: 30,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.grey.shade700, Colors.grey.shade600],
@@ -2241,19 +2246,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
                   )
                 : Container(
-                    width: 42,  // Fixed width to prevent layout shifts
-                    height: 42, // Fixed height to prevent layout shifts
+                    width: 30,  // 容器尺寸30
+                    height: 30, // 容器尺寸30
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: shouldHighlight ? highlightColor : Colors.transparent,
-                        width: shouldHighlight ? borderWidth : 1,
+                        width: shouldHighlight ? borderWidth : 0,  // 不选中时无边框
                       ),
                     ),
                     child: Center(
-                      child: _getDiceImage(
-                        value,
-                        size: 36.r,  // Slightly smaller to account for border
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: _getDiceImage(
+                          value,
+                          size: 26,  // 骰子始终26像素
+                        ),
                       ),
                     ),
                   ),
@@ -2298,7 +2306,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ],
           ],
         ),
-        SizedBox(height: 5.h),
+        SizedBox(height: 3.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: dice.values.map((value) {
@@ -2309,8 +2317,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: 3),
               child: Container(
-                width: 42,  // Fixed width to prevent layout shifts
-                height: 42, // Fixed height to prevent layout shifts
+                width: 34,  // Fixed width to prevent layout shifts
+                height: 34, // Fixed height to prevent layout shifts
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
@@ -2321,7 +2329,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Center(
                   child: _getDiceImage(
                     value,
-                    size: 36,  // Slightly smaller to account for border
+                    size: 28,  // Slightly smaller to account for border
                   ),
                 ),
               ),
@@ -2349,7 +2357,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final winner = _currentRound!.winner ?? '';
     
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 4.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: winner == 'Player' 
@@ -3307,8 +3315,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   
   Widget _buildControlPanel() {
     return Container(
-      padding: EdgeInsets.all(8),
-      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -3375,12 +3383,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ],
           ),
           
-          SizedBox(height: 10),
+          SizedBox(height: 6),
           
           // Main Bid Button (Reduced height)
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: 44,
             child: ElevatedButton(
               onPressed: _playerBid,
               style: ElevatedButton.styleFrom(
@@ -3423,10 +3431,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     style: TextStyle(
                       fontSize: 12,
                       color: _calculateBidProbability() > 0.5
-                        ? Colors.lightGreen.shade300
+                        ? Colors.white
                         : _calculateBidProbability() > 0.3
-                          ? Colors.yellow.shade300
-                          : Colors.red.shade300,
+                          ? Colors.yellow.shade200
+                          : Colors.orange.shade300,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -3437,10 +3445,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           
           // Challenge Button (Reduced)
           if (_currentRound?.currentBid != null) ...[
-            SizedBox(height: 10),
+            SizedBox(height: 6),
             SizedBox(
               width: double.infinity,
-              height: 42,
+              height: 40,
               child: OutlinedButton(
                 onPressed: _playerChallenge,
                 style: OutlinedButton.styleFrom(
@@ -3506,12 +3514,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 2),
         Container(
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.1),
@@ -3523,23 +3531,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           ),
           child: Row(
             children: [
-              IconButton(
-                icon: Icon(
-                  Icons.remove_circle_outline,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  size: 20.r,  // 使用响应式尺寸
-                ),
-                onPressed: onDecrease,
-                padding: EdgeInsets.all(2),
-                constraints: BoxConstraints(
-                  minWidth: 32.w,  // 使用响应式宽度
-                  minHeight: 32.h,  // 使用响应式高度
+              InkWell(
+                onTap: onDecrease,
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  width: 30.w,
+                  height: 28.h,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.remove_circle_outline,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    size: 26.r,
+                  ),
                 ),
               ),
               Container(
                 width: 36.w,  // 使用响应式宽度
+                height: 28.h,
                 alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(vertical: 2),
                 decoration: BoxDecoration(
                   color: isWild 
                     ? Colors.amber.withValues(alpha: 0.3)
@@ -3549,23 +3558,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Text(
                   value.toString(),
                   style: TextStyle(
-                    fontSize: 20.sp,  // 使用响应式字体
+                    fontSize: 26.sp,  // 使用响应式字体
                     fontWeight: FontWeight.bold,
                     color: isWild ? Colors.amber : Colors.white,
                   ),
                 ),
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.add_circle_outline,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  size: 20.r,  // 使用响应式尺寸
-                ),
-                onPressed: onIncrease,
-                padding: EdgeInsets.all(2),
-                constraints: BoxConstraints(
-                  minWidth: 32.w,  // 使用响应式宽度
-                  minHeight: 32.h,  // 使用响应式高度
+              InkWell(
+                onTap: onIncrease,
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  width: 30.w,
+                  height: 28.h,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.add_circle_outline,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    size: 26.r,
+                  ),
                 ),
               ),
             ],

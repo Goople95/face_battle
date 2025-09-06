@@ -1475,6 +1475,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     showDialog(
       context: context,
       barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(1.0),  // 设置背景为完全不透明的黑色
       builder: (context) => DrunkDialog(
         personality: personality,
         drinkingState: _drinkingState!,
