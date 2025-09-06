@@ -740,6 +740,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String vipFreeSober(Object name) {
+    return 'VIP Privilege: $name is instantly sober!';
+  }
+
+  @override
+  String get vipInstantSober => 'VIP Privilege: Instant Sober';
+
+  @override
   String get minimumBidTwo => 'Minimum bid is 2';
 
   @override

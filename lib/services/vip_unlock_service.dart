@@ -136,15 +136,15 @@ class VIPUnlockService {
   }
 
   /// 显示VIP解锁对话框
-  static Future<bool> showVIPUnlockDialog({
+  static Future<dynamic> showVIPUnlockDialog({
     required BuildContext context,
     required AIPersonality character,
   }) async {
-    return await showDialog<bool>(
+    return await showDialog<dynamic>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => VIPUnlockDialog(character: character),
-    ) ?? false;
+    );
   }
 }
 

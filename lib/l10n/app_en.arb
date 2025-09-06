@@ -722,6 +722,8 @@
   "adWatchedSober": "✨ Ad watched, fully sober!",
   "usedSoberPotion": "Used sober potion, sobered up 2 drinks!",
   "aiSoberedUp": "✨ {name} sobered up, continue the game!",
+  "vipFreeSober": "VIP Privilege: {name} is instantly sober!",
+  "vipInstantSober": "VIP Privilege: Instant Sober",
   "minimumBidTwo": "Minimum bid is 2",
   "languageChanged": "Language changed to {language}",
   "tempUnlocked": "✨ Temporarily unlocked {name} for 1 hour",

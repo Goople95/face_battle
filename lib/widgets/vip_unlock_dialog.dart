@@ -10,6 +10,7 @@ import '../services/analytics_service.dart';
 import '../utils/ad_helper.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'npc_image_widget.dart';
+import '../screens/game_screen.dart';
 
 /// VIP解锁对话框
 class VIPUnlockDialog extends StatefulWidget {
@@ -233,7 +234,8 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                       },
                     );
                     
-                    Navigator.of(context).pop(false);
+                    // 先关闭对话框，返回一个特殊标记表示看广告
+                    Navigator.of(context).pop('watch_ad');
                     await Future.delayed(const Duration(milliseconds: 100));
                     
                     if (context.mounted) {
@@ -285,9 +287,9 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                 _buildUnlockOption(
                   icon: Icons.diamond,
                   title: AppLocalizations.of(context)!.permanentUnlock,
-                  subtitle: _product?.price ?? '\$0.99',  // 显示实际价格或默认价格
+                  subtitle: _product?.price ?? '...',  // 加载中显示省略号，避免价格闪动
                   color: Colors.amber.shade600,
-                  enabled: !_isLoading,
+                  enabled: !_isLoading && _product != null,  // 必须加载完成才能点击
                   onTap: () async {
                     // 记录点击购买按钮
                     AnalyticsService().logDialogAction(
@@ -295,7 +297,7 @@ class _VIPUnlockDialogState extends State<VIPUnlockDialog> with SingleTickerProv
                       action: 'purchase',
                       params: {
                         'npc_id': widget.character.id,
-                        'price': _product?.price ?? '\$0.99',
+                        'price': _product?.price ?? 'unknown',
                       },
                     );
                     

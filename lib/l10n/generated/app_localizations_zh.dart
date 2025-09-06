@@ -728,6 +728,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String vipFreeSober(Object name) {
+    return 'VIP特權：$name已免費醒酒！';
+  }
+
+  @override
+  String get vipInstantSober => 'VIP特權·直接醒酒';
+
+  @override
   String get minimumBidTwo => '起叫最少2個';
 
   @override
@@ -1789,6 +1797,14 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String aiSoberedUp(Object name) {
     return '✨ $name醒酒了，繼續對戰！';
   }
+
+  @override
+  String vipFreeSober(Object name) {
+    return 'VIP特權：$name已免費醒酒！';
+  }
+
+  @override
+  String get vipInstantSober => 'VIP特權·直接醒酒';
 
   @override
   String get minimumBidTwo => '起叫最少2個';

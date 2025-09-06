@@ -742,6 +742,14 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String vipFreeSober(Object name) {
+    return 'Hak Istimewa VIP: $name langsung sadar!';
+  }
+
+  @override
+  String get vipInstantSober => 'Hak Istimewa VIP: Langsung Sadar';
+
+  @override
   String get minimumBidTwo => 'Taruhan minimum adalah 2';
 
   @override

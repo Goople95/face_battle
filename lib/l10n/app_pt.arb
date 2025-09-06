@@ -178,6 +178,8 @@
   "adWatchedSober": "✨ Anúncio assistido, completamente sóbrio!",
   "usedSoberPotion": "Usou poção de sobriedade, ficou sóbrio de 2 bebidas!",
   "aiSoberedUp": "✨ {name} ficou sóbrio, continue o jogo!",
+  "vipFreeSober": "Privilégio VIP: {name} está sóbria instantaneamente!",
+  "vipInstantSober": "Privilégio VIP: Sobriedade Instantânea",
   "challengeProbability": "Probabilidade de desafio",
   "challengeWillSucceed": "O desafio terá sucesso",
   "challengeWillFail": "O desafio falhará",

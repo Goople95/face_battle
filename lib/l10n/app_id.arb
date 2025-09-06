@@ -176,6 +176,8 @@
   "adWatchedSober": "✨ Iklan ditonton, sepenuhnya sadar!",
   "usedSoberPotion": "Menggunakan ramuan sadar, membersihkan 2 minuman!",
   "aiSoberedUp": "✨ {name} sadar, lanjutkan permainan!",
+  "vipFreeSober": "Hak Istimewa VIP: {name} langsung sadar!",
+  "vipInstantSober": "Hak Istimewa VIP: Langsung Sadar",
   "challengeProbability": "Probabilitas tantangan",
   "challengeWillSucceed": "Tantangan akan berhasil",
   "challengeWillFail": "Tantangan akan gagal",

@@ -744,6 +744,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String vipFreeSober(Object name) {
+    return 'Privilégio VIP: $name está sóbria instantaneamente!';
+  }
+
+  @override
+  String get vipInstantSober => 'Privilégio VIP: Sobriedade Instantânea';
+
+  @override
   String get minimumBidTwo => 'Aposta mínima é 2';
 
   @override

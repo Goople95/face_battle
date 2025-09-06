@@ -1365,6 +1365,18 @@ abstract class AppLocalizations {
   /// **'✨ {name} sobered up, continue the game!'**
   String aiSoberedUp(Object name);
 
+  /// No description provided for @vipFreeSober.
+  ///
+  /// In en, this message translates to:
+  /// **'VIP Privilege: {name} is instantly sober!'**
+  String vipFreeSober(Object name);
+
+  /// No description provided for @vipInstantSober.
+  ///
+  /// In en, this message translates to:
+  /// **'VIP Privilege: Instant Sober'**
+  String get vipInstantSober;
+
   /// No description provided for @minimumBidTwo.
   ///
   /// In en, this message translates to:

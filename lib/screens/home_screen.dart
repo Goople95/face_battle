@@ -28,6 +28,7 @@ import '../utils/local_storage_debug_tool.dart';
 import '../services/analytics_service.dart';
 import '../services/npc_config_service.dart';
 import '../services/storage/local_storage_service.dart';
+import '../services/display_info_service.dart';
 import '../utils/logger_utils.dart';
 import '../widgets/rules_display.dart';
 import '../widgets/npc_avatar_widget.dart';
@@ -160,6 +161,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         LocalStorageService.instance.setUserId(authService.uid!);
         IntimacyService().setUserId(authService.uid!);
         GameProgressService.instance.setUserId(authService.uid!);
+        
+        // 延迟到下一帧收集显示设置，确保context已经完全初始化
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            DisplayInfoService.instance.saveDisplaySettings(context).catchError((e) {
+              // 静默失败，不影响主流程
+              LoggerUtils.debug('保存显示设置失败: $e');
+            });
+          }
+        });
       }
     }
     
@@ -1156,8 +1167,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                       _drinkingState!.isAIUnavailable(personality.id);
             
             if (isLocked) {
-              // 显示VIP解锁对话框
-              await VIPUnlockService.showVIPUnlockDialog(
+              // 显示VIP解锁对话框，返回值可能是true(购买成功)、'watch_ad'(看广告)、false(取消)
+              var result = await VIPUnlockService.showVIPUnlockDialog(
                 context: context,
                 character: personality,
               );
@@ -1167,28 +1178,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 _vipRebuildKey++; // 强制刷新VIP卡片
               });
               
-              // 延迟一下让界面刷新
-              await Future.delayed(const Duration(milliseconds: 500));
-              
-              // 再次检查解锁状态和醉酒状态
-              bool nowUnlocked = await VIPUnlockService().isUnlocked(personality.id) || 
-                                PurchaseService.instance.isNPCPurchased(personality.id);
-              bool stillUnavailable = _drinkingState != null && 
-                                    _drinkingState!.isAIUnavailable(personality.id);
-              
-              // 如果现在已解锁且AI不醉，直接进入游戏
-              if (nowUnlocked && !stillUnavailable && mounted) {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => GameScreen(aiPersonality: personality),
-                  ),
-                );
-                await _loadData();
-                _startTimer();
-              } else if (nowUnlocked && stillUnavailable && mounted) {
-                // 解锁了但是AI醉了
-                _showAISoberDialog(personality);
+              // 购买成功或看广告后，只刷新界面状态，不自动进入游戏
+              if (result == true && mounted) {
+                // 购买成功，界面会自动刷新显示解锁状态
+                LoggerUtils.info('购买成功，NPC已解锁');
+              } else if (result == 'watch_ad' && mounted) {
+                // 看广告的情况，简单处理即可
+                LoggerUtils.info('用户选择看广告解锁');
+                // 广告回调会自动处理解锁，这里不需要额外操作
               }
             } else if (currentlyUnavailable) {
               // AI醉了，显示醒酒对话框

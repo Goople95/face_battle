@@ -1368,7 +1368,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('VIP特权：${_getLocalizedAIName(context)}已免费醒酒'),
+                  content: Text(AppLocalizations.of(context)!.vipFreeSober(
+                    _getLocalizedAIName(context)
+                  )),
                   backgroundColor: Colors.purple,
                 ),
               );
